@@ -1,0 +1,16 @@
+.wrap {
+  padding: 32px 44px 60px;
+  animation: fade-up 0.25s ease-out;
+}
+
+.screen {
+  border-radius: var(--screen-r);
+  overflow: hidden;
+  border: 1px solid var(--ink-5);
+  background: linear-gradient(150deg, #060d0a 0%, #080b16 55%, #07090d 100%);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

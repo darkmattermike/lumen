@@ -1,0 +1,53 @@
+.header {
+  padding: 44px 56px 32px;
+  border-bottom: 1px solid var(--ink-5);
+  display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start;
+  background: radial-gradient(ellipse at 90% 20%, rgba(167,139,255,.1) 0%, transparent 50%), linear-gradient(180deg,#0a0810 0%,var(--bg-1) 100%);
+}
+.pre { font-family: var(--font-mono); font-size: 9px; color: rgba(167,139,255,.5); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px; }
+.title { font-family: var(--font-serif); font-size: 48px; font-weight: 200; color: var(--ink-0); margin-bottom: 10px; line-height: 1; }
+.sub { font-size: 13px; color: var(--ink-2); line-height: 1.65; }
+.monthTotal { background: rgba(167,139,255,.06); border: 1px solid rgba(167,139,255,.18); border-radius: 14px; padding: 20px 28px; text-align: center; flex-shrink: 0; }
+.mtLabel { font-family: var(--font-mono); font-size: 9px; color: rgba(167,139,255,.6); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+.mtAmt { font-family: var(--font-serif); font-size: 42px; font-weight: 200; color: rgba(167,139,255,.9); line-height: 1; }
+.mtSub { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+
+.body { padding: 40px 56px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+
+.catCard {
+  background: rgba(255,255,255,.025); border: 1px solid var(--ink-5);
+  border-radius: 14px; padding: 22px; margin-bottom: 16px;
+  transition: border-color var(--t-fast);
+}
+.catCard:hover { border-color: var(--ink-3); }
+.catHeader { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.catIcon { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,.05); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.catName { font-size: 14px; color: var(--ink-0); font-weight: 500; }
+.catPeriod { font-size: 10px; color: var(--ink-3); }
+.catNums { margin-left: auto; text-align: right; }
+.catSpent { font-family: var(--font-mono); font-size: 14px; }
+.catCap { font-size: 10px; color: var(--ink-3); }
+.barTrack { height: 5px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.barFill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+.catWarn { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--warn); margin-bottom: 8px; }
+.subRows { display: flex; flex-direction: column; gap: 2px; }
+.subRow { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); padding: 4px 0; }
+.subName { color: var(--ink-2); }
+.subAmt { font-family: var(--font-mono); font-size: 10px; }
+
+.aiRecs { background: linear-gradient(135deg,rgba(167,139,255,.06),rgba(108,140,255,.04)); border: 1px solid rgba(167,139,255,.18); border-radius: 16px; padding: 24px; }
+.aiTag { font-family: var(--font-mono); font-size: 9px; color: rgba(167,139,255,.7); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.aiRec { padding: 14px; border-radius: 10px; background: rgba(255,255,255,.03); border: 1px solid var(--ink-5); margin-bottom: 10px; cursor: pointer; transition: all var(--t-base); }
+.aiRec:hover { border-color: rgba(167,139,255,.3); background: rgba(167,139,255,.06); }
+.aiRecHead { font-size: 13px; color: var(--ink-1); font-weight: 500; margin-bottom: 4px; }
+.aiRecBody { font-size: 11px; color: var(--ink-3); line-height: 1.6; }
+.aiRecTag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); font-size: 9px; margin-top: 8px; }
+.tagSave { background: rgba(93,202,165,.1); color: var(--safe); }
+.tagWarn { background: rgba(240,176,76,.1); color: var(--warn); }
+
+.rolloverCard { background: rgba(255,255,255,.02); border: 1px solid var(--ink-5); border-radius: 14px; padding: 18px; }
+.rolloverNote { font-size: 13px; color: var(--ink-2); line-height: 1.65; margin-bottom: 12px; }
+.rolloverRow { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--ink-5); }
+.rolloverRow:last-child { border-bottom: none; }
+.rolloverName { color: var(--ink-2); }
+.rolloverAmt { font-family: var(--font-mono); color: var(--safe); font-size: 11px; }

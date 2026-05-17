@@ -1,0 +1,57 @@
+.spotlight {
+  background: linear-gradient(135deg, rgba(93, 202, 165, 0.07) 0%, rgba(167, 139, 255, 0.04) 100%);
+  border: 1px solid rgba(93, 202, 165, 0.18);
+  border-radius: 18px;
+  padding: 28px 32px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+}
+
+.dotCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dotLabel {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: rgba(93, 202, 165, 0.5);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.content {}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--safe);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.text {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--ink-0);
+  line-height: 1.75;
+}
+.text :global(strong) { color: var(--safe); font-weight: 400; }
+.text :global(.w)     { color: rgba(240, 176, 76, 0.85); }
+.text :global(.d)     { color: var(--debt); }
+.text :global(em)     { color: rgba(167, 139, 255, 0.9); font-style: normal; }
+.text :global(.b)     { color: rgba(108, 140, 255, 0.85); }
+
+.footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(93, 202, 165, 0.12);
+}

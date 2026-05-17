@@ -1,0 +1,38 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.row:last-child { border-bottom: none; }
+
+.highlight {
+  background: rgba(93, 202, 165, 0.04);
+  border-radius: 7px;
+  padding: 6px;
+}
+
+.bar {
+  width: 3px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.info { flex: 1; }
+
+.name {
+  font-size: 12px;
+  color: var(--ink-1);
+}
+
+.when {
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
+.amount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
