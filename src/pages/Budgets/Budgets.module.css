@@ -251,3 +251,84 @@
   color: var(--safe) !important;
   background: rgba(93,202,165,.12) !important;
 }
+
+/* ── Header button row ── */
+.headerBtns { display: flex; gap: 8px; align-items: center; }
+
+.aiLimitsBtn {
+  padding: 10px 18px;
+  background: linear-gradient(135deg, rgba(167,139,255,.1), rgba(108,140,255,.07));
+  border: 1px solid rgba(167,139,255,.3); border-radius: 10px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(167,139,255,.85);
+  cursor: pointer; transition: all var(--t-base); white-space: nowrap;
+}
+.aiLimitsBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(167,139,255,.2), rgba(108,140,255,.14));
+  border-color: rgba(167,139,255,.5); color: #c4b0ff;
+}
+.aiLimitsBtn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ── AI Limits Modal internals ── */
+.aiLimitsLoading {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13px; color: var(--ink-2); padding: 16px 0;
+}
+.aiLimitsDot {
+  width: 8px; height: 8px; border-radius: 50%; background: rgba(167,139,255,.7);
+  animation: ai-pulse 1.2s ease-in-out infinite; flex-shrink: 0;
+}
+.aiLimitsDesc {
+  font-size: 13px; color: var(--ink-2); line-height: 1.65; margin-bottom: 18px;
+}
+
+.aiLimitsTable { display: flex; flex-direction: column; gap: 0; }
+.aiLimitsHead {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: 8px; padding: 8px 12px;
+  font-family: var(--font-mono); font-size: 9px; color: var(--ink-3);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  border-bottom: 1px solid var(--ink-5);
+}
+.aiLimitsRow {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: 8px; align-items: center;
+  padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.03);
+  transition: background var(--t-fast);
+}
+.aiLimitsRow:hover { background: rgba(255,255,255,.02); }
+.aiLimitsApplied { opacity: .55; }
+
+/* reason spans full width below the grid row */
+.aiLimitsRow { flex-wrap: wrap; display: grid; }
+.aiLimitsReason {
+  grid-column: 1 / -1;
+  font-size: 10px; color: var(--ink-3); padding: 3px 0 4px;
+  font-style: italic; line-height: 1.5;
+}
+
+.aiLimitsCat  { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-1); }
+.aiLimitsMono { font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); }
+
+.aiLimitsApplyBtn {
+  padding: 4px 12px; border-radius: 6px;
+  background: rgba(167,139,255,.08); border: 1px solid rgba(167,139,255,.25);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: .5px;
+  text-transform: uppercase; color: rgba(167,139,255,.8);
+  cursor: pointer; transition: all var(--t-fast); white-space: nowrap;
+}
+.aiLimitsApplyBtn:hover:not(:disabled) { background: rgba(167,139,255,.18); color: #c4b0ff; }
+.aiLimitsApplyBtn:disabled { opacity: .45; cursor: not-allowed; }
+
+.aiLimitsDone {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--safe); letter-spacing: .5px;
+}
+
+.modalError {
+  font-size:12px;color:var(--debt);background:rgba(232,115,99,.08);
+  border:1px solid rgba(232,115,99,.2);border-radius:8px;padding:10px 14px;
+  margin-bottom:12px;
+}
+
+@keyframes ai-pulse { 0%,100%{opacity:.4} 50%{opacity:1} }

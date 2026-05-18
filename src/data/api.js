@@ -36,15 +36,23 @@ export const api = {
   accounts:      ()     => request('/api/accounts'),
   transactions:         (params = '') => request(`/api/transactions${params}`),
   updateTransaction:    (id, body)   => request(`/api/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-  budgets:              ()     => request('/api/budgets'),
-  createBudget:         (body) => request('/api/budgets', { method: 'POST', body: JSON.stringify(body) }),
-  deleteBudget:         (id)   => request(`/api/budgets/${id}`, { method: 'DELETE' }),
+  budgets:              ()           => request('/api/budgets'),
+  createBudget:         (body)       => request('/api/budgets', { method: 'POST', body: JSON.stringify(body) }),
+  updateBudget:         (id, body)   => request(`/api/budgets/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteBudget:         (id)         => request(`/api/budgets/${id}`, { method: 'DELETE' }),
   completeBudget:       (id, completed) => request(`/api/budgets/${id}/complete`, { method: 'PATCH', body: JSON.stringify({ completed }) }),
-  budgetTransactions:   (id)   => request(`/api/budgets/${id}/transactions`),
-  calendar:             ()          => request('/api/calendar'),
-  createRecurring:      (body)      => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
-  deleteRecurring:      (id)        => request(`/api/calendar/${id}`, { method: 'DELETE' }),
+  budgetTransactions:   (id)         => request(`/api/budgets/${id}/transactions`),
+  calendar:             ()           => request('/api/calendar'),
+  createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
+  deleteRecurring:      (id)         => request(`/api/calendar/${id}`, { method: 'DELETE' }),
   analytics:     ()     => request('/api/analytics'),
+
+  // Rules
+  rules:         ()     => request('/api/rules'),
+  createRule:    (body) => request('/api/rules', { method: 'POST', body: JSON.stringify(body) }),
+  updateRule:    (id, body) => request(`/api/rules/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteRule:    (id)   => request(`/api/rules/${id}`, { method: 'DELETE' }),
+  applyRules:    ()     => request('/api/rules/apply', { method: 'POST' }),
 
   // Settings
   getSettings:      ()     => request('/api/settings'),
@@ -53,7 +61,10 @@ export const api = {
   updateKeys:       (body) => request('/api/settings/keys',     { method: 'PATCH', body: JSON.stringify(body) }),
 
   // Lumen AI
-  lumenInsight: (body) => request('/api/lumen/insight', { method: 'POST', body: JSON.stringify(body) }),
+  lumenInsight:        (body) => request('/api/lumen/insight',            { method: 'POST', body: JSON.stringify(body) }),
+  suggestCategories:   ()     => request('/api/lumen/suggest-categories', { method: 'POST' }),
+  aiCategorize:        ()     => request('/api/lumen/categorize',         { method: 'POST' }),
+  aiBudgetLimits:      ()     => request('/api/lumen/budget-limits',      { method: 'POST' }),
 
   // Lumen streaming ask — returns a raw fetch Response for SSE
   lumenAsk: async (message, context_type = 'general') => {

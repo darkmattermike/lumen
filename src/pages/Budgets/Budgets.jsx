@@ -250,10 +250,154 @@ function AddBudgetModal({ onClose, onSaved }) {
   )
 }
 
+
+// ── AI Budget Limits Modal ────────────────────────────────────
+function AiBudgetLimitsModal({ onClose, onApplied }) {
+  const [loading, setLoading]   = useState(true)
+  const [suggestions, setSugg]  = useState([])
+  const [applied, setApplied]   = useState(new Set())
+  const [applying, setApplying] = useState(null) // id of the one being applied
+  const [error, setError]       = useState('')
+
+  useEffect(() => {
+    api.aiBudgetLimits()
+      .then(data => { setSugg(data.suggestions || []); setLoading(false) })
+      .catch(err  => {
+        setError(err.message === 'NO_KEY'
+          ? 'Add an Anthropic API key in Settings to use AI features.'
+          : err.message)
+        setLoading(false)
+      })
+  }, [])
+
+  async function applyOne(s) {
+    setApplying(s.id)
+    try {
+      await api.updateBudget(s.id, { cap: s.suggested_cap })
+      setApplied(prev => new Set([...prev, s.id]))
+      onApplied()
+    } catch (err) { setError(err.message) }
+    finally { setApplying(null) }
+  }
+
+  async function applyAll() {
+    setApplying('all')
+    for (const s of suggestions) {
+      if (!applied.has(s.id)) {
+        try {
+          await api.updateBudget(s.id, { cap: s.suggested_cap })
+          setApplied(prev => new Set([...prev, s.id]))
+        } catch {}
+      }
+    }
+    setApplying(null)
+    onApplied()
+  }
+
+  const unapplied = suggestions.filter(s => !applied.has(s.id))
+  const changed   = suggestions.filter(s => s.suggested_cap !== s.current_cap)
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} style={{maxWidth:640}} onClick={e=>e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalTitle}>✦ AI Budget Limits</div>
+          <button className={styles.modalClose} onClick={onClose}>✕</button>
+        </div>
+        <div className={styles.modalBody}>
+          {loading && (
+            <div className={styles.aiLimitsLoading}>
+              <div className={styles.aiLimitsDot}/>
+              Analyzing your last 6 months of spending...
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className={styles.modalError}>{error}</div>
+          )}
+
+          {!loading && !error && suggestions.length === 0 && (
+            <div style={{fontSize:13,color:'var(--ink-3)',padding:'16px 0'}}>
+              Not enough spending history to make recommendations yet.
+            </div>
+          )}
+
+          {!loading && !error && suggestions.length > 0 && (
+            <>
+              <div className={styles.aiLimitsDesc}>
+                Based on your last 6 months of spending, here are AI-recommended monthly caps. Changes you haven't applied yet are highlighted.
+              </div>
+
+              <div className={styles.aiLimitsTable}>
+                <div className={styles.aiLimitsHead}>
+                  <span>Category</span>
+                  <span>Avg / Month</span>
+                  <span>Current Cap</span>
+                  <span>Suggested</span>
+                  <span></span>
+                </div>
+                {suggestions.map(s => {
+                  const isUp      = s.suggested_cap > s.current_cap
+                  const isDown    = s.suggested_cap < s.current_cap
+                  const isApplied = applied.has(s.id)
+                  const color     = isUp ? 'var(--warn)' : isDown ? 'var(--safe)' : 'var(--ink-2)'
+                  return (
+                    <div key={s.id} className={`${styles.aiLimitsRow} ${isApplied ? styles.aiLimitsApplied : ''}`}>
+                      <span className={styles.aiLimitsCat}>
+                        <span>{s.icon}</span> {s.name}
+                      </span>
+                      <span className={styles.aiLimitsMono}>${(s.avg_monthly||0).toFixed(0)}</span>
+                      <span className={styles.aiLimitsMono}>${s.current_cap}</span>
+                      <span className={styles.aiLimitsMono} style={{color}}>
+                        {isUp ? '↑' : isDown ? '↓' : '='} ${s.suggested_cap}
+                      </span>
+                      <span>
+                        {isApplied ? (
+                          <span className={styles.aiLimitsDone}>✓ Applied</span>
+                        ) : (
+                          <button
+                            className={styles.aiLimitsApplyBtn}
+                            onClick={() => applyOne(s)}
+                            disabled={applying !== null}
+                          >
+                            {applying === s.id ? '...' : 'Apply'}
+                          </button>
+                        )}
+                      </span>
+                      {s.reasoning && (
+                        <div className={styles.aiLimitsReason}>{s.reasoning}</div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+        <div className={styles.modalFooter}>
+          <button className={styles.cancelBtn} onClick={onClose}>
+            {applied.size > 0 ? 'Done' : 'Cancel'}
+          </button>
+          {unapplied.length > 0 && !loading && !error && (
+            <button
+              className={styles.saveBtn}
+              onClick={applyAll}
+              disabled={applying !== null}
+            >
+              {applying === 'all' ? 'Applying...' : `Apply All ${changed.length > 0 ? `(${changed.length} changes)` : ''}`}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────
 export default function Budgets() {
   const {data, loading, error, refresh} = useApi(api.budgets)
-  const [showModal, setShowModal]       = useState(false)
+  const [showModal, setShowModal]           = useState(false)
+  const [showAiLimits, setShowAiLimits]     = useState(false)
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
@@ -296,12 +440,7 @@ export default function Budgets() {
       <>
         <SectionHead label={label} count={cats.length} color={color} />
         {cats.map(cat => (
-          <CategoryCard
-            key={cat.id}
-            cat={cat}
-            onDelete={handleDelete}
-            onRefresh={refresh}
-          />
+          <CategoryCard key={cat.id} cat={cat} onDelete={handleDelete} onRefresh={refresh} />
         ))}
       </>
     )
@@ -309,7 +448,13 @@ export default function Budgets() {
 
   return (
     <>
-      {showModal && <AddBudgetModal onClose={()=>setShowModal(false)} onSaved={refresh}/>}
+      {showModal    && <AddBudgetModal onClose={()=>setShowModal(false)} onSaved={refresh}/>}
+      {showAiLimits && (
+        <AiBudgetLimitsModal
+          onClose={()=>setShowAiLimits(false)}
+          onApplied={refresh}
+        />
+      )}
       <ScreenWrap>
         <div className={styles.header}>
           <div>
@@ -325,7 +470,12 @@ export default function Budgets() {
               <div className={styles.mtAmt}>${fmtK(totalBudgeted)}</div>
               <div className={styles.mtSub}>${fmtK(totalSpent)} spent · {totalPct}% used · {daysLeft} days left</div>
             </div>
-            <button className={styles.addBtn} onClick={()=>setShowModal(true)}>+ Add Category</button>
+            <div className={styles.headerBtns}>
+              <button className={styles.aiLimitsBtn} onClick={()=>setShowAiLimits(true)} disabled={budgets.length===0}>
+                ✦ AI Limits
+              </button>
+              <button className={styles.addBtn} onClick={()=>setShowModal(true)}>+ Add Category</button>
+            </div>
           </div>
         </div>
 

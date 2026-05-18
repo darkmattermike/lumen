@@ -194,22 +194,205 @@ function TxRow({ tx, budgets, onSaved }) {
   )
 }
 
+
+// ── Auto-Categorize Modal ─────────────────────────────────────
+function AutoCategorizeModal({ budgets, onClose, onDone }) {
+  // stage: 'loading' | 'no-budgets' | 'ready' | 'running' | 'done' | 'error'
+  const [stage, setStage]               = useState(budgets.length === 0 ? 'loading' : 'ready')
+  const [suggestions, setSuggestions]   = useState([])
+  const [selected, setSelected]         = useState(new Set())
+  const [creating, setCreating]         = useState(false)
+  const [running, setRunning]           = useState(false)
+  const [result, setResult]             = useState(null)
+  const [error, setError]               = useState('')
+
+  // If no budgets, load AI category suggestions on open
+  useEffect(() => {
+    if (budgets.length > 0) return
+    api.suggestCategories()
+      .then(data => {
+        const cats = data.categories || []
+        setSuggestions(cats)
+        setSelected(new Set(cats.map((_, i) => i)))
+        setStage('no-budgets')
+      })
+      .catch(err => {
+        setError(err.message === 'NO_KEY'
+          ? 'Add an Anthropic API key in Settings to use AI features.'
+          : err.message)
+        setStage('error')
+      })
+  }, [])
+
+  function toggleSelect(i) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(i) ? next.delete(i) : next.add(i)
+      return next
+    })
+  }
+
+  async function handleCreateAndContinue() {
+    const toCreate = suggestions.filter((_, i) => selected.has(i))
+    if (!toCreate.length) return setError('Select at least one category')
+    setCreating(true)
+    try {
+      for (const cat of toCreate) {
+        await api.createBudget({ name: cat.name, icon: cat.icon, color: cat.color || 'safe', cap: 500 })
+      }
+      setStage('ready')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  async function handleRun() {
+    setRunning(true)
+    setError('')
+    try {
+      const res = await api.aiCategorize()
+      setResult(res)
+      setStage('done')
+      onDone()
+    } catch (err) {
+      setError(err.message === 'NO_KEY'
+        ? 'Add an Anthropic API key in Settings to use AI features.'
+        : err.message === 'NO_BUDGETS'
+        ? 'No budget categories found. Create some first.'
+        : err.message)
+      setStage('error')
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  return (
+    <div className={styles.overlay}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalTitle}>✦ Auto-Categorize</div>
+          <button className={styles.modalClose} onClick={onClose}>✕</button>
+        </div>
+
+        <div className={styles.modalBody}>
+          {/* Loading suggestions */}
+          {stage === 'loading' && (
+            <div className={styles.modalLoading}>
+              <div className={styles.modalLoadingDot} />
+              Analyzing your transactions...
+            </div>
+          )}
+
+          {/* Suggest budget categories */}
+          {stage === 'no-budgets' && (
+            <>
+              <div className={styles.modalDesc}>
+                You don't have any budget categories yet. Based on your transactions, here are some suggestions — select the ones you'd like to create, then AI will categorize your transactions.
+              </div>
+              <div className={styles.suggestionList}>
+                {suggestions.map((cat, i) => (
+                  <button
+                    key={i}
+                    className={`${styles.suggestionItem} ${selected.has(i) ? styles.suggestionOn : ''}`}
+                    onClick={() => toggleSelect(i)}
+                  >
+                    <span className={styles.suggestionIcon}>{cat.icon}</span>
+                    <span className={styles.suggestionName}>{cat.name}</span>
+                    {selected.has(i) && <span className={styles.suggestionCheck}>✓</span>}
+                  </button>
+                ))}
+              </div>
+              {error && <div className={styles.modalError}>{error}</div>}
+              <div className={styles.modalFooter}>
+                <button className={styles.modalCancel} onClick={onClose}>Cancel</button>
+                <button className={styles.modalSave} onClick={handleCreateAndContinue} disabled={creating || selected.size === 0}>
+                  {creating ? 'Creating...' : `Create ${selected.size} Categories & Continue`}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Ready to categorize */}
+          {stage === 'ready' && (
+            <>
+              <div className={styles.modalDesc}>
+                AI will scan your last 3 months of expenses and assign them to your budget categories. Transactions already categorized won't be overwritten.
+              </div>
+              <div className={styles.catPreview}>
+                {budgets.map(b => (
+                  <div key={b.id} className={styles.catPreviewItem}>
+                    <span>{b.icon}</span><span>{b.name}</span>
+                  </div>
+                ))}
+              </div>
+              {error && <div className={styles.modalError}>{error}</div>}
+              <div className={styles.modalFooter}>
+                <button className={styles.modalCancel} onClick={onClose}>Cancel</button>
+                <button className={styles.modalSave} onClick={handleRun} disabled={running}>
+                  {running ? 'Categorizing...' : '✦ Run AI Categorization'}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Running */}
+          {stage === 'running' && (
+            <div className={styles.modalLoading}>
+              <div className={styles.modalLoadingDot} />
+              AI is categorizing your transactions...
+            </div>
+          )}
+
+          {/* Done */}
+          {stage === 'done' && result && (
+            <>
+              <div className={styles.doneMsg}>
+                <div className={styles.doneMsgTitle}>Done!</div>
+                <div className={styles.doneMsgSub}>
+                  {result.updated} of {result.total} transactions categorized.
+                  {result.total > result.updated && ` ${result.total - result.updated} didn't match any category.`}
+                </div>
+              </div>
+              <div className={styles.modalFooter}>
+                <button className={styles.modalSave} onClick={onClose}>Close</button>
+              </div>
+            </>
+          )}
+
+          {/* Error */}
+          {stage === 'error' && (
+            <>
+              <div className={styles.modalError}>{error || 'Something went wrong. Please try again.'}</div>
+              <div className={styles.modalFooter}>
+                <button className={styles.modalCancel} onClick={onClose}>Close</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────
 export default function Transactions() {
-  const [activeFilter, setActiveFilter] = useState('All')
-  const [search, setSearch]             = useState('')
+  const [activeFilter, setActiveFilter]   = useState('All')
+  const [search, setSearch]               = useState('')
+  const [showCatModal, setShowCatModal]   = useState(false)
 
   // Flat list of all loaded transactions (current month + accumulated historical pages)
-  const [loadedTxs, setLoadedTxs]   = useState(null)
-  const [histPage, setHistPage]     = useState(0)
-  const [hasMore, setHasMore]       = useState(false)
+  const [loadedTxs, setLoadedTxs]     = useState(null)
+  const [histPage, setHistPage]       = useState(0)
+  const [hasMore, setHasMore]         = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
 
-  const { data, loading, error } = useApi(
+  const { data, loading, error, refresh } = useApi(
     () => api.transactions(activeFilter !== 'All' ? `?category=${activeFilter}` : ''),
     [activeFilter]
   )
-  const { data: budgetData } = useApi(api.budgets)
+  const { data: budgetData, refresh: refreshBudgets } = useApi(api.budgets)
 
   // When the filter changes, reset accumulated pages so stale data isn't shown
   useEffect(() => {
@@ -303,118 +486,132 @@ export default function Transactions() {
   )
 
   return (
-    <ScreenWrap>
-      <div className={styles.header}>
-        <div>
-          <div className={styles.pre}>↕ What Happened</div>
-          <div className={styles.title}>Transactions</div>
-          <div className={styles.sub}>
-            Every dollar in and out. Click any transaction to edit it. Assign a budget category to have it count toward your budget caps.
-          </div>
-          <div className={styles.stats}>
-            <div className={styles.stat}><div className={styles.statL}>This Month In</div><div className={styles.statV} style={{color:'var(--safe)'}}>${fmtK(income)}</div></div>
-            <div className={styles.stat}><div className={styles.statL}>This Month Out</div><div className={styles.statV} style={{color:'var(--debt)'}}>${fmtK(spending)}</div></div>
-            <div className={styles.stat}><div className={styles.statL}>Net</div><div className={styles.statV} style={{color:net>=0?'var(--safe)':'var(--debt)'}}>{net>=0?'+':'−'}${fmtK(Math.abs(net))}</div></div>
-            <div className={styles.stat}><div className={styles.statL}>Transactions</div><div className={styles.statV}>{count}</div></div>
-          </div>
-        </div>
-        <div className={styles.pace}>
-          <div className={styles.paceLabel}>Monthly Spend Rate</div>
-          <div className={styles.paceTrack}>
-            <div className={styles.paceFill} style={{width:`${Math.min(spendPct,100)}%`}}/>
-          </div>
-          <div className={styles.paceMeta}>
-            <span>$0</span>
-            <span style={{color:spendPct>80?'var(--debt)':spendPct>60?'var(--warn)':'var(--safe)'}}>{spendPct}%</span>
-            <span>${fmtK(income)}</span>
-          </div>
-          <div className={styles.paceReading}>{spendPct>80?'Over Pace':spendPct>60?'Watch':'On Pace'}</div>
-          <div className={styles.paceSub}>{daysLeft} days remaining</div>
-        </div>
-      </div>
-
-      <div className={styles.filters}>
-        {FILTERS.map(f => (
-          <button key={f}
-            className={`${styles.filterChip} ${activeFilter===f?styles.filterOn:''}`}
-            onClick={() => setActiveFilter(f)}>
-            {FILTER_LABELS[f]}
-          </button>
-        ))}
-        <input className={styles.search} placeholder="🔍 Search transactions..."
-          value={search} onChange={e => setSearch(e.target.value)} />
-      </div>
-
-      <div className={styles.body}>
-        <div className={styles.list}>
-          {Object.keys(filteredGrouped).length === 0 ? (
-            <div style={{padding:'40px',textAlign:'center',color:'var(--ink-3)',fontFamily:'var(--font-mono)',fontSize:11}}>
-              No transactions found
+    <>
+      {showCatModal && (
+        <AutoCategorizeModal
+          budgets={budgets}
+          onClose={() => setShowCatModal(false)}
+          onDone={() => { setShowCatModal(false); refresh(); refreshBudgets() }}
+        />
+      )}
+      <ScreenWrap>
+        <div className={styles.header}>
+          <div>
+            <div className={styles.pre}>↕ What Happened</div>
+            <div className={styles.title}>Transactions</div>
+            <div className={styles.sub}>
+              Every dollar in and out. Click any transaction to edit it. Assign a budget category to have it count toward your budget caps.
             </div>
-          ) : Object.entries(filteredGrouped).map(([date, txs]) => (
-            <div key={date}>
-              <div className={styles.dayHead}>{date}</div>
-              {txs.map(tx => (
-                <TxRow key={tx.id} tx={tx} budgets={budgets} onSaved={handleTxSaved} />
-              ))}
+            <div className={styles.stats}>
+              <div className={styles.stat}><div className={styles.statL}>This Month In</div><div className={styles.statV} style={{color:'var(--safe)'}}>${fmtK(income)}</div></div>
+              <div className={styles.stat}><div className={styles.statL}>This Month Out</div><div className={styles.statV} style={{color:'var(--debt)'}}>${fmtK(spending)}</div></div>
+              <div className={styles.stat}><div className={styles.statL}>Net</div><div className={styles.statV} style={{color:net>=0?'var(--safe)':'var(--debt)'}}>{net>=0?'+':'−'}${fmtK(Math.abs(net))}</div></div>
+              <div className={styles.stat}><div className={styles.statL}>Transactions</div><div className={styles.statV}>{count}</div></div>
             </div>
-          ))}
-
-          {/* ── Load More (historical pages) ── */}
-          {hasMore && (
-            <div className={styles.loadMore}>
-              <button
-                className={styles.loadMoreBtn}
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-              >
-                {loadingMore ? 'Loading...' : 'Load Older Transactions'}
-              </button>
-              <div className={styles.loadMoreSub}>50 per page · showing oldest first within each page</div>
-            </div>
-          )}
-        </div>
-
-        <div className={styles.aside}>
-          <div className={styles.asideLabel}>Budget Categories · This Month</div>
-          {budgetRows.length === 0 ? (
-            <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0',lineHeight:1.65}}>
-              Edit transactions and assign categories to see spending here.
-            </div>
-          ) : budgetRows.map(b => {
-            const color = {debt:'var(--debt)',warn:'var(--warn)',safe:'var(--safe)',calm:'var(--calm)',goal:'var(--goal)',pink:'#e87fa3',orange:'#f07a3a',sky:'#5bc4e8',lime:'#8ecf4a',gold:'#d4a017'}[b.color] || 'var(--safe)'
-            const pct    = Math.round((b.spent / maxSpent) * 100)
-            const capPct = Number(b.cap) > 0 ? Math.round((b.spent / Number(b.cap)) * 100) : null
-            return (
-              <div key={b.id} className={styles.catRow}>
-                <div className={styles.catMeta}>
-                  <span className={styles.catName}>{b.icon} {b.name}</span>
-                  <span style={{fontFamily:'var(--font-mono)',fontSize:11,color}}>
-                    ${fmtK(b.spent)}{capPct !== null ? ` · ${capPct}%` : ''}
-                  </span>
-                </div>
-                <div className={styles.catTrack}>
-                  <div className={styles.catFill} style={{width:`${pct}%`,background:color,opacity:.55}}/>
-                </div>
+          </div>
+          <div className={styles.headerRight}>
+            <div className={styles.pace}>
+              <div className={styles.paceLabel}>Monthly Spend Rate</div>
+              <div className={styles.paceTrack}>
+                <div className={styles.paceFill} style={{width:`${Math.min(spendPct,100)}%`}}/>
               </div>
-            )
-          })}
-
-          <div className={styles.asideLabel} style={{marginTop:16}}>Lumen Watching</div>
-          <LumenInsight
-            label="This Month"
-            contextType="transactions"
-            prompt="In 2-3 sentences, give me a sharp read on how this month's transactions look — income vs spending, anything unusual, and where I should pay attention."
-            color="green"
-          />
-          <LumenInsight
-            label="Pattern Alert"
-            contextType="transactions"
-            prompt="In 2-3 sentences, identify the most important spending pattern or anomaly in my recent transactions that I should know about."
-            color="blue"
-          />
+              <div className={styles.paceMeta}>
+                <span>$0</span>
+                <span style={{color:spendPct>80?'var(--debt)':spendPct>60?'var(--warn)':'var(--safe)'}}>{spendPct}%</span>
+                <span>${fmtK(income)}</span>
+              </div>
+              <div className={styles.paceReading}>{spendPct>80?'Over Pace':spendPct>60?'Watch':'On Pace'}</div>
+              <div className={styles.paceSub}>{daysLeft} days remaining</div>
+            </div>
+            <button className={styles.aiCatBtn} onClick={() => setShowCatModal(true)}>
+              ✦ Auto-Categorize
+            </button>
+          </div>
         </div>
-      </div>
-    </ScreenWrap>
+
+        <div className={styles.filters}>
+          {FILTERS.map(f => (
+            <button key={f}
+              className={`${styles.filterChip} ${activeFilter===f?styles.filterOn:''}`}
+              onClick={() => setActiveFilter(f)}>
+              {FILTER_LABELS[f]}
+            </button>
+          ))}
+          <input className={styles.search} placeholder="🔍 Search transactions..."
+            value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+
+        <div className={styles.body}>
+          <div className={styles.list}>
+            {Object.keys(filteredGrouped).length === 0 ? (
+              <div style={{padding:'40px',textAlign:'center',color:'var(--ink-3)',fontFamily:'var(--font-mono)',fontSize:11}}>
+                No transactions found
+              </div>
+            ) : Object.entries(filteredGrouped).map(([date, txs]) => (
+              <div key={date}>
+                <div className={styles.dayHead}>{date}</div>
+                {txs.map(tx => (
+                  <TxRow key={tx.id} tx={tx} budgets={budgets} onSaved={handleTxSaved} />
+                ))}
+              </div>
+            ))}
+
+            {/* ── Load More (historical pages) ── */}
+            {hasMore && (
+              <div className={styles.loadMore}>
+                <button
+                  className={styles.loadMoreBtn}
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? 'Loading...' : 'Load Older Transactions'}
+                </button>
+                <div className={styles.loadMoreSub}>50 per page · showing oldest first within each page</div>
+              </div>
+            )}
+          </div>
+
+          <div className={styles.aside}>
+            <div className={styles.asideLabel}>Budget Categories · This Month</div>
+            {budgetRows.length === 0 ? (
+              <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0',lineHeight:1.65}}>
+                Edit transactions and assign categories to see spending here.
+              </div>
+            ) : budgetRows.map(b => {
+              const color = {debt:'var(--debt)',warn:'var(--warn)',safe:'var(--safe)',calm:'var(--calm)',goal:'var(--goal)',pink:'#e87fa3',orange:'#f07a3a',sky:'#5bc4e8',lime:'#8ecf4a',gold:'#d4a017'}[b.color] || 'var(--safe)'
+              const pct    = Math.round((b.spent / maxSpent) * 100)
+              const capPct = Number(b.cap) > 0 ? Math.round((b.spent / Number(b.cap)) * 100) : null
+              return (
+                <div key={b.id} className={styles.catRow}>
+                  <div className={styles.catMeta}>
+                    <span className={styles.catName}>{b.icon} {b.name}</span>
+                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color}}>
+                      ${fmtK(b.spent)}{capPct !== null ? ` · ${capPct}%` : ''}
+                    </span>
+                  </div>
+                  <div className={styles.catTrack}>
+                    <div className={styles.catFill} style={{width:`${pct}%`,background:color,opacity:.55}}/>
+                  </div>
+                </div>
+              )
+            })}
+
+            <div className={styles.asideLabel} style={{marginTop:16}}>Lumen Watching</div>
+            <LumenInsight
+              label="This Month"
+              contextType="transactions"
+              prompt="In 2-3 sentences, give me a sharp read on how this month's transactions look — income vs spending, anything unusual, and where I should pay attention."
+              color="green"
+            />
+            <LumenInsight
+              label="Pattern Alert"
+              contextType="transactions"
+              prompt="In 2-3 sentences, identify the most important spending pattern or anomaly in my recent transactions that I should know about."
+              color="blue"
+            />
+          </div>
+        </div>
+      </ScreenWrap>
+    </>
   )
 }

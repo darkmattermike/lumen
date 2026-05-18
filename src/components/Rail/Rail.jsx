@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { path: '/accounts',     icon: '⬦', label: 'ACCOUNTS' },
   { path: '/analytics',    icon: '⌁', label: 'ANALYTICS' },
   { path: '/calendar',     icon: '◷', label: 'CALENDAR' },
+  { path: '/rules',        icon: '⊙', label: 'RULES' },
 ]
 
 export default function Rail() {
