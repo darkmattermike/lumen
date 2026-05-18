@@ -33,7 +33,7 @@ function fmt(n) {
   return Math.abs(Number(n||0)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
 }
 
-// ── Add Recurring Modal and adding extra text here to push as new───────────────────────────────────────
+// ── Add Recurring Modal ───────────────────────────────────────
 function RecurringModal({ item, onClose, onSaved }) {
   const isEdit = !!item
   const [form, setForm]     = useState({
@@ -361,5 +361,3 @@ export default function Calendar() {
     </>
   )
 }
-
-  if (loading) return <LoadingShell />
