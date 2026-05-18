@@ -10,6 +10,7 @@ import Accounts     from './pages/Accounts/Accounts'
 import Analytics    from './pages/Analytics/Analytics'
 import Calendar     from './pages/Calendar/Calendar'
 import Rules        from './pages/Rules/Rules'
+import GmailInbox  from './pages/GmailInbox/GmailInbox'
 import Settings     from './pages/Settings/Settings'
 import styles from './App.module.css'
 
@@ -33,6 +34,7 @@ function AppShell() {
             <Route path="/analytics"    element={<Analytics />} />
             <Route path="/calendar"     element={<Calendar />} />
             <Route path="/rules"        element={<Rules />} />
+            <Route path="/gmail"        element={<GmailInbox />} />
             <Route path="/settings"     element={<Settings />} />
           </Routes>
         </main>

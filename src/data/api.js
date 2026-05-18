@@ -71,6 +71,13 @@ export const api = {
   gmailAuthUrl:    ()  => request('/api/gmail/auth-url'),
   gmailStatus:     ()  => request('/api/gmail/status'),
   gmailDisconnect: ()  => request('/api/gmail/disconnect', { method: 'DELETE' }),
+  gmailScanSubs:        ()    => request('/api/gmail/scan/subscriptions', { method: 'POST' }),
+  gmailScanOrders:      ()    => request('/api/gmail/scan/orders',        { method: 'POST' }),
+  gmailScanBills:       ()    => request('/api/gmail/scan/bills',         { method: 'POST' }),
+  gmailSubscriptions:   ()    => request('/api/gmail/subscriptions'),
+  gmailOrders:          ()    => request('/api/gmail/orders'),
+  gmailUpdateSub:       (id, body) => request(`/api/gmail/subscriptions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  gmailUpdateOrder:     (id, body) => request(`/api/gmail/orders/${id}`,        { method: 'PATCH', body: JSON.stringify(body) }),
 
   // Lumen AI
   lumenInsight:        (body) => request('/api/lumen/insight',            { method: 'POST', body: JSON.stringify(body) }),
