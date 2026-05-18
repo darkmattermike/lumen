@@ -182,10 +182,11 @@
   border-top: 1px solid var(--ink-5);
 }
 
-.savedBadge {
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--safe); margin-right: auto;
-  animation: fade-in .2s ease;
+.editorError {
+  font-size: 11px; color: var(--debt);
+  background: rgba(232,115,99,.07); border: 1px solid rgba(232,115,99,.2);
+  border-radius: 7px; padding: 8px 12px;
+  grid-column: 1 / -1;
 }
 
 .editorCancel {

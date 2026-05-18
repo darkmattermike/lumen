@@ -19,40 +19,36 @@ function fmtK(n) { return Math.abs(Number(n||0)).toLocaleString('en-US',{minimum
 function TxRow({ tx, budgets, onSaved }) {
   const [open, setOpen]     = useState(false)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved]   = useState(false)
+  const [error, setError]   = useState('')
   const [form, setForm]     = useState({
-    name:     tx.name,
+    name:     tx.name || '',
     category: tx.category || '',
-    amount:   Math.abs(Number(tx.amount)),
-    date:     tx.date ? tx.date.slice(0, 10) : '',
+    amount:   Math.abs(Number(tx.amount || 0)),
+    date:     tx.date ? String(tx.date).slice(0, 10) : '',
     note:     tx.note || '',
-    account_id: tx.account_id || '',
   })
 
   const amt      = Number(tx.amount)
   const isIncome = amt > 0
-  const isEdited = form.name !== tx.name
-    || form.category !== (tx.category || '')
-    || form.note !== (tx.note || '')
-    || form.date !== (tx.date ? tx.date.slice(0, 10) : '')
 
-  function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
 
   async function handleSave() {
     setSaving(true)
+    setError('')
     try {
       await api.updateTransaction(tx.id, {
         name:     form.name,
-        category: form.category,
-        amount:   isIncome ? Math.abs(form.amount) : -Math.abs(form.amount),
+        category: form.category || null,
+        amount:   isIncome ? Math.abs(Number(form.amount)) : -Math.abs(Number(form.amount)),
         date:     form.date,
         note:     form.note || null,
       })
+      // Close first, then refresh parent — prevents state-after-unmount issues
       setOpen(false)
       onSaved()
     } catch (err) {
-      console.error('Save failed:', err)
-    } finally {
+      setError(err.message || 'Save failed')
       setSaving(false)
     }
   }
@@ -65,9 +61,9 @@ function TxRow({ tx, budgets, onSaved }) {
         <div className={styles.txInfo}>
           <div className={styles.txName}>{form.name}</div>
           <div className={styles.txCat}>
-            {form.category.replace(/_/g, ' ')}
+            {(form.category || 'Uncategorized').replace(/_/g, ' ')}
             {tx.account_name ? ` · ${tx.account_name}` : ''}
-            {form.note ? ` · ${form.note}` : ''}
+            {form.note ? ` — ${form.note}` : ''}
           </div>
         </div>
         <div className={styles.txAmt} style={{ color: isIncome ? 'var(--safe)' : 'var(--debt)' }}>
@@ -92,7 +88,7 @@ function TxRow({ tx, budgets, onSaved }) {
             </div>
 
             <div className={styles.editorField}>
-              <div className={styles.editorLabel}>Category</div>
+              <div className={styles.editorLabel}>Budget Category</div>
               <select
                 className={styles.editorSelect}
                 value={form.category}
@@ -133,14 +129,15 @@ function TxRow({ tx, budgets, onSaved }) {
                 className={styles.editorInput}
                 value={form.note}
                 onChange={e => set('note', e.target.value)}
-                placeholder="Add a note — split with Jake, client dinner..."
+                placeholder="Split with Jake, client dinner, reimbursable..."
               />
             </div>
 
           </div>
 
+          {error && <div className={styles.editorError}>{error}</div>}
+
           <div className={styles.editorFooter}>
-            {saved && <span className={styles.savedBadge}>✓ Saved</span>}
             <button className={styles.editorCancel} onClick={() => setOpen(false)}>Cancel</button>
             <button
               className={styles.editorSave}
@@ -182,22 +179,16 @@ export default function Transactions() {
   const daysLeft    = daysInMonth - today.getDate()
   const spendPct    = income > 0 ? Math.round((spending / income) * 100) : 0
 
-  // Budget-sourced category totals for aside
-  const budgetCatTotals = {}
-  Object.values(grouped).flat().forEach(tx => {
-    if (Number(tx.amount) < 0) {
-      const cat = tx.category || 'Other'
-      budgetCatTotals[cat] = (budgetCatTotals[cat] || 0) + Math.abs(Number(tx.amount))
-    }
-  })
-  // Match against budget categories, show budget name + spent + cap
-  const budgetRows = budgets.map(b => ({
-    ...b,
-    spent: budgetCatTotals[b.name] || 0,
-  })).filter(b => b.spent > 0).sort((a, b) => b.spent - a.spent).slice(0, 5)
+  // Budget-sourced category totals — match by budget name
+  const budgetRows = budgets.map(b => {
+    const spent = Object.values(grouped).flat()
+      .filter(tx => Number(tx.amount) < 0 && (tx.category || '').toLowerCase() === b.name.toLowerCase())
+      .reduce((s, tx) => s + Math.abs(Number(tx.amount)), 0)
+    return { ...b, spent }
+  }).filter(b => b.spent > 0).sort((a, b) => b.spent - a.spent).slice(0, 5)
+
   const maxSpent = budgetRows[0]?.spent || 1
 
-  // Search filter
   const filteredGrouped = Object.fromEntries(
     Object.entries(grouped).map(([date, txs]) => [
       date,
@@ -212,7 +203,7 @@ export default function Transactions() {
           <div className={styles.pre}>↕ What Happened</div>
           <div className={styles.title}>Transactions</div>
           <div className={styles.sub}>
-            Every dollar in and out. Click any transaction to edit it. Lumen watches for patterns you'd never catch manually.
+            Every dollar in and out. Click any transaction to edit it. Assign a budget category to have it count toward your budget caps.
           </div>
           <div className={styles.stats}>
             <div className={styles.stat}><div className={styles.statL}>This Month In</div><div className={styles.statV} style={{color:'var(--safe)'}}>${fmtK(income)}</div></div>
@@ -249,7 +240,6 @@ export default function Transactions() {
       </div>
 
       <div className={styles.body}>
-        {/* ── Transaction list ── */}
         <div className={styles.list}>
           {Object.keys(filteredGrouped).length === 0 ? (
             <div style={{padding:'40px',textAlign:'center',color:'var(--ink-3)',fontFamily:'var(--font-mono)',fontSize:11}}>
@@ -265,17 +255,16 @@ export default function Transactions() {
           ))}
         </div>
 
-        {/* ── Aside ── */}
         <div className={styles.aside}>
           <div className={styles.asideLabel}>Budget Categories · This Month</div>
           {budgetRows.length === 0 ? (
-            <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0'}}>
-              Set up budgets to see category breakdown.
+            <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0',lineHeight:1.65}}>
+              Edit transactions and assign categories to see spending here.
             </div>
           ) : budgetRows.map(b => {
-            const color = {debt:'var(--debt)',warn:'var(--warn)',safe:'var(--safe)',calm:'var(--calm)',goal:'var(--goal)'}[b.color] || 'var(--safe)'
+            const color = {debt:'var(--debt)',warn:'var(--warn)',safe:'var(--safe)',calm:'var(--calm)',goal:'var(--goal)',pink:'#e87fa3',orange:'#f07a3a',sky:'#5bc4e8',lime:'#8ecf4a',gold:'#d4a017'}[b.color] || 'var(--safe)'
             const pct   = Math.round((b.spent / maxSpent) * 100)
-            const capPct = b.cap > 0 ? Math.round((b.spent / Number(b.cap)) * 100) : null
+            const capPct = Number(b.cap) > 0 ? Math.round((b.spent / Number(b.cap)) * 100) : null
             return (
               <div key={b.id} className={styles.catRow}>
                 <div className={styles.catMeta}>
