@@ -41,7 +41,7 @@ function TxRow({ tx, budgets, onSaved }) {
     setSaving(true)
     setError('')
     try {
-      await api.updateTransaction(tx.id, {
+      const saved = await api.updateTransaction(tx.id, {
         name:     form.name,
         category: form.category || null,
         amount:   form.tx_type === 'income' ? Math.abs(Number(form.amount)) : -Math.abs(Number(form.amount)),
@@ -49,9 +49,8 @@ function TxRow({ tx, budgets, onSaved }) {
         note:     form.note || null,
         tx_type:  form.tx_type,
       })
-      // Close first, then refresh parent — prevents state-after-unmount issues
       setOpen(false)
-      onSaved()
+      onSaved(tx.id, saved) // pass updated tx back up — no re-fetch
     } catch (err) {
       setError(err.message || 'Save failed')
       setSaving(false)
@@ -185,8 +184,9 @@ function TxRow({ tx, budgets, onSaved }) {
 export default function Transactions() {
   const [activeFilter, setActiveFilter] = useState('All')
   const [search, setSearch] = useState('')
+  const [localGrouped, setLocalGrouped] = useState(null)
 
-  const { data, loading, error, refresh } = useApi(
+  const { data, loading, error } = useApi(
     () => api.transactions(activeFilter !== 'All' ? `?category=${activeFilter}` : ''),
     [activeFilter]
   )
@@ -195,7 +195,9 @@ export default function Transactions() {
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
 
-  const { grouped = {}, totals = {} } = data
+  // Use local state if available (after an edit), otherwise use fetched data
+  const grouped = localGrouped ?? (data?.grouped || {})
+  const { totals = {} } = data
   const budgets  = budgetData?.budgets || []
   const income   = Number(totals.income || 0)
   const spending = Number(totals.spending || 0)
@@ -206,6 +208,19 @@ export default function Transactions() {
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
   const daysLeft    = daysInMonth - today.getDate()
   const spendPct    = income > 0 ? Math.round((spending / income) * 100) : 0
+
+  // Update a single transaction in local grouped state — no re-fetch
+  function handleTxSaved(id, saved) {
+    setLocalGrouped(prev => {
+      const base = prev ?? data?.grouped ?? {}
+      return Object.fromEntries(
+        Object.entries(base).map(([date, txs]) => [
+          date,
+          txs.map(tx => tx.id === id ? { ...tx, ...saved } : tx)
+        ])
+      )
+    })
+  }
 
   // Budget-sourced category totals — match by budget name
   const budgetRows = budgets.map(b => {
@@ -277,7 +292,7 @@ export default function Transactions() {
             <div key={date}>
               <div className={styles.dayHead}>{date}</div>
               {txs.map(tx => (
-                <TxRow key={tx.id} tx={tx} budgets={budgets} onSaved={refresh} />
+                <TxRow key={tx.id} tx={tx} budgets={budgets} onSaved={handleTxSaved} />
               ))}
             </div>
           ))}
