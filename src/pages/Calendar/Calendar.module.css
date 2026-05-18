@@ -6,8 +6,8 @@
 .navBtn { cursor: pointer; color: var(--ink-3); transition: color var(--t-fast); font-size: 16px; padding: 0 8px; background: none; border: none; }
 .navBtn:hover { color: var(--ink-0); }
 
-.body { display: grid; grid-template-columns: 1fr 300px; }
-.calMain { padding: 32px 56px; }
+.body { display: grid; grid-template-columns: 1fr 380px; }
+.calMain { padding: 24px 32px; }
 
 .dow { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 8px; }
 .dowCell { text-align: center; font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase; padding: 8px 0; }
@@ -28,7 +28,7 @@
 .sub      { background: rgba(240,176,76,.1);   color: rgba(240,176,76,.8);  }
 .transfer { background: rgba(108,140,255,.1);  color: rgba(108,140,255,.8); }
 
-.aside { background: rgba(255,255,255,.015); border-left: 1px solid var(--ink-5); padding: 28px; display: flex; flex-direction: column; gap: 0; }
+.aside { background: rgba(255,255,255,.015); border-left: 1px solid var(--ink-5); padding: 20px 18px; display: flex; flex-direction: column; gap: 0; }
 
 .remaining { background: rgba(93,202,165,.05); border: 1px solid rgba(93,202,165,.15); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
 .remLabel { font-family: var(--font-mono); font-size: 9px; color: rgba(93,202,165,.6); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
@@ -37,14 +37,14 @@
 
 .upcomingHead { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
 
-.eventRow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+.eventRow { display: flex; align-items: center; gap: 7px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
 .eventRow:last-of-type { border-bottom: none; }
-.eventDate { min-width: 44px; font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); }
-.eventDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.eventInfo { flex: 1; }
-.eventName { font-size: 12px; color: var(--ink-1); }
+.eventDate { min-width: 36px; font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); }
+.eventDot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.eventInfo { flex: 1; min-width: 0; }
+.eventName { font-size: 12px; color: var(--ink-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .eventType { font-size: 10px; color: var(--ink-3); }
-.eventAmt { font-family: var(--font-mono); font-size: 12px; }
+.eventAmt { font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
 
 .spotlightWrap { margin-top: 16px; margin-bottom: 8px; }
 

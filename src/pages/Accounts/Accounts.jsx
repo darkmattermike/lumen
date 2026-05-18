@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePlaidLink } from 'react-plaid-link'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
-import Spotlight from '../../components/Spotlight/Spotlight'
+import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { api } from '../../data/api'
 import styles from './Accounts.module.css'
 
@@ -201,13 +201,12 @@ export default function Accounts() {
               </>
             )}
             <div className={styles.spotlightWrap}>
-              <Spotlight tag="Lumen on Your Accounts" dotSize={32}>
-                <span style={{ fontSize: 15, lineHeight: 1.75 }}>
-                  Net worth is <strong>${Math.abs(netWorth).toLocaleString()}</strong>
-                  {assets.length > 0 && ` across ${assets.length} asset account${assets.length > 1 ? 's' : ''}`}.
-                  {' '}Use <em>Sync</em> to pull the latest transactions from your bank.
-                </span>
-              </Spotlight>
+              <LumenInsight
+                label="Your Accounts"
+                contextType="accounts"
+                prompt="In 2-3 sentences, give a sharp read on the current account balances and net worth — any concerns, opportunities, or things worth paying attention to."
+                color="green"
+              />
             </div>
           </>
         )}

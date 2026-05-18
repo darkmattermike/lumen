@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
-import Spotlight from '../../components/Spotlight/Spotlight'
+import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -327,18 +327,12 @@ export default function Calendar() {
             })}
 
             <div className={styles.spotlightWrap}>
-              <Spotlight tag="Lumen on Your Schedule" dotSize={22}>
-                <span style={{fontSize:12,lineHeight:1.65}}>
-                  {upcoming.filter(e=>e.type!=='income').length > 0
-                    ? <><strong>{upcoming.filter(e=>e.type!=='income').length} bills</strong> remaining this month totaling <strong>${fmt(remainingBills)}</strong>.</>
-                    : <>No upcoming bills this month.</>
-                  }{' '}
-                  {upcoming.find(e=>e.type==='income')
-                    ? <>Next paycheck in <strong>{upcoming.find(e=>e.type==='income').daysUntil} days</strong>.</>
-                    : null
-                  }
-                </span>
-              </Spotlight>
+              <LumenInsight
+                label="Your Schedule"
+                contextType="calendar"
+                prompt="In 2-3 sentences, give a sharp read on this month's recurring bills and income — anything to watch out for, cash flow timing, or patterns worth flagging."
+                color="green"
+              />
             </div>
 
             <div style={{marginTop:8}}>
