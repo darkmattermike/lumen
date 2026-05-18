@@ -25,16 +25,19 @@ export default function Dashboard() {
   if (error)   return <ErrorShell message={error} />
 
   const {
-    balance, balanceAfterBills, committedBills, upcomingPayTotal = 0,
+    balance, balanceAfterBills, balanceAfterPlans, committedBills, upcomingPayTotal = 0,
     pressureLabel, pressureScore,
     monthSpent, monthIncome,
     upcomingBills, nextPaycheck,
+    activePlans = [], plannedSpend = 0,
   } = data
 
-  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()
-  const daysUntilPay = nextPaycheck?.daysUntil ?? null
-  const netChange = monthIncome - monthSpent
-  const heroColor = balanceAfterBills >= 0 ? 'var(--safe)' : 'var(--debt)'
+  const today       = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()
+  const daysUntilPay  = nextPaycheck?.daysUntil ?? null
+  const netChange     = monthIncome - monthSpent
+  const hasPlans      = activePlans.length > 0
+  const heroBalance   = hasPlans ? (balanceAfterPlans ?? balanceAfterBills) : balanceAfterBills
+  const heroColor     = heroBalance >= 0 ? 'var(--safe)' : 'var(--debt)'
 
   // Build bill rows for aside
   const billRows = upcomingBills.map(b => ({
@@ -63,10 +66,10 @@ export default function Dashboard() {
 
         <div className={styles.balanceCol}>
           <div className={styles.pre}>◈ FREE TO SPEND · {today}</div>
-          <div className={styles.amount} style={{ color: heroColor }}>${fmt(balanceAfterBills)}</div>
+          <div className={styles.amount} style={{ color: heroColor }}>${fmt(heroBalance)}</div>
           <div className={styles.prose}>
             Balance is <strong>${fmt(balance)}</strong>. After remaining bills{upcomingPayTotal > 0 ? ' and incoming paychecks' : ''} this cycle
-            {' '}you'll have <strong style={{ color: heroColor }}>${fmt(balanceAfterBills)}</strong> free.
+            {' '}you'll have <strong style={{ color: heroColor }}>${fmt(heroBalance)}</strong> free.
             {daysUntilPay !== null && daysUntilPay > 0 && (
               <> Next paycheck in <span className="b">{daysUntilPay} days</span>.</>
             )}
@@ -84,8 +87,8 @@ export default function Dashboard() {
           <div className={styles.statStack}>
             <div className={styles.stat}>
               <span className={styles.statLabel}>After Bills</span>
-              <span className={styles.statVal} style={{ color: balanceAfterBills >= 0 ? 'var(--safe)' : 'var(--debt)' }}>
-                ${fmt(balanceAfterBills)}
+              <span className={styles.statVal} style={{ color: heroBalance >= 0 ? 'var(--safe)' : 'var(--debt)' }}>
+                ${fmt(heroBalance)}
               </span>
             </div>
             <div className={styles.stat}>
@@ -96,12 +99,41 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Four Principle Zones ── */}
+
+      {/* ── Active Plans Impact Banner ── */}
+      {hasPlans && (
+        <div className={styles.plansBanner}>
+          <div className={styles.plansBannerLeft}>
+            <span className={styles.plansBannerIcon}>📌</span>
+            <div>
+              <div className={styles.plansBannerTitle}>
+                {activePlans.length} pinned plan{activePlans.length !== 1 ? 's' : ''} · −${fmt(plannedSpend)} reserved
+              </div>
+              <div className={styles.plansBannerSub}>
+                {activePlans.map(p => p.question).join(' · ')}
+              </div>
+            </div>
+          </div>
+          <div className={styles.plansBannerRight}>
+            <div className={styles.plansBannerStat}>
+              <span className={styles.plansBannerStatLabel}>Without plans</span>
+              <span className={styles.plansBannerStatVal}>${fmt(balanceAfterBills)}</span>
+            </div>
+            <div className={styles.plansBannerArrow}>→</div>
+            <div className={styles.plansBannerStat}>
+              <span className={styles.plansBannerStatLabel}>After plans</span>
+              <span className={styles.plansBannerStatVal} style={{ color: heroColor }}>${fmt(heroBalance)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Four Principle Zones ── */
       <div className={styles.zones}>
         {/* WHERE I AM */}
         <div className={`${styles.zone} ${styles.now}`}>
           <div className={styles.zoneTag}>✦ Where I Am</div>
-          <div className={styles.zoneVal} style={{ color: heroColor }}>${fmt(balanceAfterBills)}</div>
+          <div className={styles.zoneVal} style={{ color: heroColor }}>${fmt(heroBalance)}</div>
           <div className={styles.zoneProse}>
             Free to spend after bills{data.upcomingPayTotal > 0 ? ' and pay' : ''} this cycle.
           </div>
@@ -111,7 +143,7 @@ export default function Dashboard() {
             {data.upcomingPayTotal > 0 && (
               <div className={styles.zoneRow}><span className={styles.zrn}>Income coming</span><span className={styles.zrv} style={{ color: 'var(--safe)' }}>+${fmt(data.upcomingPayTotal)}</span></div>
             )}
-            <div className={styles.zoneRow}><span className={styles.zrn}>Free to spend</span><span className={styles.zrv} style={{ color: heroColor }}>${fmt(balanceAfterBills)}</span></div>
+            <div className={styles.zoneRow}><span className={styles.zrn}>Free to spend</span><span className={styles.zrv} style={{ color: heroColor }}>${fmt(heroBalance)}</span></div>
           </div>
         </div>
 
@@ -170,7 +202,7 @@ export default function Dashboard() {
 
       {/* ── Body: Theater + Aside ── */}
       <div className={styles.body}>
-        <WhatIfTheater balance={balance} balanceAfterBills={balanceAfterBills} />
+        <WhatIfTheater balance={balance} balanceAfterBills={balanceAfterBills} activePlans={activePlans} plannedSpend={plannedSpend} />
 
         <div className={styles.aside}>
           <div className={styles.asideLabel}>Bill Schedule</div>

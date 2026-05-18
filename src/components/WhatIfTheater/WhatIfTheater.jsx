@@ -19,7 +19,7 @@ function extractAmount(text) {
   return parseFloat(match[0].replace(/[$,]/g, ''))
 }
 
-export default function WhatIfTheater({ balance, balanceAfterBills }) {
+export default function WhatIfTheater({ balance, balanceAfterBills, activePlans = [], plannedSpend = 0 }) {
   const [question, setQuestion]   = useState('')
   const [response, setResponse]   = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -206,6 +206,17 @@ export default function WhatIfTheater({ balance, balanceAfterBills }) {
                     <div className={styles.pnLabel}>After Bills</div>
                     <div className={styles.pnVal}>${Number(balanceAfterBills || 0).toLocaleString()}</div>
                   </div>
+                  {plannedSpend > 0 && (
+                    <>
+                      <div className={styles.pnDivider} />
+                      <div className={styles.pn}>
+                        <div className={styles.pnLabel}>📌 After Plans</div>
+                        <div className={styles.pnVal} style={{ color: (balanceAfterBills - plannedSpend) >= 0 ? 'var(--safe)' : 'var(--debt)' }}>
+                          ${Number(balanceAfterBills - plannedSpend).toLocaleString()}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
