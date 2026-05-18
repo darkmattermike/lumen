@@ -14,8 +14,9 @@
 
 .grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
 
-.cell { min-height: 90px; border-radius: 10px; padding: 8px; background: rgba(255,255,255,.02); border: 1px solid var(--ink-5); cursor: pointer; transition: all var(--t-fast); }
+.cell { height: 90px; border-radius: 10px; padding: 8px; background: rgba(255,255,255,.02); border: 1px solid var(--ink-5); cursor: pointer; transition: all var(--t-fast); overflow: hidden; }
 .cell:hover { border-color: var(--ink-3); }
+.cellSelected { border-color: rgba(91,196,233,.4) !important; background: rgba(91,196,233,.04) !important; }
 .otherMonth { opacity: 0.35; }
 .today { border-color: rgba(93,202,165,.4) !important; background: rgba(93,202,165,.05) !important; }
 .hasEvent { border-color: var(--ink-4); }
@@ -190,3 +191,36 @@
 
 @keyframes fade-in  { from { opacity:0; } to { opacity:1; } }
 @keyframes slide-up { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+.calEventMore {
+  font-family: var(--font-mono); font-size: 8px;
+  color: var(--ink-3); padding: 1px 4px;
+  letter-spacing: .5px;
+}
+
+/* ── Day detail panel ─────────────────────────────────────────── */
+.dayDetail {
+  margin-top: 12px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(91,196,233,.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  animation: fadeIn .15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.dayDetailHead {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--calm); letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.dayDetailRow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.dayDetailRow:last-child { border-bottom: none; }
+.dayDetailDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dayDetailIcon { font-size: 16px; flex-shrink: 0; }
+.dayDetailInfo { flex: 1; min-width: 0; }
+.dayDetailName { font-size: 13px; color: var(--ink-0); font-weight: 500; }
+.dayDetailMeta { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-top: 1px; text-transform: capitalize; }
+.dayDetailAmt { font-family: var(--font-serif); font-size: 15px; font-weight: 300; white-space: nowrap; }

@@ -238,9 +238,10 @@ function RecurringModal({ item, onClose, onSaved }) {
 // ── Main page ─────────────────────────────────────────────────
 export default function Calendar() {
   const today = new Date()
-  const [viewDate, setViewDate] = useState({ year: today.getFullYear(), month: today.getMonth() })
+  const [viewDate, setViewDate]   = useState({ year: today.getFullYear(), month: today.getMonth() })
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem]   = useState(null)
+  const [selectedDay, setSelectedDay] = useState(null)
   const { data, loading, error, refresh } = useApi(api.calendar)
 
   if (loading) return <LoadingShell />
@@ -264,9 +265,11 @@ export default function Calendar() {
   const isCurrentMonth = viewDate.year === today.getFullYear() && viewDate.month === today.getMonth()
 
   function prevMonth() {
+    setSelectedDay(null)
     setViewDate(v => { const d = new Date(v.year, v.month-1, 1); return { year:d.getFullYear(), month:d.getMonth() } })
   }
   function nextMonth() {
+    setSelectedDay(null)
     setViewDate(v => { const d = new Date(v.year, v.month+1, 1); return { year:d.getFullYear(), month:d.getMonth() } })
   }
 
@@ -317,25 +320,65 @@ export default function Calendar() {
             </div>
             <div className={styles.grid}>
               {grid.map((cell, i) => {
-                const events = cell.month === 'cur' ? (eventMap[cell.day] || []) : []
-                const isToday = isCurrentMonth && cell.month === 'cur' && cell.day === today.getDate()
+                const events    = cell.month === 'cur' ? (eventMap[cell.day] || []) : []
+                const isToday   = isCurrentMonth && cell.month === 'cur' && cell.day === today.getDate()
+                const isSelected = selectedDay === cell.day && cell.month === 'cur'
+                const visible   = events.slice(0, 2)
+                const overflow  = events.length - visible.length
                 return (
-                  <div key={i} className={[
-                    styles.cell,
-                    cell.month !== 'cur' ? styles.otherMonth : '',
-                    isToday ? styles.today : '',
-                    events.length > 0 ? styles.hasEvent : '',
-                  ].join(' ')}>
+                  <div key={i}
+                    className={[
+                      styles.cell,
+                      cell.month !== 'cur' ? styles.otherMonth : '',
+                      isToday ? styles.today : '',
+                      events.length > 0 ? styles.hasEvent : '',
+                      isSelected ? styles.cellSelected : '',
+                    ].join(' ')}
+                    onClick={() => {
+                      if (cell.month !== 'cur') return
+                      setSelectedDay(prev => prev === cell.day ? null : cell.day)
+                    }}
+                  >
                     <div className={styles.cellDate}>{cell.day}</div>
-                    {events.map((ev, ei) => (
+                    {visible.map((ev, ei) => (
                       <div key={ei} className={`${styles.calEvent} ${styles[ev.type] || ''}`}>
                         {ev.icon} {ev.name}
                       </div>
                     ))}
+                    {overflow > 0 && (
+                      <div className={styles.calEventMore}>+{overflow} more</div>
+                    )}
                   </div>
                 )
               })}
             </div>
+
+            {/* ── Day detail panel ── */}
+            {selectedDay && eventMap[selectedDay] && (
+              <div className={styles.dayDetail}>
+                <div className={styles.dayDetailHead}>
+                  {new Date(viewDate.year, viewDate.month, selectedDay)
+                    .toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </div>
+                {eventMap[selectedDay].map((ev, i) => (
+                  <div key={i} className={styles.dayDetailRow}>
+                    <div className={`${styles.dayDetailDot} ${styles[ev.type] || ''}`} />
+                    <div className={styles.dayDetailIcon}>{ev.icon}</div>
+                    <div className={styles.dayDetailInfo}>
+                      <div className={styles.dayDetailName}>{ev.name}</div>
+                      <div className={styles.dayDetailMeta}>
+                        {ev.frequency === 'biweekly' ? 'biweekly' : ev.type}
+                        {ev.frequency === 'biweekly' ? ' · every 2 weeks' : ''}
+                      </div>
+                    </div>
+                    <div className={styles.dayDetailAmt} style={{color: typeColor[ev.type] || 'var(--ink-2)'}}>
+                      {ev.type === 'income' ? '+' : '−'}${fmt(ev.amount)}
+                    </div>
+                    <button className={styles.eventEdit} onClick={() => setEditItem(recurring.find(r => r.id === ev.id) || ev)} title="Edit">✎</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className={styles.aside}>
@@ -346,6 +389,16 @@ export default function Calendar() {
                 <div className={styles.remSub}>Committed bills left this month</div>
               </div>
             )}
+
+            <div className={styles.spotlightWrap}>
+              <LumenInsight
+                label="Your Schedule"
+                contextType="calendar"
+                prompt="In 1-2 sentences, flag the single most important thing about this month's bills and budget — especially any categories near their cap. Be specific and direct, no fluff."
+                color="green"
+                showWhenNoKey
+              />
+            </div>
 
             <div className={styles.upcomingHead}>
               {isCurrentMonth ? 'This Month' : `Events in ${monthLabel}`}
@@ -387,31 +440,6 @@ export default function Calendar() {
                 </div>
               )
             })}
-
-            <div className={styles.spotlightWrap}>
-              <LumenInsight
-                label="Your Schedule"
-                contextType="calendar"
-                prompt="In 1-2 sentences, flag the single most important thing about this month's bills and budget — especially any categories near their cap. Be specific and direct, no fluff."
-                color="green"
-                showWhenNoKey
-              />
-            </div>
-
-            <div style={{marginTop:8}}>
-              <div className="section-label" style={{marginBottom:8}}>Legend</div>
-              {[
-                {label:'Income',        color:'rgba(93,202,165,.5)'},
-                {label:'Bills',         color:'rgba(232,115,99,.5)'},
-                {label:'Subscriptions', color:'rgba(240,176,76,.5)'},
-                {label:'Transfers',     color:'rgba(108,140,255,.5)'},
-              ].map(l => (
-                <div key={l.label} className={styles.legendRow}>
-                  <div className={styles.legendDot} style={{background:l.color}} />
-                  {l.label}
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </ScreenWrap>
