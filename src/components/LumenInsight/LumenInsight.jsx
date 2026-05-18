@@ -3,45 +3,61 @@ import LumenDot from '../LumenDot/LumenDot'
 import { api } from '../../data/api'
 import styles from './LumenInsight.module.css'
 
-/**
- * LumenInsight
- * Renders a Lumen-branded card that fetches a real AI insight on mount.
- *
- * @param {string} prompt      — the specific question to ask Lumen
- * @param {string} contextType — e.g. 'dashboard', 'analytics', 'transactions'
- * @param {string} label       — the tag shown above the insight e.g. 'Lumen Noticed'
- * @param {string} color       — 'green' | 'blue' | 'purple' | 'amber' (default green)
- */
-export default function LumenInsight({ prompt, contextType = 'insight', label = 'Lumen', color = 'green', showWhenNoKey = false }) {
-  const [text, setText]       = useState('')
-  const [loading, setLoading] = useState(true)
-  const [noKey, setNoKey]     = useState(false)
+const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
-  useEffect(() => {
-    let cancelled = false
+function getCacheKey(prompt, contextType) {
+  return `lumen_insight_${contextType}_${btoa(prompt).slice(0, 32)}`
+}
+
+function readCache(key) {
+  try {
+    const raw = sessionStorage.getItem(key)
+    if (!raw) return null
+    const { text, ts } = JSON.parse(raw)
+    if (Date.now() - ts > CACHE_TTL) { sessionStorage.removeItem(key); return null }
+    return text
+  } catch { return null }
+}
+
+function writeCache(key, text) {
+  try { sessionStorage.setItem(key, JSON.stringify({ text, ts: Date.now() })) } catch {}
+}
+
+export default function LumenInsight({ prompt, contextType = 'insight', label = 'Lumen', color = 'green', showWhenNoKey = false }) {
+  const [text, setText]         = useState('')
+  const [loading, setLoading]   = useState(true)
+  const [noKey, setNoKey]       = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const cacheKey = getCacheKey(prompt, contextType)
+
+  function fetchInsight(bust = false) {
+    if (!bust) {
+      const cached = readCache(cacheKey)
+      if (cached) { setText(cached); setLoading(false); return }
+    }
     setLoading(true)
     setNoKey(false)
     setText('')
 
     api.lumenInsight({ prompt, context_type: contextType })
       .then(data => {
-        if (cancelled) return
-        setText(data.insight || '')
+        const insight = data.insight || ''
+        setText(insight)
+        writeCache(cacheKey, insight)
       })
       .catch(err => {
-        if (cancelled) return
-        if (err.message?.includes('402') || err.message === 'NO_KEY') {
-          setNoKey(true)
-        } else {
-          setText('')
-        }
+        if (err.message?.includes('402') || err.message === 'NO_KEY') setNoKey(true)
       })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      .finally(() => { setLoading(false); setRefreshing(false) })
+  }
 
-    return () => { cancelled = true }
-  }, [prompt, contextType])
+  useEffect(() => { fetchInsight() }, [prompt, contextType])
 
-  // No key — either hide or show a prompt to add one
+  function handleRefresh() {
+    setRefreshing(true)
+    fetchInsight(true)
+  }
+
   if (!loading && noKey) {
     if (!showWhenNoKey) return null
     return (
@@ -72,6 +88,14 @@ export default function LumenInsight({ prompt, contextType = 'insight', label = 
           <>
             <div className={styles.dotWrap}><LumenDot size={8} /></div>
             {label}
+            <button
+              className={styles.refreshBtn}
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Refresh insight"
+            >
+              {refreshing ? '…' : '↻'}
+            </button>
           </>
         )}
       </div>
@@ -81,3 +105,4 @@ export default function LumenInsight({ prompt, contextType = 'insight', label = 
     </div>
   )
 }
+

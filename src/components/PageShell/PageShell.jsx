@@ -24,13 +24,10 @@ export function LoadingShell() {
         <div className={styles.brand}>Lumen Finance</div>
       </div>
 
-      {/* Two-segment loading bar */}
+      {/* Single-segment loading bar */}
       <div className={styles.barWrap}>
         <div className={styles.barTrack}>
           <div className={styles.barFill} />
-        </div>
-        <div className={styles.barTrack}>
-          <div className={styles.barFill} style={{ animationDelay: '0.3s' }} />
         </div>
       </div>
 

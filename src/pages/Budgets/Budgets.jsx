@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenDot from '../../components/LumenDot/LumenDot'
+import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -497,30 +498,18 @@ export default function Budgets() {
 
           <div>
             <div className="section-label" style={{marginBottom:12}}>Lumen Analysis</div>
-            <div className={styles.aiRecs}>
-              <div className={styles.aiTag}><LumenDot size={10}/>AI Budget Analysis</div>
-              {insights.length===0 ? (
-                <div className={styles.aiRec}>
-                  <div className={styles.aiRecHead}>
-                    {completed.length === budgets.length && budgets.length > 0
-                      ? 'All categories complete 🎉'
-                      : 'All budgets on track'}
-                  </div>
-                  <div className={styles.aiRecBody}>
-                    {completed.length === budgets.length && budgets.length > 0
-                      ? `Every category is marked complete for ${monthName}. Great month.`
-                      : `You're at ${totalPct}% of your total budget with ${daysLeft} days remaining. Everything looks healthy.`}
-                  </div>
-                  <div className={`${styles.aiRecTag} ${styles.tagSave}`}>↓ Looking Good</div>
-                </div>
-              ) : insights.map((r,i)=>(
-                <div key={i} className={styles.aiRec}>
-                  <div className={styles.aiRecHead}>{r.head}</div>
-                  <div className={styles.aiRecBody}>{r.body}</div>
-                  <div className={`${styles.aiRecTag} ${r.tagType==='save'?styles.tagSave:styles.tagWarn}`}>{r.tag}</div>
-                </div>
-              ))}
-            </div>
+            <LumenInsight
+              label="Budget Pulse"
+              contextType="budgets"
+              prompt="Give me 2-3 sharp, specific insights about my budget this month. Include: (1) any category that's overspent or dangerously close to cap, (2) a historical pattern — am I consistently over or under in any category across the last few months, and (3) a forward projection — based on my pace, what will I likely end at by month end. Use exact dollar figures. No generic advice."
+              color="amber"
+            />
+            <LumenInsight
+              label="Spending Pattern"
+              contextType="budgets"
+              prompt="In 2 sentences, identify the single most notable spending pattern across my budget categories over the last 3 months — something I might not have noticed. Be specific with numbers and category names."
+              color="blue"
+            />
 
             <div style={{marginTop:20}}>
               <div className="section-label" style={{marginBottom:12}}>Budget Summary</div>

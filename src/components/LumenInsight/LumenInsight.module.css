@@ -23,6 +23,17 @@
 
 .dotWrap { flex-shrink: 0; }
 
+.refreshBtn {
+  margin-left: auto;
+  background: transparent; border: none;
+  color: inherit; opacity: 0.4;
+  cursor: pointer; font-size: 11px;
+  padding: 0 2px; line-height: 1;
+  transition: opacity var(--t-fast);
+}
+.refreshBtn:hover:not(:disabled) { opacity: 1; }
+.refreshBtn:disabled { cursor: not-allowed; }
+
 /* Loading dots in tag */
 .tagLoading { display: flex; gap: 4px; align-items: center; }
 .tagDot {

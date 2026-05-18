@@ -132,3 +132,95 @@
   0%,80%,100% { transform: scale(.8); opacity: .4; }
   40%          { transform: scale(1.2); opacity: 1; }
 }
+
+/* ── Plan actions (pin / dismiss after response) ─────────────── */
+.planActions {
+  display: flex; align-items: center; gap: 8px;
+  padding-top: 4px;
+}
+.pinBtn {
+  padding: 7px 16px;
+  background: rgba(93,202,165,.1);
+  border: 1px solid rgba(93,202,165,.3);
+  border-radius: 8px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--safe); cursor: pointer;
+  transition: all var(--t-fast);
+}
+.pinBtn:hover { background: rgba(93,202,165,.2); }
+.dismissBtn {
+  padding: 7px 16px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-3); cursor: pointer;
+  transition: all var(--t-fast);
+}
+.dismissBtn:hover { color: var(--ink-1); border-color: rgba(255,255,255,.2); }
+.pinnedConfirm {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--safe); letter-spacing: .5px;
+}
+
+/* ── Pinned plans list ───────────────────────────────────────── */
+.plansWrap {
+  margin-top: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.plansHead {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.planCard {
+  background: rgba(93,202,165,.04);
+  border: 1px solid rgba(93,202,165,.15);
+  border-radius: 12px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.planQuestion {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--safe); letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.planResponse {
+  font-size: 12px; color: var(--ink-2);
+  line-height: 1.6;
+  display: -webkit-box; -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.planFooter {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 8px;
+  padding-top: 4px; border-top: 1px solid rgba(255,255,255,.05);
+}
+.planAmt {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--ink-3);
+}
+.planBtns { display: flex; gap: 6px; }
+.completeBtn {
+  padding: 5px 12px;
+  background: rgba(93,202,165,.1);
+  border: 1px solid rgba(93,202,165,.25);
+  border-radius: 6px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: .5px; text-transform: uppercase;
+  color: var(--safe); cursor: pointer;
+  transition: all var(--t-fast);
+}
+.completeBtn:hover { background: rgba(93,202,165,.2); }
+.dismissPlanBtn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 6px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: .5px; text-transform: uppercase;
+  color: var(--ink-4); cursor: pointer;
+  transition: all var(--t-fast);
+}
+.dismissPlanBtn:hover { color: var(--ink-2); border-color: rgba(255,255,255,.18); }

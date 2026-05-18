@@ -56,6 +56,11 @@ export const api = {
   deleteRule:    (id)   => request(`/api/rules/${id}`, { method: 'DELETE' }),
   applyRules:    ()     => request('/api/rules/apply', { method: 'POST' }),
 
+  // Plans
+  plans:       ()           => request('/api/plans'),
+  createPlan:  (body)       => request('/api/plans', { method: 'POST', body: JSON.stringify(body) }),
+  updatePlan:  (id, body)   => request(`/api/plans/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
   // Settings
   getSettings:      ()     => request('/api/settings'),
   updateProfile:    (body) => request('/api/settings/profile',  { method: 'PATCH', body: JSON.stringify(body) }),

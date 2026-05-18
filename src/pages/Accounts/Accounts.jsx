@@ -188,6 +188,15 @@ export default function Accounts() {
           </div>
         ) : (
           <>
+            <div className={styles.spotlightWrap}>
+              <LumenInsight
+                label="Your Accounts"
+                contextType="accounts"
+                prompt="In 2-3 sentences, give a sharp read on the current account balances and net worth — any concerns, opportunities, or things worth paying attention to."
+                color="green"
+                showWhenNoKey
+              />
+            </div>
             {assets.length > 0 && (
               <>
                 <div className={styles.groupLabel}>💳 Checking & Savings</div>
@@ -200,15 +209,6 @@ export default function Accounts() {
                 {liabilities.map(a => <AccountCard key={a.id} acct={a} onToggleDashboard={handleToggleDashboard} />)}
               </>
             )}
-            <div className={styles.spotlightWrap}>
-              <LumenInsight
-                label="Your Accounts"
-                contextType="accounts"
-                prompt="In 2-3 sentences, give a sharp read on the current account balances and net worth — any concerns, opportunities, or things worth paying attention to."
-                color="green"
-                showWhenNoKey
-              />
-            </div>
           </>
         )}
       </div>
