@@ -35,9 +35,10 @@ export const api = {
   dashboard:     ()     => request('/api/dashboard'),
   accounts:      ()     => request('/api/accounts'),
   transactions:  (params = '') => request(`/api/transactions${params}`),
-  budgets:       ()     => request('/api/budgets'),
-  createBudget:  (body) => request('/api/budgets', { method: 'POST', body: JSON.stringify(body) }),
-  deleteBudget:  (id)   => request(`/api/budgets/${id}`, { method: 'DELETE' }),
+  budgets:              ()     => request('/api/budgets'),
+  createBudget:         (body) => request('/api/budgets', { method: 'POST', body: JSON.stringify(body) }),
+  deleteBudget:         (id)   => request(`/api/budgets/${id}`, { method: 'DELETE' }),
+  budgetTransactions:   (id)   => request(`/api/budgets/${id}/transactions`),
   calendar:      ()     => request('/api/calendar'),
   analytics:     ()     => request('/api/analytics'),
 }
