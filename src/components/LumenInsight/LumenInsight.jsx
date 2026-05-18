@@ -6,7 +6,13 @@ import styles from './LumenInsight.module.css'
 const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 function getCacheKey(prompt, contextType) {
-  return `lumen_insight_${contextType}_${btoa(prompt).slice(0, 32)}`
+  // Simple djb2 hash — safe with any characters
+  let hash = 5381
+  for (let i = 0; i < prompt.length; i++) {
+    hash = ((hash << 5) + hash) + prompt.charCodeAt(i)
+    hash = hash & hash // convert to 32-bit int
+  }
+  return `lumen_insight_${contextType}_${Math.abs(hash)}`
 }
 
 function readCache(key) {
