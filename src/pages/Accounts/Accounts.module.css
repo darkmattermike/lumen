@@ -30,3 +30,84 @@
 .metaVal { font-family: var(--font-mono); font-size: 12px; color: var(--ink-1); }
 
 .spotlightWrap { grid-column: 1 / -1; margin-top: 8px; }
+
+/* ── New styles for Plaid integration ── */
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.addBtn {
+  padding: 10px 20px;
+  background: var(--safe-d);
+  border: 1px solid rgba(93, 202, 165, 0.3);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--safe);
+  cursor: pointer;
+  transition: all var(--t-base);
+}
+.addBtn:hover:not(:disabled) { background: var(--safe); color: #040608; }
+.addBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.syncBtn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--ink-4);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all var(--t-base);
+}
+.syncBtn:hover:not(:disabled) { border-color: var(--ink-2); color: var(--ink-0); }
+.syncBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.lastSynced {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+}
+
+.empty {
+  padding: 60px;
+  text-align: center;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.emptyState {
+  grid-column: 1 / -1;
+  padding: 80px 40px;
+  text-align: center;
+}
+.emptyTitle {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 300;
+  color: var(--ink-1);
+  margin-bottom: 10px;
+}
+.emptySub {
+  font-size: 14px;
+  color: var(--ink-3);
+  line-height: 1.65;
+}
+.emptySub strong { color: var(--safe); font-weight: 500; }

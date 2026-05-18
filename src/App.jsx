@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import AuthGate from './components/AuthGate/AuthGate'
 import Rail from './components/Rail/Rail'
 import Dashboard from './pages/Dashboard/Dashboard'
 import Transactions from './pages/Transactions/Transactions'
@@ -8,7 +10,19 @@ import Analytics from './pages/Analytics/Analytics'
 import Calendar from './pages/Calendar/Calendar'
 import styles from './App.module.css'
 
-export default function App() {
+function AppShell() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-0)' }}>
+        <div className="dot d-44" style={{ animation: 'dot-breathe 3s ease-in-out infinite' }} />
+      </div>
+    )
+  }
+
+  if (!user) return <AuthGate />
+
   return (
     <div className={styles.shell}>
       <div className={styles.inner}>
@@ -26,5 +40,13 @@ export default function App() {
         </main>
       </div>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppShell />
+    </AuthProvider>
   )
 }

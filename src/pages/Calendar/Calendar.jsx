@@ -1,28 +1,75 @@
 import { useState } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import Spotlight from '../../components/Spotlight/Spotlight'
-import { CALENDAR_EVENTS, UPCOMING_EVENTS } from '../../data/mock'
+import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
+import { useApi } from '../../hooks/useApi'
+import { api } from '../../data/api'
 import styles from './Calendar.module.css'
 
-const TODAY = '2025-05-17'
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-// Build May 2025 grid (starts Thursday = index 4)
-function buildMayGrid() {
+function buildGrid(year, month) {
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const daysInPrev  = new Date(year, month, 0).getDate()
   const cells = []
-  // April tail: 27–30
-  for (let d = 27; d <= 30; d++) cells.push({ day: d, month: 'apr' })
-  // May 1–31
-  for (let d = 1; d <= 31; d++) cells.push({ day: d, month: 'may' })
-  // June head: 1–6
-  for (let d = 1; d <= 6; d++) cells.push({ day: d, month: 'jun' })
+
+  // Previous month tail
+  for (let i = firstDay - 1; i >= 0; i--) {
+    cells.push({ day: daysInPrev - i, month: 'prev' })
+  }
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, month: 'cur' })
+  }
+  // Next month head — fill to complete last row
+  let next = 1
+  while (cells.length % 7 !== 0) {
+    cells.push({ day: next++, month: 'next' })
+  }
   return cells
 }
 
-const GRID = buildMayGrid()
+function fmt(n) {
+  return Math.abs(Number(n || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
 
 export default function Calendar() {
-  const [month] = useState('May 2025')
+  const today = new Date()
+  const [viewDate, setViewDate] = useState({ year: today.getFullYear(), month: today.getMonth() })
+  const { data, loading, error } = useApi(api.calendar)
+
+  if (loading) return <LoadingShell />
+  if (error)   return <ErrorShell message={error} />
+
+  const { recurring = [], upcoming = [], remainingBills = 0 } = data
+
+  // Build event map keyed by day-of-month for the current view month
+  const eventMap = {}
+  recurring.forEach(r => {
+    const key = r.day_of_month
+    if (!eventMap[key]) eventMap[key] = []
+    eventMap[key].push(r)
+  })
+
+  const grid = buildGrid(viewDate.year, viewDate.month)
+  const monthLabel = new Date(viewDate.year, viewDate.month, 1)
+    .toLocaleString('en-US', { month: 'long', year: 'numeric' })
+
+  function prevMonth() {
+    setViewDate(v => {
+      const d = new Date(v.year, v.month - 1, 1)
+      return { year: d.getFullYear(), month: d.getMonth() }
+    })
+  }
+  function nextMonth() {
+    setViewDate(v => {
+      const d = new Date(v.year, v.month + 1, 1)
+      return { year: d.getFullYear(), month: d.getMonth() }
+    })
+  }
+
+  const isCurrentMonth = viewDate.year === today.getFullYear() && viewDate.month === today.getMonth()
 
   return (
     <ScreenWrap>
@@ -36,9 +83,9 @@ export default function Calendar() {
           </div>
         </div>
         <div className={styles.monthNav}>
-          <button className={styles.navBtn}>‹</button>
-          <span>{month}</span>
-          <button className={styles.navBtn}>›</button>
+          <button className={styles.navBtn} onClick={prevMonth}>‹</button>
+          <span>{monthLabel}</span>
+          <button className={styles.navBtn} onClick={nextMonth}>›</button>
         </div>
       </div>
 
@@ -48,26 +95,20 @@ export default function Calendar() {
             {DAYS_OF_WEEK.map(d => <div key={d} className={styles.dowCell}>{d}</div>)}
           </div>
           <div className={styles.grid}>
-            {GRID.map((cell, i) => {
-              const key = cell.month === 'may' ? `2025-05-${String(cell.day).padStart(2, '0')}` : null
-              const events = key ? (CALENDAR_EVENTS[key] || []) : []
-              const isToday = key === TODAY
-              const isOther = cell.month !== 'may'
-
+            {grid.map((cell, i) => {
+              const events = cell.month === 'cur' ? (eventMap[cell.day] || []) : []
+              const isToday = isCurrentMonth && cell.month === 'cur' && cell.day === today.getDate()
               return (
-                <div
-                  key={i}
-                  className={[
-                    styles.cell,
-                    isOther ? styles.otherMonth : '',
-                    isToday ? styles.today : '',
-                    events.length ? styles.hasEvent : '',
-                  ].join(' ')}
-                >
+                <div key={i} className={[
+                  styles.cell,
+                  cell.month !== 'cur' ? styles.otherMonth : '',
+                  isToday ? styles.today : '',
+                  events.length > 0 ? styles.hasEvent : '',
+                ].join(' ')}>
                   <div className={styles.cellDate}>{cell.day}</div>
                   {events.map((ev, ei) => (
-                    <div key={ei} className={`${styles.calEvent} ${styles[ev.type]}`}>
-                      {ev.label}
+                    <div key={ei} className={`${styles.calEvent} ${styles[ev.type] || ''}`}>
+                      {ev.icon} {ev.name}
                     </div>
                   ))}
                 </div>
@@ -77,42 +118,57 @@ export default function Calendar() {
         </div>
 
         <div className={styles.aside}>
-          <div className={styles.remaining}>
-            <div className={styles.remLabel}>Remaining this Cycle</div>
-            <div className={styles.remVal}>$4,028</div>
-            <div className={styles.remSub}>After all committed bills · Paycheck May 24</div>
+          {isCurrentMonth && (
+            <div className={styles.remaining}>
+              <div className={styles.remLabel}>Remaining this Cycle</div>
+              <div className={styles.remVal}>${fmt(remainingBills)}</div>
+              <div className={styles.remSub}>Committed bills left this month</div>
+            </div>
+          )}
+
+          <div className={styles.upcomingHead}>
+            {isCurrentMonth ? 'Upcoming This Month' : `Events in ${monthLabel}`}
           </div>
 
-          <div className={styles.upcomingHead}>Upcoming · May 17–31</div>
-
-          {UPCOMING_EVENTS.map(ev => (
+          {upcoming.length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', padding: '8px 0', lineHeight: 1.65 }}>
+              No recurring bills set up. Add them to your database to see them here.
+            </div>
+          ) : upcoming.map(ev => (
             <div
-              key={ev.name + ev.date}
+              key={ev.id}
               className={styles.eventRow}
-              style={ev.highlight ? { background: 'rgba(93,202,165,.04)', borderRadius: 8, padding: '8px 4px' } : {}}
+              style={ev.type === 'income' ? { background: 'rgba(93,202,165,.04)', borderRadius: 8, padding: '8px 4px' } : {}}
             >
-              <div className={styles.eventDate} style={ev.highlight ? { color: 'rgba(93,202,165,.6)' } : {}}>
-                {ev.date}
+              <div className={styles.eventDate} style={ev.type === 'income' ? { color: 'rgba(93,202,165,.6)' } : {}}>
+                Day {ev.day_of_month}
               </div>
-              <div className={styles.eventDot} style={{ background: ev.color }} />
+              <div className={styles.eventDot} style={{ background: ev.type === 'income' ? 'var(--safe)' : ev.daysUntil <= 2 ? 'var(--debt)' : 'var(--warn)' }} />
               <div className={styles.eventInfo}>
-                <div className={styles.eventName} style={ev.highlight ? { color: 'rgba(93,202,165,.9)' } : {}}>
-                  {ev.name}
+                <div className={styles.eventName} style={ev.type === 'income' ? { color: 'rgba(93,202,165,.9)' } : {}}>
+                  {ev.icon} {ev.name}
                 </div>
-                <div className={styles.eventType} style={ev.highlight ? { color: 'rgba(93,202,165,.4)' } : {}}>
-                  {ev.type}
+                <div className={styles.eventType} style={ev.type === 'income' ? { color: 'rgba(93,202,165,.4)' } : {}}>
+                  {ev.type} · {ev.daysUntil === 0 ? 'Today' : `in ${ev.daysUntil} day${ev.daysUntil === 1 ? '' : 's'}`}
                 </div>
               </div>
-              <div className={styles.eventAmt} style={{ color: ev.color }}>{ev.amount}</div>
+              <div className={styles.eventAmt} style={{ color: ev.type === 'income' ? 'var(--safe)' : ev.daysUntil <= 2 ? 'var(--debt)' : 'var(--warn)' }}>
+                {ev.type === 'income' ? '+' : '−'}${fmt(ev.amount)}
+              </div>
             </div>
           ))}
 
           <div className={styles.spotlightWrap}>
-            <Spotlight tag="Lumen on May" dotSize={22}>
+            <Spotlight tag="Lumen on Your Schedule" dotSize={22}>
               <span style={{ fontSize: 12, lineHeight: 1.65 }}>
-                Bills are <strong>well spaced</strong>. No cluster weeks. The{' '}
-                <span className="w">May 17–20</span> window has two bills back-to-back
-                but paycheck on May 24 recovers it cleanly.
+                {upcoming.filter(e => e.type !== 'income').length > 0
+                  ? <><strong>{upcoming.filter(e => e.type !== 'income').length} bills</strong> remaining this month totaling <strong>${fmt(remainingBills)}</strong>.</>
+                  : <>No upcoming bills this month.</>
+                }{' '}
+                {upcoming.find(e => e.type === 'income')
+                  ? <>Next paycheck in <strong>{upcoming.find(e => e.type === 'income').daysUntil} days</strong>.</>
+                  : null
+                }
               </span>
             </Spotlight>
           </div>
@@ -123,7 +179,6 @@ export default function Calendar() {
               { label: 'Income',        color: 'rgba(93,202,165,.5)' },
               { label: 'Bills',         color: 'rgba(232,115,99,.5)' },
               { label: 'Subscriptions', color: 'rgba(240,176,76,.5)' },
-              { label: 'Transfers',     color: 'rgba(108,140,255,.5)' },
             ].map(l => (
               <div key={l.label} className={styles.legendRow}>
                 <div className={styles.legendDot} style={{ background: l.color }} />

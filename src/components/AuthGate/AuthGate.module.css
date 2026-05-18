@@ -1,0 +1,171 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-0);
+  position: relative;
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(93, 202, 165, 0.08) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(150deg, #060d0a 0%, #080b16 60%, #07090d 100%);
+  border: 1px solid var(--ink-5);
+  border-radius: 24px;
+  padding: 48px 44px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.logoName {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 300;
+  color: var(--safe);
+  line-height: 1;
+}
+.logoTag {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 3px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--ink-5);
+}
+.tab {
+  flex: 1;
+  padding: 10px 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: all var(--t-base);
+}
+.tab:hover { color: var(--ink-1); }
+.tabOn {
+  color: var(--safe);
+  border-bottom-color: var(--safe);
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ink-4);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-0);
+  outline: none;
+  transition: border var(--t-base);
+  width: 100%;
+}
+.input::placeholder { color: var(--ink-3); }
+.input:focus { border-color: rgba(93, 202, 165, 0.4); }
+
+.error {
+  font-size: 12px;
+  color: var(--debt);
+  background: rgba(232, 115, 99, 0.08);
+  border: 1px solid rgba(232, 115, 99, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.submit {
+  margin-top: 4px;
+  width: 100%;
+  padding: 14px;
+  background: var(--safe-d);
+  border: 1px solid rgba(93, 202, 165, 0.3);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--safe);
+  cursor: pointer;
+  transition: all var(--t-base);
+}
+.submit:hover:not(:disabled) {
+  background: var(--safe);
+  color: #040608;
+}
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Four principles */
+.principles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ink-5);
+}
+.principle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.principleSymbol {
+  font-size: 10px;
+  color: rgba(93, 202, 165, 0.4);
+}
+.principleLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+  letter-spacing: 0.5px;
+}
