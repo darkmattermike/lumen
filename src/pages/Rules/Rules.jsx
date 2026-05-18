@@ -33,12 +33,29 @@ const EXAMPLES = [
 ]
 
 // ── Individual rule row ───────────────────────────────────────
-function RuleRow({ rule, budgets, onDelete, onToggle }) {
+function RuleRow({ rule, budgets, onDelete, onToggle, onSaved }) {
   const [toggling, setToggling] = useState(false)
-  const actionColor = ACTION_COLORS[rule.action] || 'var(--ink-2)'
+  const [editing, setEditing]   = useState(false)
+  const [form, setForm]         = useState({
+    name: rule.name, operator: rule.operator, match_value: rule.match_value,
+    action: rule.action, action_value: rule.action_value,
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState('')
 
+  const actionColor   = ACTION_COLORS[rule.action] || 'var(--ink-2)'
   const operatorLabel = OPERATORS.find(o => o.value === rule.operator)?.label || rule.operator
   const actionLabel   = ACTIONS.find(a => a.value === rule.action)?.label || rule.action
+  const sortedBudgets = [...budgets].sort((a, b) => a.name.localeCompare(b.name))
+
+  function setF(k, v) {
+    setForm(f => {
+      const next = { ...f, [k]: v }
+      if (k === 'action') next.action_value = ''
+      return next
+    })
+    setError('')
+  }
 
   async function handleToggle() {
     setToggling(true)
@@ -46,36 +63,136 @@ function RuleRow({ rule, budgets, onDelete, onToggle }) {
     setToggling(false)
   }
 
+  async function handleSave() {
+    if (!form.match_value.trim())  return setError('Enter a value to match against')
+    if (!form.action_value.trim()) return setError('Enter a value for the action')
+    setSaving(true)
+    try {
+      await onSaved(rule.id, {
+        name:         form.name.trim() || `${form.match_value} → ${form.action_value}`,
+        operator:     form.operator,
+        match_value:  form.match_value.trim(),
+        action:       form.action,
+        action_value: form.action_value.trim(),
+      })
+      setEditing(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function handleCancel() {
+    setForm({
+      name: rule.name, operator: rule.operator, match_value: rule.match_value,
+      action: rule.action, action_value: rule.action_value,
+    })
+    setError('')
+    setEditing(false)
+  }
+
   return (
-    <div className={`${styles.ruleRow} ${!rule.active ? styles.ruleRowOff : ''}`}>
-      <div className={styles.ruleMain}>
-        <div className={styles.ruleName}>{rule.name}</div>
-        <div className={styles.ruleDesc}>
-          <span className={styles.ruleChip}>name</span>
-          <span className={styles.ruleOp}>{operatorLabel}</span>
-          <span className={styles.ruleVal}>"{rule.match_value}"</span>
-          <span className={styles.ruleArrow}>→</span>
-          <span className={styles.ruleAction} style={{ color: actionColor }}>{actionLabel}</span>
-          <span className={styles.ruleVal} style={{ color: actionColor }}>"{rule.action_value}"</span>
+    <div className={`${styles.ruleRow} ${!rule.active ? styles.ruleRowOff : ''} ${editing ? styles.ruleRowEditing : ''}`}>
+      {editing ? (
+        <div className={styles.ruleEditBody}>
+          <div className={styles.ruleBuilder}>
+            <div className={styles.builderRow}>
+              <span className={styles.builderLabel}>When transaction name</span>
+              <select className={styles.builderSelect} value={form.operator} onChange={e => setF('operator', e.target.value)}>
+                {OPERATORS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <input
+                className={styles.builderInput}
+                value={form.match_value}
+                onChange={e => setF('match_value', e.target.value)}
+                placeholder="e.g. Starbucks, WHOLEFDS"
+              />
+            </div>
+
+            <div className={styles.builderRow}>
+              <select
+                className={styles.builderSelect}
+                value={form.action}
+                onChange={e => setF('action', e.target.value)}
+                style={{ color: ACTION_COLORS[form.action] }}
+              >
+                {ACTIONS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+              </select>
+
+              {form.action === 'set_category' && (
+                <select className={styles.builderSelect} value={form.action_value} onChange={e => setF('action_value', e.target.value)}>
+                  <option value="">— pick a category —</option>
+                  {sortedBudgets.map(b => <option key={b.id} value={b.name}>{b.icon} {b.name}</option>)}
+                </select>
+              )}
+              {form.action === 'set_type' && (
+                <select className={styles.builderSelect} value={form.action_value} onChange={e => setF('action_value', e.target.value)}>
+                  <option value="">— pick a type —</option>
+                  {TYPE_OPTS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              )}
+              {form.action === 'set_note' && (
+                <input
+                  className={styles.builderInput}
+                  value={form.action_value}
+                  onChange={e => setF('action_value', e.target.value)}
+                  placeholder="e.g. Client dinner"
+                />
+              )}
+            </div>
+
+            <div className={styles.builderRow}>
+              <span className={styles.builderLabel}>Label (optional)</span>
+              <input
+                className={styles.builderInput}
+                value={form.name}
+                onChange={e => setF('name', e.target.value)}
+                placeholder={`${form.match_value || '...'} → ${form.action_value || '...'}`}
+              />
+            </div>
+          </div>
+
+          {error && <div className={styles.formError}>{error}</div>}
+
+          <div className={styles.editFooter}>
+            <button className={styles.editCancel} onClick={handleCancel}>Cancel</button>
+            <button className={styles.editSave} onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </div>
-      </div>
-      <div className={styles.ruleActions}>
-        <button
-          className={`${styles.toggleBtn} ${rule.active ? styles.toggleOn : ''}`}
-          onClick={handleToggle}
-          disabled={toggling}
-          title={rule.active ? 'Disable rule' : 'Enable rule'}
-        >
-          {rule.active ? 'On' : 'Off'}
-        </button>
-        <button
-          className={styles.deleteBtn}
-          onClick={() => onDelete(rule.id)}
-          title="Delete rule"
-        >
-          ✕
-        </button>
-      </div>
+      ) : (
+        <>
+          <div className={styles.ruleMain}>
+            <div className={styles.ruleName}>{rule.name}</div>
+            <div className={styles.ruleDesc}>
+              <span className={styles.ruleChip}>name</span>
+              <span className={styles.ruleOp}>{operatorLabel}</span>
+              <span className={styles.ruleVal}>"{rule.match_value}"</span>
+              <span className={styles.ruleArrow}>→</span>
+              <span className={styles.ruleAction} style={{ color: actionColor }}>{actionLabel}</span>
+              <span className={styles.ruleVal} style={{ color: actionColor }}>"{rule.action_value}"</span>
+            </div>
+          </div>
+          <div className={styles.ruleActions}>
+            <button
+              className={`${styles.toggleBtn} ${rule.active ? styles.toggleOn : ''}`}
+              onClick={handleToggle}
+              disabled={toggling}
+              title={rule.active ? 'Disable rule' : 'Enable rule'}
+            >
+              {rule.active ? 'On' : 'Off'}
+            </button>
+            <button className={styles.editBtn} onClick={() => setEditing(true)} title="Edit rule">
+              ✎
+            </button>
+            <button className={styles.deleteBtn} onClick={() => onDelete(rule.id)} title="Delete rule">
+              ✕
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -247,6 +364,11 @@ export default function Rules() {
     refresh()
   }
 
+  async function handleEdit(id, fields) {
+    await api.updateRule(id, fields)
+    refresh()
+  }
+
   async function handleApplyNow() {
     setApplying(true)
     setApplyResult(null)
@@ -329,6 +451,7 @@ export default function Rules() {
                   budgets={budgets}
                   onDelete={handleDelete}
                   onToggle={handleToggle}
+                  onSaved={handleEdit}
                 />
               ))}
             </div>
@@ -349,6 +472,7 @@ export default function Rules() {
                   budgets={budgets}
                   onDelete={handleDelete}
                   onToggle={handleToggle}
+                  onSaved={handleEdit}
                 />
               ))}
             </div>

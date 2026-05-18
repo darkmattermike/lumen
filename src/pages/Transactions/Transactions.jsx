@@ -130,6 +130,10 @@ function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
   const isTransfer = txType === 'transfer'
   const amtColor   = isTransfer ? 'var(--calm)' : isIncome ? 'var(--safe)' : 'var(--debt)'
 
+  const COLOR_MAP = {debt:'var(--debt)',warn:'var(--warn)',safe:'var(--safe)',calm:'var(--calm)',goal:'var(--goal)',pink:'#e87fa3',orange:'#f07a3a',sky:'#5bc4e8',lime:'#8ecf4a',gold:'#d4a017'}
+  const matchedBudget = form.category ? budgets.find(b => b.name.toLowerCase() === form.category.toLowerCase()) : null
+  const catColor = matchedBudget ? (COLOR_MAP[matchedBudget.color] || 'var(--safe)') : null
+
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
 
   async function handleSave() {
@@ -184,7 +188,7 @@ function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
           <div className={styles.txCat}>
             {isTransfer
               ? <span style={{color:'var(--calm)'}}>↔ Transfer — excluded from totals</span>
-              : (form.category || 'Uncategorized').replace(/_/g, ' ')
+              : <span style={catColor ? {color: catColor} : {}}>{(form.category || 'Uncategorized').replace(/_/g, ' ')}</span>
             }
             {!isTransfer && tx.account_name ? ` · ${tx.account_name}` : ''}
             {form.note ? ` — ${form.note}` : ''}
