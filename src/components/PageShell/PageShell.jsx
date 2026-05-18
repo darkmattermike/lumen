@@ -5,6 +5,7 @@ export function LoadingShell() {
     <div className={styles.page}>
       <div className={styles.glow} />
 
+      {/* Orb + rings + bounce */}
       <div className={styles.orbWrap}>
         <div className={styles.ring} />
         <div className={styles.ring} />
@@ -12,16 +13,29 @@ export function LoadingShell() {
         <div className={styles.orb} />
       </div>
 
+      {/* Shadow */}
       <div className={styles.shadow} />
 
-      <div className={styles.tagline}>
-        <span className={styles.white}>your money,</span>
-        <span className={styles.teal}>told clearly.</span>
+      {/* Text block */}
+      <div className={styles.textBlock}>
+        <div className={styles.tagline}>
+          your <em className={styles.teal}>money</em>, told plainly.
+        </div>
+        <div className={styles.brand}>Lumen Finance</div>
       </div>
 
-      <div className={styles.scanTrack}>
-        <div className={styles.scanFill} />
+      {/* Two-segment loading bar */}
+      <div className={styles.barWrap}>
+        <div className={styles.barTrack}>
+          <div className={styles.barFill} />
+        </div>
+        <div className={styles.barTrack}>
+          <div className={styles.barFill} style={{ animationDelay: '0.3s' }} />
+        </div>
       </div>
+
+      {/* Sub label */}
+      <div className={styles.loadingLabel}>loading your data...</div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import AuthGate from './components/AuthGate/AuthGate'
 import Rail from './components/Rail/Rail'
+import { LoadingShell } from './components/PageShell/PageShell'
 import Dashboard from './pages/Dashboard/Dashboard'
 import Transactions from './pages/Transactions/Transactions'
 import Budgets from './pages/Budgets/Budgets'
@@ -14,15 +15,8 @@ import styles from './App.module.css'
 function AppShell() {
   const { user, loading } = useAuth()
 
-  if (loading) {
-    return (
-      <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'var(--bg-0)' }}>
-        <div className="dot d-44" style={{ animation:'dot-breathe 3s ease-in-out infinite' }} />
-      </div>
-    )
-  }
-
-  if (!user) return <AuthGate />
+  if (loading) return <LoadingShell />
+  if (!user)   return <AuthGate />
 
   return (
     <div className={styles.shell}>
