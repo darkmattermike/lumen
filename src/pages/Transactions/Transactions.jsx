@@ -48,8 +48,7 @@ function TxRow({ tx, budgets, onSaved }) {
         date:     form.date,
         note:     form.note || null,
       })
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
+      setOpen(false)
       onSaved()
     } catch (err) {
       console.error('Save failed:', err)
@@ -102,10 +101,6 @@ function TxRow({ tx, budgets, onSaved }) {
                 <option value="">— Uncategorized —</option>
                 {budgets.map(b => (
                   <option key={b.id} value={b.name}>{b.icon} {b.name}</option>
-                ))}
-                {/* Common Plaid categories not in budgets */}
-                {['INCOME','FOOD_AND_DRINK','SHOPS','TRANSPORTATION','PAYMENT','TRANSFER','ENTERTAINMENT','HEALTH','PERSONAL_CARE','GENERAL_MERCHANDISE'].map(c => (
-                  <option key={c} value={c}>{c.replace(/_/g,' ')}</option>
                 ))}
               </select>
             </div>

@@ -40,7 +40,9 @@ export const api = {
   createBudget:         (body) => request('/api/budgets', { method: 'POST', body: JSON.stringify(body) }),
   deleteBudget:         (id)   => request(`/api/budgets/${id}`, { method: 'DELETE' }),
   budgetTransactions:   (id)   => request(`/api/budgets/${id}/transactions`),
-  calendar:      ()     => request('/api/calendar'),
+  calendar:             ()          => request('/api/calendar'),
+  createRecurring:      (body)      => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
+  deleteRecurring:      (id)        => request(`/api/calendar/${id}`, { method: 'DELETE' }),
   analytics:     ()     => request('/api/analytics'),
 
   // Settings
