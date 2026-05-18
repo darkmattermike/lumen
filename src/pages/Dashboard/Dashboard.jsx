@@ -16,7 +16,7 @@ function fmtD(n) {
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-const PRESSURE_OFFSET = { SAFE: 70, WATCH: 40, TIGHT: 15, CRITICAL: 0 }
+const LABEL_COLOR = { SAFE: 'var(--safe)', WATCH: 'var(--warn)', TIGHT: 'var(--warn)', CRITICAL: 'var(--debt)' }
 
 export default function Dashboard() {
   const { data, loading, error } = useApi(api.dashboard)
@@ -34,6 +34,7 @@ export default function Dashboard() {
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()
   const daysUntilPay = nextPaycheck?.daysUntil ?? null
   const netChange = monthIncome - monthSpent
+  const heroColor = balanceAfterBills >= 0 ? 'var(--safe)' : 'var(--debt)'
 
   // Build bill rows for aside
   const billRows = upcomingBills.map(b => ({
@@ -62,15 +63,15 @@ export default function Dashboard() {
 
         <div className={styles.balanceCol}>
           <div className={styles.pre}>◈ FREE TO SPEND · {today}</div>
-          <div className={styles.amount}>${fmt(balance)}</div>
+          <div className={styles.amount} style={{ color: heroColor }}>${fmt(balanceAfterBills)}</div>
           <div className={styles.prose}>
-            After every bill <strong>already promised</strong> this cycle, you'll have{' '}
-            <strong>${fmt(balanceAfterBills)}</strong> clear.
+            After every bill <strong>already promised</strong> this cycle.{' '}
+            Current balance is <strong>${fmt(balance)}</strong>.
             {daysUntilPay !== null && daysUntilPay > 0 && (
               <> Next paycheck lands in <span className="b">{daysUntilPay} days</span>.</>
             )}
             {daysUntilPay === 0 && <> Paycheck lands <strong>today</strong>.</>}
-            {' '}The pressure gauge reads <strong>{pressureLabel}</strong>.
+            {' '}The pressure gauge reads <strong style={{ color: heroColor }}>{pressureLabel}</strong>.
           </div>
         </div>
 
@@ -78,7 +79,7 @@ export default function Dashboard() {
           <PressureGauge
             label={pressureLabel}
             sub={daysUntilPay !== null ? `${daysUntilPay === 0 ? 'Paycheck today' : `Paycheck in ${daysUntilPay} days`}` : ''}
-            dashOffset={PRESSURE_OFFSET[pressureLabel] ?? 70}
+            score={pressureScore}
           />
           <div className={styles.statStack}>
             <div className={styles.stat}>
