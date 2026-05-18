@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
@@ -15,6 +15,17 @@ const FILTER_LABELS = {
 function fmt(n)  { return Math.abs(Number(n||0)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) }
 function fmtK(n) { return Math.abs(Number(n||0)).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) }
 
+function groupByDate(txs) {
+  return txs.reduce((acc, tx) => {
+    const date = new Date(tx.date).toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric',
+    })
+    if (!acc[date]) acc[date] = []
+    acc[date].push(tx)
+    return acc
+  }, {})
+}
+
 // ── Expandable transaction row ────────────────────────────────
 function TxRow({ tx, budgets, onSaved }) {
   const [open, setOpen]     = useState(false)
@@ -29,11 +40,11 @@ function TxRow({ tx, budgets, onSaved }) {
     tx_type:  tx.tx_type || (Number(tx.amount) > 0 ? 'income' : 'expense'),
   })
 
-  const amt       = Number(tx.amount)
-  const txType    = form.tx_type || (amt > 0 ? 'income' : 'expense')
-  const isIncome  = txType === 'income'
+  const amt        = Number(tx.amount)
+  const txType     = form.tx_type || (amt > 0 ? 'income' : 'expense')
+  const isIncome   = txType === 'income'
   const isTransfer = txType === 'transfer'
-  const amtColor  = isTransfer ? 'var(--calm)' : isIncome ? 'var(--safe)' : 'var(--debt)'
+  const amtColor   = isTransfer ? 'var(--calm)' : isIncome ? 'var(--safe)' : 'var(--debt)'
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
 
@@ -50,12 +61,15 @@ function TxRow({ tx, budgets, onSaved }) {
         tx_type:  form.tx_type,
       })
       setOpen(false)
-      onSaved(tx.id, saved) // pass updated tx back up — no re-fetch
+      onSaved(tx.id, saved)
     } catch (err) {
       setError(err.message || 'Save failed')
       setSaving(false)
     }
   }
+
+  // Alphabetical sort applied by the parent — budgets arrives pre-sorted
+  const sortedBudgets = budgets
 
   return (
     <div className={`${styles.txWrap} ${open ? styles.txWrapOpen : ''}`}>
@@ -122,7 +136,7 @@ function TxRow({ tx, budgets, onSaved }) {
                 onChange={e => set('category', e.target.value)}
               >
                 <option value="">— Uncategorized —</option>
-                {budgets.map(b => (
+                {sortedBudgets.map(b => (
                   <option key={b.id} value={b.name}>{b.icon} {b.name}</option>
                 ))}
               </select>
@@ -183,8 +197,13 @@ function TxRow({ tx, budgets, onSaved }) {
 // ── Main page ─────────────────────────────────────────────────
 export default function Transactions() {
   const [activeFilter, setActiveFilter] = useState('All')
-  const [search, setSearch] = useState('')
-  const [localGrouped, setLocalGrouped] = useState(null)
+  const [search, setSearch]             = useState('')
+
+  // Flat list of all loaded transactions (current month + accumulated historical pages)
+  const [loadedTxs, setLoadedTxs]   = useState(null)
+  const [histPage, setHistPage]     = useState(0)
+  const [hasMore, setHasMore]       = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   const { data, loading, error } = useApi(
     () => api.transactions(activeFilter !== 'All' ? `?category=${activeFilter}` : ''),
@@ -192,51 +211,95 @@ export default function Transactions() {
   )
   const { data: budgetData } = useApi(api.budgets)
 
+  // When the filter changes, reset accumulated pages so stale data isn't shown
+  useEffect(() => {
+    setLoadedTxs(null)
+    setHistPage(0)
+    setHasMore(false)
+  }, [activeFilter])
+
+  // When fresh data arrives (initial load or filter change), seed loadedTxs
+  useEffect(() => {
+    if (!data) return
+    setLoadedTxs([...(data.currentMonth || []), ...(data.historical || [])])
+    setHasMore(data.pagination?.hasMore || false)
+    setHistPage(0)
+  }, [data])
+
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
 
-  // Use local state if available (after an edit), otherwise use fetched data
-  const grouped = localGrouped ?? (data?.grouped || {})
-  const { totals = {} } = data
-  const budgets  = budgetData?.budgets || []
-  const income   = Number(totals.income || 0)
+  const { totals = {} } = data || {}
+
+  // Fall back to data directly if the effect hasn't synced yet (first render after fetch)
+  const effectiveTxs = loadedTxs ?? [
+    ...(data?.currentMonth || []),
+    ...(data?.historical   || []),
+  ]
+
+  // Budgets — sorted alphabetically for the category dropdown
+  const budgets = [...(budgetData?.budgets || [])].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  )
+
+  const income   = Number(totals.income   || 0)
   const spending = Number(totals.spending || 0)
   const net      = income - spending
-  const count    = Number(totals.count || 0)
+  const count    = Number(totals.count    || 0)
 
   const today       = new Date()
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
   const daysLeft    = daysInMonth - today.getDate()
   const spendPct    = income > 0 ? Math.round((spending / income) * 100) : 0
 
-  // Update a single transaction in local grouped state — no re-fetch
+  // Update a single tx in the flat list — no re-fetch needed
   function handleTxSaved(id, saved) {
-    setLocalGrouped(prev => {
-      const base = prev ?? data?.grouped ?? {}
-      return Object.fromEntries(
-        Object.entries(base).map(([date, txs]) => [
-          date,
-          txs.map(tx => tx.id === id ? { ...tx, ...saved } : tx)
-        ])
-      )
-    })
+    setLoadedTxs(prev =>
+      (prev ?? effectiveTxs).map(tx => tx.id === id ? { ...tx, ...saved } : tx)
+    )
   }
 
-  // Budget-sourced category totals — match by budget name
+  // Load the next page of historical transactions and append
+  async function handleLoadMore() {
+    setLoadingMore(true)
+    try {
+      const nextPage = histPage + 1
+      const qs = `?page=${nextPage}${activeFilter !== 'All' ? `&category=${activeFilter}` : ''}`
+      const more = await api.transactions(qs)
+      setLoadedTxs(prev => [...(prev ?? effectiveTxs), ...(more.historical || [])])
+      setHasMore(more.pagination?.hasMore || false)
+      setHistPage(nextPage)
+    } catch (e) {
+      console.error('Failed to load more transactions:', e)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  // Budget category totals — always scoped to current month only
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
   const budgetRows = budgets.map(b => {
-    const spent = Object.values(grouped).flat()
-      .filter(tx => Number(tx.amount) < 0 && (tx.category || '').toLowerCase() === b.name.toLowerCase())
+    const spent = effectiveTxs
+      .filter(tx =>
+        Number(tx.amount) < 0 &&
+        (tx.category || '').toLowerCase() === b.name.toLowerCase() &&
+        new Date(tx.date) >= monthStart
+      )
       .reduce((s, tx) => s + Math.abs(Number(tx.amount)), 0)
     return { ...b, spent }
   }).filter(b => b.spent > 0).sort((a, b) => b.spent - a.spent).slice(0, 5)
 
   const maxSpent = budgetRows[0]?.spent || 1
 
+  // Group effective txs by display date, then apply search filter
+  const grouped = groupByDate(effectiveTxs)
   const filteredGrouped = Object.fromEntries(
-    Object.entries(grouped).map(([date, txs]) => [
-      date,
-      txs.filter(tx => !search || tx.name.toLowerCase().includes(search.toLowerCase()))
-    ]).filter(([, txs]) => txs.length > 0)
+    Object.entries(grouped)
+      .map(([date, txs]) => [
+        date,
+        txs.filter(tx => !search || tx.name.toLowerCase().includes(search.toLowerCase()))
+      ])
+      .filter(([, txs]) => txs.length > 0)
   )
 
   return (
@@ -296,6 +359,20 @@ export default function Transactions() {
               ))}
             </div>
           ))}
+
+          {/* ── Load More (historical pages) ── */}
+          {hasMore && (
+            <div className={styles.loadMore}>
+              <button
+                className={styles.loadMoreBtn}
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore ? 'Loading...' : 'Load Older Transactions'}
+              </button>
+              <div className={styles.loadMoreSub}>50 per page · showing oldest first within each page</div>
+            </div>
+          )}
         </div>
 
         <div className={styles.aside}>
@@ -306,7 +383,7 @@ export default function Transactions() {
             </div>
           ) : budgetRows.map(b => {
             const color = {debt:'var(--debt)',warn:'var(--warn)',safe:'var(--safe)',calm:'var(--calm)',goal:'var(--goal)',pink:'#e87fa3',orange:'#f07a3a',sky:'#5bc4e8',lime:'#8ecf4a',gold:'#d4a017'}[b.color] || 'var(--safe)'
-            const pct   = Math.round((b.spent / maxSpent) * 100)
+            const pct    = Math.round((b.spent / maxSpent) * 100)
             const capPct = Number(b.cap) > 0 ? Math.round((b.spent / Number(b.cap)) * 100) : null
             return (
               <div key={b.id} className={styles.catRow}>
