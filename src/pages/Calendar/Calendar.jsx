@@ -330,7 +330,7 @@ export default function Calendar() {
               <LumenInsight
                 label="Your Schedule"
                 contextType="calendar"
-                prompt="In 2-3 sentences, give a sharp read on this month's recurring bills and income — anything to watch out for, cash flow timing, or patterns worth flagging."
+                prompt="In 1-2 sentences, flag the single most important thing about this month's bills and budget — especially any categories near their cap. Be specific and direct, no fluff."
                 color="green"
                 showWhenNoKey
               />
