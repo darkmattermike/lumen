@@ -255,6 +255,151 @@ function ApiKeysSection({ data, onRefresh }) {
   )
 }
 
+// ── Gmail section ─────────────────────────────────────────────
+function GmailSection({ data, onRefresh }) {
+  const gmail        = data.gmail || { connected: false }
+  const [busy, setBusy]       = useState(false)
+  const [status, setStatus]   = useState('')
+
+  // Handle ?gmail=connected / ?gmail=error redirect from OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const result = params.get('gmail')
+    if (result === 'connected') {
+      setStatus('Gmail connected successfully')
+      onRefresh()
+      window.history.replaceState({}, '', '/settings')
+    } else if (result === 'error') {
+      const reason = params.get('reason') || 'Unknown error'
+      setStatus(`Error: ${reason}`)
+      window.history.replaceState({}, '', '/settings')
+    }
+  }, [])
+
+  async function handleConnect() {
+    setBusy(true)
+    setStatus('')
+    try {
+      const { url } = await api.gmailAuthUrl()
+      window.location.href = url   // full redirect to Google consent screen
+    } catch (err) {
+      setStatus(`Error: ${err.message}`)
+      setBusy(false)
+    }
+  }
+
+  async function handleDisconnect() {
+    if (!window.confirm('Disconnect Gmail? Lumen will lose access to your emails.')) return
+    setBusy(true)
+    setStatus('')
+    try {
+      await api.gmailDisconnect()
+      setStatus('Gmail disconnected')
+      onRefresh()
+    } catch (err) {
+      setStatus(`Error: ${err.message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const connectedAt = gmail.connected_at
+    ? new Date(gmail.connected_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+
+  const lastSynced = gmail.last_synced
+    ? new Date(gmail.last_synced).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : 'Never'
+
+  return (
+    <Section
+      title="Gmail"
+      subtitle="Connect Gmail so Lumen can read receipts, renewal notices, and bills to enrich your financial data."
+    >
+      <Field
+        label="Gmail Account"
+        hint="Lumen only requests read-only access. Your emails are never stored — only parsed for financial signals."
+      >
+        {gmail.connected ? (
+          <div className={styles.keyExisting}>
+            <div className={styles.keyBadge}>
+              <span className={styles.keyDot} />
+              {gmail.gmail_address}
+            </div>
+            <button className={styles.keyRemove} onClick={handleDisconnect} disabled={busy}>
+              Disconnect
+            </button>
+          </div>
+        ) : (
+          <button
+            className={styles.gmailConnectBtn}
+            onClick={handleConnect}
+            disabled={busy}
+          >
+            <svg width="16" height="16" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
+              <path fill="#EA4335" d="M24 5C13.5 5 5 13.5 5 24s8.5 19 19 19 19-8.5 19-19S34.5 5 24 5z" opacity="0"/>
+              <path fill="#4285F4" d="M6.3 14.7L24 27l17.7-12.3A19 19 0 0 0 5 24h1.3z" opacity="0"/>
+              <path fill="#34A853" d="M24 5a19 19 0 0 1 17.7 9.7L24 27 6.3 14.7A19 19 0 0 1 24 5z" opacity="0"/>
+              <g>
+                <path fill="#4285F4" d="M8 10h32v28H8z" opacity="0"/>
+                <path fill="#EA4335" d="M8 10l16 14L40 10H8z"/>
+                <path fill="#FBBC05" d="M8 10v28l12-14L8 10z"/>
+                <path fill="#34A853" d="M40 10v28L28 24l12-14z"/>
+                <path fill="#4285F4" d="M8 38h32L28 24 20 24 8 38z"/>
+              </g>
+            </svg>
+            {busy ? 'Connecting...' : 'Connect Gmail'}
+          </button>
+        )}
+      </Field>
+
+      {gmail.connected && (
+        <div className={styles.gmailMeta}>
+          <div className={styles.gmailMetaItem}>
+            <span className={styles.gmailMetaLabel}>Connected</span>
+            <span className={styles.gmailMetaVal}>{connectedAt}</span>
+          </div>
+          <div className={styles.gmailMetaItem}>
+            <span className={styles.gmailMetaLabel}>Last synced</span>
+            <span className={styles.gmailMetaVal}>{lastSynced}</span>
+          </div>
+          <div className={styles.gmailMetaItem}>
+            <span className={styles.gmailMetaLabel}>Access</span>
+            <span className={styles.gmailMetaVal} style={{ color: 'var(--safe)' }}>Read-only</span>
+          </div>
+        </div>
+      )}
+
+      {!gmail.connected && (
+        <div className={styles.gmailCapabilities}>
+          <div className={styles.gmailCapTitle}>What Lumen will read</div>
+          {[
+            ['📦', 'Order confirmations', 'Amazon, Target, Apple and more'],
+            ['🔄', 'Subscription renewals', 'Netflix, Spotify, Adobe before they charge'],
+            ['📄', 'Bills & statements',   'Utilities, credit cards, insurance'],
+            ['✈️', 'Travel bookings',      'Flights, hotels — added to your calendar'],
+            ['↩️', 'Refunds & credits',    'Flagged and matched to transactions'],
+          ].map(([icon, label, desc]) => (
+            <div key={label} className={styles.gmailCap}>
+              <span className={styles.gmailCapIcon}>{icon}</span>
+              <div>
+                <div className={styles.gmailCapLabel}>{label}</div>
+                <div className={styles.gmailCapDesc}>{desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {status && (
+        <div className={styles.fieldActions}>
+          <SaveStatus status={status} />
+        </div>
+      )}
+    </Section>
+  )
+}
+
 // ── Account info section ──────────────────────────────────────
 function AccountInfoSection({ data, onLogout }) {
   const joined = data.created_at
@@ -311,6 +456,7 @@ export default function Settings() {
         </div>
         <div className={styles.right}>
           <ApiKeysSection  data={data} onRefresh={refresh} />
+          <GmailSection    data={data} onRefresh={refresh} />
           <AccountInfoSection data={data} onLogout={logout} />
         </div>
       </div>

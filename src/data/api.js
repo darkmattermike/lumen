@@ -67,6 +67,11 @@ export const api = {
   updatePassword:   (body) => request('/api/settings/password', { method: 'PATCH', body: JSON.stringify(body) }),
   updateKeys:       (body) => request('/api/settings/keys',     { method: 'PATCH', body: JSON.stringify(body) }),
 
+  // Gmail
+  gmailAuthUrl:    ()  => request('/api/gmail/auth-url'),
+  gmailStatus:     ()  => request('/api/gmail/status'),
+  gmailDisconnect: ()  => request('/api/gmail/disconnect', { method: 'DELETE' }),
+
   // Lumen AI
   lumenInsight:        (body) => request('/api/lumen/insight',            { method: 'POST', body: JSON.stringify(body) }),
   suggestCategories:   ()     => request('/api/lumen/suggest-categories', { method: 'POST' }),
