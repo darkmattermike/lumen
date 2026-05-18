@@ -516,3 +516,30 @@
   from { opacity: 0; transform: translateX(-50%) translateY(12px) scale(.97); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0)    scale(1);   }
 }
+
+/* ── Account pill (expanded row) ─────────────────────────────── */
+.accountPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.accountPillIcon { font-size: 14px; line-height: 1; }
+.accountPillName { color: var(--ink-1); font-weight: 500; }
+.accountPillMask {
+  color: var(--ink-3);
+  letter-spacing: .5px;
+}
+.accountPillMask::before { content: '·'; margin-right: 8px; color: rgba(255,255,255,.12); }
+.accountPillInstitution {
+  color: var(--ink-3);
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: .5px;
+}

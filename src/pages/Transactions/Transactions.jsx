@@ -277,6 +277,22 @@ function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
               />
             </div>
 
+            {tx.account_name && (
+              <div className={`${styles.editorField} ${styles.editorFieldFull}`}>
+                <div className={styles.editorLabel}>Account</div>
+                <div className={styles.accountPill}>
+                  <span className={styles.accountPillIcon}>{tx.account_icon || '🏦'}</span>
+                  <span className={styles.accountPillName}>{tx.account_name}</span>
+                  {tx.account_mask && (
+                    <span className={styles.accountPillMask}>····{tx.account_mask}</span>
+                  )}
+                  {tx.account_institution && (
+                    <span className={styles.accountPillInstitution}>{tx.account_institution}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
           </div>
 
           {error && <div className={styles.editorError}>{error}</div>}
