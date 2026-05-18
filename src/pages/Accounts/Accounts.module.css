@@ -111,3 +111,27 @@
   line-height: 1.65;
 }
 .emptySub strong { color: var(--safe); font-weight: 500; }
+
+/* ── Dashboard balance toggle ─────────────────────────────────── */
+.dashToggle {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+.dashToggle:hover:not(:disabled) { border-color: rgba(255,255,255,.25); color: var(--ink-2); }
+.dashToggle:disabled { opacity: .6; cursor: not-allowed; }
+.dashToggleOn {
+  border-color: rgba(142,207,74,.3);
+  color: var(--safe);
+  background: rgba(142,207,74,.08);
+}
+.dashToggleOn:hover:not(:disabled) { background: rgba(142,207,74,.15); }

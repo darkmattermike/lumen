@@ -34,6 +34,7 @@ export const api = {
   // Data
   dashboard:     ()     => request('/api/dashboard'),
   accounts:      ()     => request('/api/accounts'),
+  updateAccount: (id, body) => request(`/api/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   transactions:         (params = '') => request(`/api/transactions${params}`),
   updateTransaction:    (id, body)   => request(`/api/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   budgets:              ()           => request('/api/budgets'),

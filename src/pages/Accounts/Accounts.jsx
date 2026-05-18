@@ -5,9 +5,16 @@ import Spotlight from '../../components/Spotlight/Spotlight'
 import { api } from '../../data/api'
 import styles from './Accounts.module.css'
 
-function AccountCard({ acct }) {
+function AccountCard({ acct, onToggleDashboard }) {
   const colorMap = { safe: 'var(--safe)', calm: 'var(--calm)', goal: 'var(--goal)', debt: 'var(--debt)' }
   const balColor = colorMap[acct.color] || 'var(--safe)'
+  const [toggling, setToggling] = useState(false)
+
+  async function handleToggle() {
+    setToggling(true)
+    await onToggleDashboard(acct.id, !acct.include_in_balance)
+    setToggling(false)
+  }
 
   return (
     <div className={`${styles.acctCard} ${acct.is_debt ? styles.debt : ''}`}>
@@ -45,6 +52,17 @@ function AccountCard({ acct }) {
         <div className={styles.metaItem}>
           <div className={styles.metaLabel}>Type</div>
           <div className={styles.metaVal} style={{ textTransform: 'capitalize' }}>{acct.type}</div>
+        </div>
+        <div className={styles.metaItem} style={{ marginLeft: 'auto', textAlign: 'right' }}>
+          <div className={styles.metaLabel}>Dashboard Balance</div>
+          <button
+            className={`${styles.dashToggle} ${acct.include_in_balance !== false ? styles.dashToggleOn : ''}`}
+            onClick={handleToggle}
+            disabled={toggling}
+            title={acct.include_in_balance !== false ? 'Included in dashboard balance — click to exclude' : 'Excluded from dashboard balance — click to include'}
+          >
+            {acct.include_in_balance !== false ? 'Included' : 'Excluded'}
+          </button>
         </div>
       </div>
     </div>
@@ -106,6 +124,20 @@ export default function Accounts() {
     finally { setSyncing(false) }
   }
 
+  async function handleToggleDashboard(id, include) {
+    // Optimistically update local state
+    setData(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => a.id === id ? { ...a, include_in_balance: include } : a),
+    }))
+    try {
+      await api.updateAccount(id, { include_in_balance: include })
+    } catch (err) {
+      console.error('Toggle failed:', err)
+      load() // revert on failure
+    }
+  }
+
   const accounts    = data?.accounts || []
   const assets      = accounts.filter(a => !a.is_debt)
   const liabilities = accounts.filter(a => a.is_debt)
@@ -159,13 +191,13 @@ export default function Accounts() {
             {assets.length > 0 && (
               <>
                 <div className={styles.groupLabel}>💳 Checking & Savings</div>
-                {assets.map(a => <AccountCard key={a.id} acct={a} />)}
+                {assets.map(a => <AccountCard key={a.id} acct={a} onToggleDashboard={handleToggleDashboard} />)}
               </>
             )}
             {liabilities.length > 0 && (
               <>
                 <div className={styles.groupLabel} style={{ marginTop: 8 }}>💳 Credit Cards & Loans</div>
-                {liabilities.map(a => <AccountCard key={a.id} acct={a} />)}
+                {liabilities.map(a => <AccountCard key={a.id} acct={a} onToggleDashboard={handleToggleDashboard} />)}
               </>
             )}
             <div className={styles.spotlightWrap}>
