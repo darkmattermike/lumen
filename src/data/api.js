@@ -36,6 +36,8 @@ export const api = {
   accounts:      ()     => request('/api/accounts'),
   transactions:  (params = '') => request(`/api/transactions${params}`),
   budgets:       ()     => request('/api/budgets'),
+  createBudget:  (body) => request('/api/budgets', { method: 'POST', body: JSON.stringify(body) }),
+  deleteBudget:  (id)   => request(`/api/budgets/${id}`, { method: 'DELETE' }),
   calendar:      ()     => request('/api/calendar'),
   analytics:     ()     => request('/api/analytics'),
 }
