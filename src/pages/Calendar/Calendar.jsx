@@ -42,25 +42,37 @@ function RecurringModal({ item, onClose, onSaved }) {
     day_of_month: item?.day_of_month      || '',
     type:         item?.type              || 'bill',
     icon:         item?.icon              || '📦',
+    frequency:    item?.frequency         || 'monthly',
+    start_date:   item?.start_date ? String(item.start_date).slice(0, 10) : '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
+
+  const isBiweekly = form.frequency === 'biweekly'
 
   function set(k,v) { setForm(f=>({...f,[k]:v})); setError('') }
 
   async function handleSave() {
     if (!form.name.trim())    return setError('Name is required')
     if (!form.amount || isNaN(form.amount) || Number(form.amount) <= 0) return setError('Enter a valid amount')
-    if (!form.day_of_month || form.day_of_month < 1 || form.day_of_month > 31) return setError('Day must be between 1 and 31')
+    if (isBiweekly) {
+      if (!form.start_date) return setError('Select a start date for biweekly frequency')
+    } else {
+      if (!form.day_of_month || form.day_of_month < 1 || form.day_of_month > 31) return setError('Day must be between 1 and 31')
+    }
 
     setSaving(true)
     try {
       const payload = {
         name:         form.name.trim(),
         amount:       Number(form.amount),
-        day_of_month: Number(form.day_of_month),
         type:         form.type,
         icon:         form.icon,
+        frequency:    form.frequency,
+        ...(isBiweekly
+          ? { start_date: form.start_date, day_of_month: new Date(form.start_date).getDate() }
+          : { day_of_month: Number(form.day_of_month), start_date: null }
+        ),
       }
       if (isEdit) {
         await api.updateRecurring(item.id, payload)
@@ -136,6 +148,53 @@ function RecurringModal({ item, onClose, onSaved }) {
               />
             </div>
             <div>
+              {form.type === 'income' ? (
+                <>
+                  <div className={styles.fieldLabel}>Frequency</div>
+                  <div className={styles.typeRow}>
+                    {[{value:'monthly',label:'Monthly'},{value:'biweekly',label:'Bi-weekly'}].map(f => (
+                      <button
+                        key={f.value}
+                        className={`${styles.typeBtn} ${form.frequency === f.value ? styles.typeBtnOn : ''}`}
+                        style={form.frequency === f.value ? { borderColor: 'var(--safe)', color: 'var(--safe)', background: 'rgba(93,202,165,.1)' } : {}}
+                        onClick={() => set('frequency', f.value)}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.fieldLabel}>Day of Month</div>
+                  <input
+                    className={styles.input}
+                    type="number"
+                    min="1"
+                    max="31"
+                    placeholder="1–31"
+                    value={form.day_of_month}
+                    onChange={e => set('day_of_month', e.target.value)}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+
+          {form.type === 'income' && isBiweekly && (
+            <div>
+              <div className={styles.fieldLabel}>First Payday</div>
+              <input
+                className={styles.input}
+                type="date"
+                value={form.start_date}
+                onChange={e => set('start_date', e.target.value)}
+              />
+            </div>
+          )}
+
+          {form.type === 'income' && !isBiweekly && (
+            <div>
               <div className={styles.fieldLabel}>Day of Month</div>
               <input
                 className={styles.input}
@@ -147,18 +206,18 @@ function RecurringModal({ item, onClose, onSaved }) {
                 onChange={e => set('day_of_month', e.target.value)}
               />
             </div>
-          </div>
+          )}
 
           <div className={styles.preview}>
             <div className={styles.previewIcon}>{form.icon}</div>
             <div>
               <div className={styles.previewName}>{form.name || 'Item Name'}</div>
               <div className={styles.previewMeta}>
-                {form.type} · day {form.day_of_month || '—'} · {form.amount ? `$${Number(form.amount).toFixed(2)}` : '$0.00'}
+                {form.type} · {isBiweekly ? `every 2 weeks${form.start_date ? ` from ${form.start_date}` : ''}` : `day ${form.day_of_month || '—'}`} · {form.amount ? `$${Number(form.amount).toFixed(2)}` : '$0.00'}
               </div>
             </div>
             <div className={styles.previewBadge} style={{ color: typeColor, borderColor: `${typeColor}44`, background: `${typeColor}12` }}>
-              {form.type}
+              {isBiweekly ? 'biweekly' : form.type}
             </div>
           </div>
 
@@ -187,16 +246,17 @@ export default function Calendar() {
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
 
-  const { recurring = [], upcoming = [], remainingBills = 0 } = data
+  const { recurring = [], expanded = [], upcoming = [], remainingBills = 0 } = data
 
+  // Use expanded (biweekly items appear on each occurrence date) for the calendar grid
   const eventMap = {}
-  recurring.forEach(r => {
+  expanded.forEach(r => {
     if (!eventMap[r.day_of_month]) eventMap[r.day_of_month] = []
     eventMap[r.day_of_month].push(r)
   })
 
-  // All recurring sorted by day for the sidebar — replaces the split upcoming/earlier logic
-  const allSorted = [...recurring].sort((a, b) => a.day_of_month - b.day_of_month)
+  // Sidebar list — use expanded so biweekly shows both paydays, sorted by day
+  const allSorted = [...expanded].sort((a, b) => a.day_of_month - b.day_of_month)
 
   const grid = buildGrid(viewDate.year, viewDate.month)
   const monthLabel = new Date(viewDate.year, viewDate.month, 1)
@@ -295,13 +355,15 @@ export default function Calendar() {
               <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0',lineHeight:1.65}}>
                 No recurring items yet. Click <strong style={{color:'var(--safe)'}}>+ Add Recurring</strong> to get started.
               </div>
-            ) : allSorted.map(ev => {
+            ) : allSorted.map((ev, idx) => {
               const isPast = isCurrentMonth && ev.day_of_month < today.getDate()
-              const upcomingEntry = upcoming.find(u => u.id === ev.id)
+              const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
               const daysUntil = upcomingEntry?.daysUntil
+              const baseItem  = recurring.find(r => r.id === ev.id) || ev
+              const freqLabel = ev.frequency === 'biweekly' ? 'biweekly' : ev.type
               return (
                 <div
-                  key={ev.id}
+                  key={`${ev.id}-${ev.day_of_month}-${idx}`}
                   className={styles.eventRow}
                   style={ev.type==='income' ? {background:'rgba(93,202,165,.04)',borderRadius:8,padding:'8px 4px'} : {}}
                 >
@@ -314,13 +376,13 @@ export default function Calendar() {
                       {ev.icon} {ev.name}
                     </div>
                     <div className={styles.eventType} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
-                      {ev.type}{isCurrentMonth ? (isPast ? ' · passed' : daysUntil === 0 ? ' · Today' : ` · in ${daysUntil} day${daysUntil===1?'':'s'}`) : ''}
+                      {freqLabel}{isCurrentMonth ? (isPast ? ' · passed' : daysUntil === 0 ? ' · Today' : ` · in ${daysUntil} day${daysUntil===1?'':'s'}`) : ''}
                     </div>
                   </div>
                   <div className={styles.eventAmt} style={{color: isPast ? 'var(--ink-3)' : typeColor[ev.type] || 'var(--warn)'}}>
                     {ev.type==='income' ? '+' : '−'}${fmt(ev.amount)}
                   </div>
-                  <button className={styles.eventEdit} onClick={() => setEditItem(ev)} title="Edit">✎</button>
+                  <button className={styles.eventEdit} onClick={() => setEditItem(baseItem)} title="Edit">✎</button>
                   <button className={styles.eventDelete} onClick={() => handleDelete(ev.id)}>✕</button>
                 </div>
               )
