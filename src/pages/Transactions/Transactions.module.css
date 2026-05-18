@@ -543,3 +543,21 @@
   font-size: 10px;
   letter-spacing: .5px;
 }
+
+/* ── Enrich button ── */
+.enrichBtn {
+  padding: 9px 18px;
+  background: rgba(91,196,233,.07);
+  border: 1px solid rgba(91,196,233,.25);
+  border-radius: 10px;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--calm);
+  cursor: pointer; transition: all var(--t-base); white-space: nowrap;
+}
+.enrichBtn:hover:not(:disabled) { background: var(--calm); color: #040608; }
+.enrichBtn:disabled { opacity: .45; cursor: not-allowed; }
+
+.enrichMsg {
+  font-family: var(--font-mono); font-size: 9px; color: var(--calm);
+  letter-spacing: .5px; white-space: nowrap;
+}

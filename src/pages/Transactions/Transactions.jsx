@@ -504,6 +504,8 @@ export default function Transactions() {
   const [activeFilter, setActiveFilter]   = useState('All')
   const [search, setSearch]               = useState('')
   const [showCatModal, setShowCatModal]   = useState(false)
+  const [enriching, setEnriching]         = useState(false)
+  const [enrichMsg, setEnrichMsg]         = useState('')
 
   // Flat list of all loaded transactions (current month + accumulated historical pages)
   const [loadedTxs, setLoadedTxs]     = useState(null)
@@ -587,6 +589,25 @@ export default function Transactions() {
     }
   }
 
+  async function handleEnrich() {
+    setEnriching(true)
+    setEnrichMsg('')
+    try {
+      const result = await api.enrichTransactions()
+      setEnrichMsg(`✉ ${result.enriched} transaction${result.enriched !== 1 ? 's' : ''} enriched`)
+      if (result.enriched > 0) refresh()
+      setTimeout(() => setEnrichMsg(''), 4000)
+    } catch (err) {
+      const msg = err.message.includes('not connected')
+        ? '✉ Connect Gmail first in Settings'
+        : 'Enrichment failed'
+      setEnrichMsg(msg)
+      setTimeout(() => setEnrichMsg(''), 4000)
+    } finally {
+      setEnriching(false)
+    }
+  }
+
   // Budget category totals — always scoped to current month only
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
   const budgetRows = budgets.map(b => {
@@ -661,6 +682,10 @@ export default function Transactions() {
             <button className={styles.aiCatBtn} onClick={() => setShowCatModal(true)}>
               ✦ Auto-Categorize
             </button>
+            <button className={styles.enrichBtn} onClick={handleEnrich} disabled={enriching}>
+              {enriching ? '...' : '✉ Enrich Names'}
+            </button>
+            {enrichMsg && <div className={styles.enrichMsg}>{enrichMsg}</div>}
           </div>
         </div>
 

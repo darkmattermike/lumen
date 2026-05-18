@@ -84,6 +84,7 @@ export const api = {
   suggestCategories:   ()     => request('/api/lumen/suggest-categories', { method: 'POST' }),
   aiCategorize:        ()     => request('/api/lumen/categorize',         { method: 'POST' }),
   aiBudgetLimits:      ()     => request('/api/lumen/budget-limits',      { method: 'POST' }),
+  enrichTransactions:  ()     => request('/api/lumen/enrich',           { method: 'POST' }),
 
   // Lumen streaming ask — returns a raw fetch Response for SSE
   lumenAsk: async (message, context_type = 'general') => {
