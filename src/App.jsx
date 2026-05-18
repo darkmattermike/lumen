@@ -8,6 +8,7 @@ import Budgets from './pages/Budgets/Budgets'
 import Accounts from './pages/Accounts/Accounts'
 import Analytics from './pages/Analytics/Analytics'
 import Calendar from './pages/Calendar/Calendar'
+import Settings from './pages/Settings/Settings'
 import styles from './App.module.css'
 
 function AppShell() {
@@ -15,8 +16,8 @@ function AppShell() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-0)' }}>
-        <div className="dot d-44" style={{ animation: 'dot-breathe 3s ease-in-out infinite' }} />
+      <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'var(--bg-0)' }}>
+        <div className="dot d-44" style={{ animation:'dot-breathe 3s ease-in-out infinite' }} />
       </div>
     )
   }
@@ -29,13 +30,14 @@ function AppShell() {
         <Rail />
         <main className={styles.main}>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/"             element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard"    element={<Dashboard />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/budgets"      element={<Budgets />} />
             <Route path="/accounts"     element={<Accounts />} />
             <Route path="/analytics"    element={<Analytics />} />
             <Route path="/calendar"     element={<Calendar />} />
+            <Route path="/settings"     element={<Settings />} />
           </Routes>
         </main>
       </div>

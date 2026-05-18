@@ -41,4 +41,10 @@ export const api = {
   budgetTransactions:   (id)   => request(`/api/budgets/${id}/transactions`),
   calendar:      ()     => request('/api/calendar'),
   analytics:     ()     => request('/api/analytics'),
+
+  // Settings
+  getSettings:      ()     => request('/api/settings'),
+  updateProfile:    (body) => request('/api/settings/profile',  { method: 'PATCH', body: JSON.stringify(body) }),
+  updatePassword:   (body) => request('/api/settings/password', { method: 'PATCH', body: JSON.stringify(body) }),
+  updateKeys:       (body) => request('/api/settings/keys',     { method: 'PATCH', body: JSON.stringify(body) }),
 }

@@ -30,12 +30,20 @@ export default function Rail() {
 
       <div className={styles.sep} />
 
-      <button className={styles.rb} style={{ color: 'rgba(167,139,255,0.6)' }} aria-label="WHAT IF">
+      <button
+        className={styles.rb}
+        style={{ color: 'rgba(167,139,255,0.6)' }}
+        aria-label="WHAT IF"
+      >
         ✦
         <span className={styles.tip}>WHAT IF</span>
       </button>
 
-      <button className={`${styles.rb} ${styles.bottom}`} aria-label="SETTINGS">
+      <button
+        className={`${styles.rb} ${styles.bottom} ${pathname === '/settings' ? styles.on : ''}`}
+        onClick={() => navigate('/settings')}
+        aria-label="SETTINGS"
+      >
         ⚙
         <span className={styles.tip}>SETTINGS</span>
       </button>
