@@ -128,7 +128,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Four Principle Zones ── */
+      {/* ── Four Principle Zones ── */}
       <div className={styles.zones}>
         {/* WHERE I AM */}
         <div className={`${styles.zone} ${styles.now}`}>
