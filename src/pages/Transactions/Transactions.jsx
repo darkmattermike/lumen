@@ -26,10 +26,14 @@ function TxRow({ tx, budgets, onSaved }) {
     amount:   Math.abs(Number(tx.amount || 0)),
     date:     tx.date ? String(tx.date).slice(0, 10) : '',
     note:     tx.note || '',
+    tx_type:  tx.tx_type || (Number(tx.amount) > 0 ? 'income' : 'expense'),
   })
 
-  const amt      = Number(tx.amount)
-  const isIncome = amt > 0
+  const amt       = Number(tx.amount)
+  const txType    = form.tx_type || (amt > 0 ? 'income' : 'expense')
+  const isIncome  = txType === 'income'
+  const isTransfer = txType === 'transfer'
+  const amtColor  = isTransfer ? 'var(--calm)' : isIncome ? 'var(--safe)' : 'var(--debt)'
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
 
@@ -40,9 +44,10 @@ function TxRow({ tx, budgets, onSaved }) {
       await api.updateTransaction(tx.id, {
         name:     form.name,
         category: form.category || null,
-        amount:   isIncome ? Math.abs(Number(form.amount)) : -Math.abs(Number(form.amount)),
+        amount:   form.tx_type === 'income' ? Math.abs(Number(form.amount)) : -Math.abs(Number(form.amount)),
         date:     form.date,
         note:     form.note || null,
+        tx_type:  form.tx_type,
       })
       // Close first, then refresh parent — prevents state-after-unmount issues
       setOpen(false)
@@ -61,13 +66,16 @@ function TxRow({ tx, budgets, onSaved }) {
         <div className={styles.txInfo}>
           <div className={styles.txName}>{form.name}</div>
           <div className={styles.txCat}>
-            {(form.category || 'Uncategorized').replace(/_/g, ' ')}
-            {tx.account_name ? ` · ${tx.account_name}` : ''}
+            {isTransfer
+              ? <span style={{color:'var(--calm)'}}>↔ Transfer — excluded from totals</span>
+              : (form.category || 'Uncategorized').replace(/_/g, ' ')
+            }
+            {!isTransfer && tx.account_name ? ` · ${tx.account_name}` : ''}
             {form.note ? ` — ${form.note}` : ''}
           </div>
         </div>
-        <div className={styles.txAmt} style={{ color: isIncome ? 'var(--safe)' : 'var(--debt)' }}>
-          {isIncome ? '+' : '−'}${fmt(Math.abs(amt))}
+        <div className={styles.txAmt} style={{ color: amtColor }}>
+          {isTransfer ? '↔' : isIncome ? '+' : '−'}${fmt(Math.abs(amt))}
         </div>
         <div className={styles.txChevron} style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}>›</div>
       </div>
@@ -76,6 +84,26 @@ function TxRow({ tx, budgets, onSaved }) {
       {open && (
         <div className={styles.txEditor}>
           <div className={styles.editorGrid}>
+
+            <div className={`${styles.editorField} ${styles.editorFieldFull}`}>
+              <div className={styles.editorLabel}>Type</div>
+              <div className={styles.typeRow}>
+                {[
+                  { value: 'expense',  label: 'Expense',  color: 'var(--debt)' },
+                  { value: 'income',   label: 'Income',   color: 'var(--safe)' },
+                  { value: 'transfer', label: 'Transfer', color: 'var(--calm)' },
+                ].map(t => (
+                  <button
+                    key={t.value}
+                    className={`${styles.typeBtn} ${form.tx_type === t.value ? styles.typeBtnOn : ''}`}
+                    style={form.tx_type === t.value ? { borderColor: t.color, color: t.color, background: `${t.color}18` } : {}}
+                    onClick={() => set('tx_type', t.value)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className={styles.editorField}>
               <div className={styles.editorLabel}>Name</div>
