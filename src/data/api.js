@@ -45,6 +45,7 @@ export const api = {
   budgetTransactions:   (id)         => request(`/api/budgets/${id}/transactions`),
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
+  updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteRecurring:      (id)         => request(`/api/calendar/${id}`, { method: 'DELETE' }),
   analytics:     ()     => request('/api/analytics'),
 

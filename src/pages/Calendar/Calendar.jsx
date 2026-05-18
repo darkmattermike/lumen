@@ -34,8 +34,15 @@ function fmt(n) {
 }
 
 // ── Add Recurring Modal ───────────────────────────────────────
-function AddRecurringModal({ onClose, onSaved }) {
-  const [form, setForm]     = useState({ name:'', amount:'', day_of_month:'', type:'bill', icon:'📦' })
+function RecurringModal({ item, onClose, onSaved }) {
+  const isEdit = !!item
+  const [form, setForm]     = useState({
+    name:         item?.name              || '',
+    amount:       item?.amount            || '',
+    day_of_month: item?.day_of_month      || '',
+    type:         item?.type              || 'bill',
+    icon:         item?.icon              || '📦',
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
 
@@ -48,13 +55,18 @@ function AddRecurringModal({ onClose, onSaved }) {
 
     setSaving(true)
     try {
-      await api.createRecurring({
+      const payload = {
         name:         form.name.trim(),
         amount:       Number(form.amount),
         day_of_month: Number(form.day_of_month),
         type:         form.type,
         icon:         form.icon,
-      })
+      }
+      if (isEdit) {
+        await api.updateRecurring(item.id, payload)
+      } else {
+        await api.createRecurring(payload)
+      }
       onSaved()
       onClose()
     } catch (err) {
@@ -70,12 +82,11 @@ function AddRecurringModal({ onClose, onSaved }) {
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <div className={styles.modalTitle}>New Recurring Item</div>
+          <div className={styles.modalTitle}>{isEdit ? 'Edit Recurring Item' : 'New Recurring Item'}</div>
           <button className={styles.modalClose} onClick={onClose}>✕</button>
         </div>
 
         <div className={styles.modalBody}>
-          {/* Type selector */}
           <div className={styles.fieldLabel}>Type</div>
           <div className={styles.typeRow}>
             {TYPE_OPTS.map(t => (
@@ -90,7 +101,6 @@ function AddRecurringModal({ onClose, onSaved }) {
             ))}
           </div>
 
-          {/* Icon picker */}
           <div className={styles.fieldLabel}>Icon</div>
           <div className={styles.iconGrid}>
             {ICON_OPTS.map(ic => (
@@ -104,7 +114,6 @@ function AddRecurringModal({ onClose, onSaved }) {
             ))}
           </div>
 
-          {/* Name */}
           <div className={styles.fieldLabel}>Name</div>
           <input
             className={styles.input}
@@ -113,7 +122,6 @@ function AddRecurringModal({ onClose, onSaved }) {
             onChange={e => set('name', e.target.value)}
           />
 
-          {/* Amount + Day side by side */}
           <div className={styles.twoCol}>
             <div>
               <div className={styles.fieldLabel}>Amount ($)</div>
@@ -141,7 +149,6 @@ function AddRecurringModal({ onClose, onSaved }) {
             </div>
           </div>
 
-          {/* Preview */}
           <div className={styles.preview}>
             <div className={styles.previewIcon}>{form.icon}</div>
             <div>
@@ -161,7 +168,7 @@ function AddRecurringModal({ onClose, onSaved }) {
         <div className={styles.modalFooter}>
           <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
           <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Add Item'}
+            {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Item'}
           </button>
         </div>
       </div>
@@ -174,6 +181,7 @@ export default function Calendar() {
   const today = new Date()
   const [viewDate, setViewDate] = useState({ year: today.getFullYear(), month: today.getMonth() })
   const [showModal, setShowModal] = useState(false)
+  const [editItem, setEditItem]   = useState(null)
   const { data, loading, error, refresh } = useApi(api.calendar)
 
   if (loading) return <LoadingShell />
@@ -186,6 +194,9 @@ export default function Calendar() {
     if (!eventMap[r.day_of_month]) eventMap[r.day_of_month] = []
     eventMap[r.day_of_month].push(r)
   })
+
+  // All recurring sorted by day for the sidebar — replaces the split upcoming/earlier logic
+  const allSorted = [...recurring].sort((a, b) => a.day_of_month - b.day_of_month)
 
   const grid = buildGrid(viewDate.year, viewDate.month)
   const monthLabel = new Date(viewDate.year, viewDate.month, 1)
@@ -209,7 +220,13 @@ export default function Calendar() {
 
   return (
     <>
-      {showModal && <AddRecurringModal onClose={() => setShowModal(false)} onSaved={refresh} />}
+      {(showModal || editItem) && (
+        <RecurringModal
+          item={editItem}
+          onClose={() => { setShowModal(false); setEditItem(null) }}
+          onSaved={refresh}
+        />
+      )}
 
       <ScreenWrap>
         <div className={styles.header}>
@@ -271,58 +288,43 @@ export default function Calendar() {
             )}
 
             <div className={styles.upcomingHead}>
-              {isCurrentMonth ? 'Upcoming This Month' : `Events in ${monthLabel}`}
+              {isCurrentMonth ? 'This Month' : `Events in ${monthLabel}`}
             </div>
 
-            {upcoming.length === 0 ? (
+            {allSorted.length === 0 ? (
               <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0',lineHeight:1.65}}>
                 No recurring items yet. Click <strong style={{color:'var(--safe)'}}>+ Add Recurring</strong> to get started.
               </div>
-            ) : upcoming.map(ev => (
-              <div
-                key={ev.id}
-                className={styles.eventRow}
-                style={ev.type==='income' ? {background:'rgba(93,202,165,.04)',borderRadius:8,padding:'8px 4px'} : {}}
-              >
-                <div className={styles.eventDate} style={ev.type==='income' ? {color:'rgba(93,202,165,.6)'} : {}}>
-                  Day {ev.day_of_month}
-                </div>
-                <div className={styles.eventDot} style={{background: typeColor[ev.type] || 'var(--warn)'}} />
-                <div className={styles.eventInfo}>
-                  <div className={styles.eventName} style={ev.type==='income' ? {color:'rgba(93,202,165,.9)'} : {}}>
-                    {ev.icon} {ev.name}
+            ) : allSorted.map(ev => {
+              const isPast = isCurrentMonth && ev.day_of_month < today.getDate()
+              const upcomingEntry = upcoming.find(u => u.id === ev.id)
+              const daysUntil = upcomingEntry?.daysUntil
+              return (
+                <div
+                  key={ev.id}
+                  className={styles.eventRow}
+                  style={ev.type==='income' ? {background:'rgba(93,202,165,.04)',borderRadius:8,padding:'8px 4px'} : {}}
+                >
+                  <div className={styles.eventDate} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.6)'} : {}}>
+                    Day {ev.day_of_month}
                   </div>
-                  <div className={styles.eventType} style={ev.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
-                    {ev.type} · {ev.daysUntil===0 ? 'Today' : `in ${ev.daysUntil} day${ev.daysUntil===1?'':'s'}`}
-                  </div>
-                </div>
-                <div className={styles.eventAmt} style={{color: typeColor[ev.type] || 'var(--warn)'}}>
-                  {ev.type==='income' ? '+' : '−'}${fmt(ev.amount)}
-                </div>
-                <button className={styles.eventDelete} onClick={() => handleDelete(ev.id)}>✕</button>
-              </div>
-            ))}
-
-            {/* All recurring (not just upcoming) */}
-            {recurring.filter(r => !upcoming.find(u => u.id === r.id)).length > 0 && (
-              <>
-                <div className={styles.upcomingHead} style={{marginTop:16}}>Earlier This Month</div>
-                {recurring.filter(r => !upcoming.find(u => u.id === r.id)).map(ev => (
-                  <div key={ev.id} className={styles.eventRow}>
-                    <div className={styles.eventDate} style={{color:'var(--ink-4)'}}>Day {ev.day_of_month}</div>
-                    <div className={styles.eventDot} style={{background:'var(--ink-4)'}} />
-                    <div className={styles.eventInfo}>
-                      <div className={styles.eventName} style={{color:'var(--ink-3)'}}>{ev.icon} {ev.name}</div>
-                      <div className={styles.eventType}>{ev.type}</div>
+                  <div className={styles.eventDot} style={{background: isPast ? 'var(--ink-4)' : typeColor[ev.type] || 'var(--warn)'}} />
+                  <div className={styles.eventInfo}>
+                    <div className={styles.eventName} style={isPast ? {color:'var(--ink-3)'} : ev.type==='income' ? {color:'rgba(93,202,165,.9)'} : {}}>
+                      {ev.icon} {ev.name}
                     </div>
-                    <div className={styles.eventAmt} style={{color:'var(--ink-3)'}}>
-                      {ev.type==='income' ? '+' : '−'}${fmt(ev.amount)}
+                    <div className={styles.eventType} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
+                      {ev.type}{isCurrentMonth ? (isPast ? ' · passed' : daysUntil === 0 ? ' · Today' : ` · in ${daysUntil} day${daysUntil===1?'':'s'}`) : ''}
                     </div>
-                    <button className={styles.eventDelete} onClick={() => handleDelete(ev.id)}>✕</button>
                   </div>
-                ))}
-              </>
-            )}
+                  <div className={styles.eventAmt} style={{color: isPast ? 'var(--ink-3)' : typeColor[ev.type] || 'var(--warn)'}}>
+                    {ev.type==='income' ? '+' : '−'}${fmt(ev.amount)}
+                  </div>
+                  <button className={styles.eventEdit} onClick={() => setEditItem(ev)} title="Edit">✎</button>
+                  <button className={styles.eventDelete} onClick={() => handleDelete(ev.id)}>✕</button>
+                </div>
+              )
+            })}
 
             <div className={styles.spotlightWrap}>
               <Spotlight tag="Lumen on Your Schedule" dotSize={22}>
@@ -359,3 +361,5 @@ export default function Calendar() {
     </>
   )
 }
+
+  if (loading) return <LoadingShell />
