@@ -25,7 +25,7 @@ export default function Dashboard() {
   if (error)   return <ErrorShell message={error} />
 
   const {
-    balance, balanceAfterBills, committedBills,
+    balance, balanceAfterBills, committedBills, upcomingPayTotal = 0,
     pressureLabel, pressureScore,
     monthSpent, monthIncome,
     upcomingBills, nextPaycheck,
@@ -65,13 +65,13 @@ export default function Dashboard() {
           <div className={styles.pre}>◈ FREE TO SPEND · {today}</div>
           <div className={styles.amount} style={{ color: heroColor }}>${fmt(balanceAfterBills)}</div>
           <div className={styles.prose}>
-            After every bill <strong>already promised</strong> this cycle.{' '}
-            Current balance is <strong>${fmt(balance)}</strong>.
+            Balance is <strong>${fmt(balance)}</strong>. After remaining bills{upcomingPayTotal > 0 ? ' and incoming paychecks' : ''} this cycle
+            {' '}you'll have <strong style={{ color: heroColor }}>${fmt(balanceAfterBills)}</strong> free.
             {daysUntilPay !== null && daysUntilPay > 0 && (
-              <> Next paycheck lands in <span className="b">{daysUntilPay} days</span>.</>
+              <> Next paycheck in <span className="b">{daysUntilPay} days</span>.</>
             )}
             {daysUntilPay === 0 && <> Paycheck lands <strong>today</strong>.</>}
-            {' '}The pressure gauge reads <strong style={{ color: heroColor }}>{pressureLabel}</strong>.
+            {' '}Pressure reads <strong style={{ color: heroColor }}>{pressureLabel}</strong>.
           </div>
         </div>
 
@@ -101,14 +101,17 @@ export default function Dashboard() {
         {/* WHERE I AM */}
         <div className={`${styles.zone} ${styles.now}`}>
           <div className={styles.zoneTag}>✦ Where I Am</div>
-          <div className={styles.zoneVal}>${fmt(balance)}</div>
+          <div className={styles.zoneVal} style={{ color: heroColor }}>${fmt(balanceAfterBills)}</div>
           <div className={styles.zoneProse}>
-            Checking live. <strong>${fmt(balanceAfterBills)}</strong> after all committed bills this cycle.
+            Free to spend after bills{data.upcomingPayTotal > 0 ? ' and pay' : ''} this cycle.
           </div>
           <div className={styles.zoneRows}>
             <div className={styles.zoneRow}><span className={styles.zrn}>Balance</span><span className={styles.zrv} style={{ color: 'var(--safe)' }}>${fmt(balance)}</span></div>
-            <div className={styles.zoneRow}><span className={styles.zrn}>After bills</span><span className={styles.zrv} style={{ color: balanceAfterBills >= 0 ? 'var(--safe)' : 'var(--debt)' }}>${fmt(balanceAfterBills)}</span></div>
-            <div className={styles.zoneRow}><span className={styles.zrn}>Committed</span><span className={styles.zrv} style={{ color: 'var(--warn)' }}>−${fmt(committedBills)}</span></div>
+            <div className={styles.zoneRow}><span className={styles.zrn}>Bills remaining</span><span className={styles.zrv} style={{ color: 'var(--debt)' }}>−${fmt(committedBills)}</span></div>
+            {data.upcomingPayTotal > 0 && (
+              <div className={styles.zoneRow}><span className={styles.zrn}>Income coming</span><span className={styles.zrv} style={{ color: 'var(--safe)' }}>+${fmt(data.upcomingPayTotal)}</span></div>
+            )}
+            <div className={styles.zoneRow}><span className={styles.zrn}>Free to spend</span><span className={styles.zrv} style={{ color: heroColor }}>${fmt(balanceAfterBills)}</span></div>
           </div>
         </div>
 
