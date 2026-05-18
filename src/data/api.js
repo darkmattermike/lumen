@@ -34,7 +34,8 @@ export const api = {
   // Data
   dashboard:     ()     => request('/api/dashboard'),
   accounts:      ()     => request('/api/accounts'),
-  transactions:  (params = '') => request(`/api/transactions${params}`),
+  transactions:         (params = '') => request(`/api/transactions${params}`),
+  updateTransaction:    (id, body)   => request(`/api/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   budgets:              ()     => request('/api/budgets'),
   createBudget:         (body) => request('/api/budgets', { method: 'POST', body: JSON.stringify(body) }),
   deleteBudget:         (id)   => request(`/api/budgets/${id}`, { method: 'DELETE' }),
