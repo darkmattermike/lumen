@@ -206,6 +206,7 @@ export default function Accounts() {
                 contextType="accounts"
                 prompt="In 2-3 sentences, give a sharp read on the current account balances and net worth — any concerns, opportunities, or things worth paying attention to."
                 color="green"
+                showWhenNoKey
               />
             </div>
           </>

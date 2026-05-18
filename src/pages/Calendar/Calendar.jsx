@@ -332,6 +332,7 @@ export default function Calendar() {
                 contextType="calendar"
                 prompt="In 2-3 sentences, give a sharp read on this month's recurring bills and income — anything to watch out for, cash flow timing, or patterns worth flagging."
                 color="green"
+                showWhenNoKey
               />
             </div>
 

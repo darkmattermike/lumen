@@ -12,7 +12,7 @@ import styles from './LumenInsight.module.css'
  * @param {string} label       — the tag shown above the insight e.g. 'Lumen Noticed'
  * @param {string} color       — 'green' | 'blue' | 'purple' | 'amber' (default green)
  */
-export default function LumenInsight({ prompt, contextType = 'insight', label = 'Lumen', color = 'green' }) {
+export default function LumenInsight({ prompt, contextType = 'insight', label = 'Lumen', color = 'green', showWhenNoKey = false }) {
   const [text, setText]       = useState('')
   const [loading, setLoading] = useState(true)
   const [noKey, setNoKey]     = useState(false)
@@ -33,7 +33,7 @@ export default function LumenInsight({ prompt, contextType = 'insight', label = 
         if (err.message?.includes('402') || err.message === 'NO_KEY') {
           setNoKey(true)
         } else {
-          setText('') // silent fail — card just won't show
+          setText('')
         }
       })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -41,9 +41,23 @@ export default function LumenInsight({ prompt, contextType = 'insight', label = 
     return () => { cancelled = true }
   }, [prompt, contextType])
 
-  // Don't render if no key and not loading
-  if (!loading && noKey) return null
-  if (!loading && !text)  return null
+  // No key — either hide or show a prompt to add one
+  if (!loading && noKey) {
+    if (!showWhenNoKey) return null
+    return (
+      <div className={`${styles.card} ${styles[color]}`}>
+        <div className={styles.tag}>
+          <div className={styles.dotWrap}><LumenDot size={8} /></div>
+          {label}
+        </div>
+        <div className={styles.text} style={{ opacity: 0.5 }}>
+          Add an Anthropic API key in Settings to unlock AI insights.
+        </div>
+      </div>
+    )
+  }
+
+  if (!loading && !text) return null
 
   return (
     <div className={`${styles.card} ${styles[color]}`}>
