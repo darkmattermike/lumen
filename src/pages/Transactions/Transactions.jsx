@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
+import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -166,29 +167,18 @@ export default function Transactions() {
           ))}
 
           <div className={styles.asideLabel} style={{ marginTop: 16 }}>Lumen Watching</div>
-          <div className={styles.notice} style={{ background: 'linear-gradient(135deg,rgba(93,202,165,.06),rgba(93,202,165,.03))', borderColor: 'rgba(93,202,165,.15)' }}>
-            <div className={styles.noticeTag} style={{ color: 'var(--safe)' }}>
-              <div className="pdot" /> This Month
-            </div>
-            <div className={styles.noticeText}>
-              <strong style={{ color: 'var(--safe)' }}>${fmtK(income)}</strong> income,{' '}
-              <strong style={{ color: 'var(--debt)' }}>${fmtK(spending)}</strong> out.
-              {net >= 0
-                ? <> You're <strong style={{ color: 'var(--safe)' }}>ahead</strong> by ${fmtK(net)}.</>
-                : <> You're <strong style={{ color: 'var(--debt)' }}>behind</strong> by ${fmtK(Math.abs(net))}.</>
-              }
-            </div>
-          </div>
-          {spendPct > 70 && (
-            <div className={styles.notice} style={{ background: 'linear-gradient(135deg,rgba(240,176,76,.06),rgba(240,176,76,.03))', borderColor: 'rgba(240,176,76,.15)' }}>
-              <div className={styles.noticeTag} style={{ color: 'var(--warn)' }}>
-                <div className="pdot" style={{ background: 'var(--warn)' }} /> Watch This
-              </div>
-              <div className={styles.noticeText}>
-                You've spent <strong style={{ color: 'var(--warn)' }}>{spendPct}% of income</strong> with {daysLeft} days left this month.
-              </div>
-            </div>
-          )}
+          <LumenInsight
+            label="This Month"
+            contextType="transactions"
+            prompt="In 2-3 sentences, give me a sharp read on how this month's transactions look — income vs spending, anything unusual, and where I should pay attention."
+            color="green"
+          />
+          <LumenInsight
+            label="Pattern Alert"
+            contextType="transactions"
+            prompt="In 2-3 sentences, identify the most important spending pattern or anomaly in my recent transactions that I should know about."
+            color="blue"
+          />
         </div>
       </div>
     </ScreenWrap>

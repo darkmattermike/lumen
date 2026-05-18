@@ -3,6 +3,7 @@ import LumenDot from '../../components/LumenDot/LumenDot'
 import PressureGauge from '../../components/PressureGauge/PressureGauge'
 import BillRow from '../../components/BillRow/BillRow'
 import WhatIfTheater from '../../components/WhatIfTheater/WhatIfTheater'
+import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -175,26 +176,18 @@ export default function Dashboard() {
           }
 
           <div className={styles.asideLabel} style={{ marginTop: 16 }}>Lumen Noticed</div>
-          <div className={styles.insightBlue}>
-            <div className={styles.insightTag} style={{ color: 'rgba(108,140,255,0.7)' }}>
-              <span className="pdot" style={{ background: 'rgba(108,140,255,0.7)' }} />
-              Pressure Score
-            </div>
-            <div className={styles.insightText}>
-              Committed bills are <strong style={{ color: 'rgba(108,140,255,0.85)' }}>{pressureScore}% of your balance</strong>.
-              Pressure gauge: <strong style={{ color: 'rgba(108,140,255,0.85)' }}>{pressureLabel}</strong>.
-            </div>
-          </div>
-          <div className={styles.insightGreen}>
-            <div className={styles.insightTag} style={{ color: 'rgba(93,202,165,0.6)' }}>✦ This Month</div>
-            <div className={styles.insightText}>
-              <strong style={{ color: 'rgba(93,202,165,0.8)' }}>${fmt(monthIncome)}</strong> in,{' '}
-              <strong style={{ color: 'var(--debt)' }}>${fmt(monthSpent)}</strong> out.
-              Net: <strong style={{ color: netChange >= 0 ? 'var(--safe)' : 'var(--debt)' }}>
-                {netChange >= 0 ? '+' : '−'}${fmt(Math.abs(netChange))}
-              </strong>.
-            </div>
-          </div>
+          <LumenInsight
+            label="Pressure & Bills"
+            contextType="dashboard"
+            prompt="In 2-3 sentences, give me the most important thing to know about my current financial pressure — upcoming bills vs balance, and what to watch."
+            color="blue"
+          />
+          <LumenInsight
+            label="This Month"
+            contextType="dashboard"
+            prompt="In 2-3 sentences, summarize how this month is going — income vs spending, net position, and one thing that stands out."
+            color="green"
+          />
         </div>
       </div>
     </ScreenWrap>

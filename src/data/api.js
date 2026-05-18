@@ -47,4 +47,20 @@ export const api = {
   updateProfile:    (body) => request('/api/settings/profile',  { method: 'PATCH', body: JSON.stringify(body) }),
   updatePassword:   (body) => request('/api/settings/password', { method: 'PATCH', body: JSON.stringify(body) }),
   updateKeys:       (body) => request('/api/settings/keys',     { method: 'PATCH', body: JSON.stringify(body) }),
+
+  // Lumen AI
+  lumenInsight: (body) => request('/api/lumen/insight', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Lumen streaming ask — returns a raw fetch Response for SSE
+  lumenAsk: async (message, context_type = 'general') => {
+    const token = getToken()
+    return fetch(`${BASE}/api/lumen/ask`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ message, context_type }),
+    })
+  },
 }

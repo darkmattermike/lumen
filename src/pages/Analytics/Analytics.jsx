@@ -1,5 +1,6 @@
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenDot from '../../components/LumenDot/LumenDot'
+import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -172,16 +173,30 @@ export default function Analytics() {
             <LumenDot size={10} />
             Lumen Insights
           </div>
-          {insights.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.65 }}>
-              Sync more transactions to unlock insights.
-            </div>
-          ) : insights.map((ins, i) => (
-            <div key={i} className={`${styles.insight} ${styles[ins.type]}`}>
-              <div className={styles.insightLabel}>{ins.label}</div>
-              <div className={styles.insightText} dangerouslySetInnerHTML={{ __html: ins.text }} />
-            </div>
-          ))}
+          <LumenInsight
+            label="Savings Velocity"
+            contextType="analytics"
+            prompt="In 2-3 sentences, analyze my savings rate and trajectory. Am I on track? What's the trend?"
+            color="green"
+          />
+          <LumenInsight
+            label="Spending Patterns"
+            contextType="analytics"
+            prompt="In 2-3 sentences, identify the most notable spending pattern or trend in my data — something I might not notice myself."
+            color="blue"
+          />
+          <LumenInsight
+            label="Income Stability"
+            contextType="analytics"
+            prompt="In 2-3 sentences, assess my income consistency and what it means for my financial planning."
+            color="green"
+          />
+          <LumenInsight
+            label="Opportunity"
+            contextType="analytics"
+            prompt="In 2-3 sentences, identify the single biggest financial opportunity or risk in my current numbers."
+            color="purple"
+          />
         </div>
       </div>
     </ScreenWrap>
