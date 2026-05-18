@@ -26,8 +26,92 @@ function groupByDate(txs) {
   }, {})
 }
 
+// ── Rule dedup helper ─────────────────────────────────────────
+// Returns true if an existing rule would already apply the same action to this tx
+function ruleAlreadyExists(rules, txName, action, actionValue) {
+  return rules.some(rule => {
+    if (!rule.active) return false
+    if (rule.action !== action) return false
+    if ((rule.action_value || '').toLowerCase() !== (actionValue || '').toLowerCase()) return false
+    const mv = (rule.match_value || '').toLowerCase()
+    const tn = (txName || '').toLowerCase()
+    if (rule.operator === 'equals')      return tn === mv
+    if (rule.operator === 'starts_with') return tn.startsWith(mv)
+    return tn.includes(mv) // contains
+  })
+}
+
+// ── Rule suggestion toast ─────────────────────────────────────
+function RuleToast({ suggestion, onAccept, onDismiss }) {
+  const [saving, setSaving]       = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
+
+  // Strip trailing "#1234" / numbers so "Starbucks #4821" reads as "Starbucks"
+  const merchantName = suggestion.matchValue.replace(/\s*#\d+\s*$/, '').trim()
+
+  const message =
+    suggestion.action === 'set_category'
+      ? `Looks like you tagged this ${merchantName} charge as ${suggestion.actionValue}. Want me to do that automatically for any ${merchantName} transaction going forward?`
+      : suggestion.action === 'set_type'
+      ? `I noticed you marked this ${merchantName} transaction as a ${suggestion.actionValue}. Should I automatically do that for all ${merchantName} transactions from now on?`
+      : `You added the note "${suggestion.actionValue}" to this ${merchantName} charge. Want me to tag any future ${merchantName} transactions with that note automatically?`
+
+  // Highlight the key value in the message
+  const highlightValue =
+    suggestion.action === 'set_note'
+      ? `"${suggestion.actionValue}"`
+      : suggestion.actionValue
+  const [before, after] = message.split(highlightValue)
+
+  async function handleAccept() {
+    setSaving(true)
+    try {
+      await api.createRule({
+        name:         `${merchantName} → ${suggestion.actionValue}`,
+        operator:     'contains',
+        match_value:  suggestion.matchValue,
+        action:       suggestion.action,
+        action_value: suggestion.actionValue,
+      })
+      setConfirmed(true)
+      setTimeout(onAccept, 2000)
+    } catch (err) {
+      console.error('Failed to create rule:', err)
+      onDismiss()
+    }
+  }
+
+  return (
+    <div className={styles.toast}>
+      <div className={styles.toastDot} />
+      <div className={styles.toastBody}>
+        <div className={styles.toastFrom}>Lumen</div>
+        {confirmed ? (
+          <div className={styles.toastMessage}>
+            Done — rule created. I&apos;ll handle it from here.
+          </div>
+        ) : (
+          <>
+            <div className={styles.toastMessage}>
+              {before}
+              <strong>{highlightValue}</strong>
+              {after}
+            </div>
+            <div className={styles.toastActions}>
+              <button className={styles.toastYes} onClick={handleAccept} disabled={saving}>
+                {saving ? '...' : 'Yes, create rule'}
+              </button>
+              <button className={styles.toastNo} onClick={onDismiss}>No thanks</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Expandable transaction row ────────────────────────────────
-function TxRow({ tx, budgets, onSaved }) {
+function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
   const [open, setOpen]     = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -62,6 +146,25 @@ function TxRow({ tx, budgets, onSaved }) {
       })
       setOpen(false)
       onSaved(tx.id, saved)
+
+      // ── Suggest creating a rule for each changed field ──────
+      const originalType = tx.tx_type || (Number(tx.amount) > 0 ? 'income' : 'expense')
+      const suggestions  = []
+
+      if (form.category && form.category !== (tx.category || '') && form.tx_type !== 'transfer') {
+        if (!ruleAlreadyExists(rules, tx.name, 'set_category', form.category))
+          suggestions.push({ matchValue: tx.name, action: 'set_category', actionValue: form.category })
+      }
+      if (form.tx_type !== originalType) {
+        if (!ruleAlreadyExists(rules, tx.name, 'set_type', form.tx_type))
+          suggestions.push({ matchValue: tx.name, action: 'set_type', actionValue: form.tx_type })
+      }
+      if (form.note && form.note !== (tx.note || '')) {
+        if (!ruleAlreadyExists(rules, tx.name, 'set_note', form.note))
+          suggestions.push({ matchValue: tx.name, action: 'set_note', actionValue: form.note })
+      }
+
+      if (suggestions.length > 0) onRuleSuggestion(suggestions[0])
     } catch (err) {
       setError(err.message || 'Save failed')
       setSaving(false)
@@ -393,6 +496,10 @@ export default function Transactions() {
     [activeFilter]
   )
   const { data: budgetData, refresh: refreshBudgets } = useApi(api.budgets)
+  const { data: rulesData,  refresh: refreshRules   } = useApi(api.rules)
+
+  // Rule suggestion toast state
+  const [ruleSuggestion, setRuleSuggestion] = useState(null)
 
   // When the filter changes, reset accumulated pages so stale data isn't shown
   useEffect(() => {
@@ -424,6 +531,7 @@ export default function Transactions() {
   const budgets = [...(budgetData?.budgets || [])].sort((a, b) =>
     a.name.localeCompare(b.name)
   )
+  const rules = rulesData?.rules || []
 
   const income   = Number(totals.income   || 0)
   const spending = Number(totals.spending || 0)
@@ -494,6 +602,13 @@ export default function Transactions() {
           onDone={() => { setShowCatModal(false); refresh(); refreshBudgets() }}
         />
       )}
+      {ruleSuggestion && (
+        <RuleToast
+          suggestion={ruleSuggestion}
+          onAccept={() => { setRuleSuggestion(null); refreshRules() }}
+          onDismiss={() => setRuleSuggestion(null)}
+        />
+      )}
       <ScreenWrap>
         <div className={styles.header}>
           <div>
@@ -551,7 +666,7 @@ export default function Transactions() {
               <div key={date}>
                 <div className={styles.dayHead}>{date}</div>
                 {txs.map(tx => (
-                  <TxRow key={tx.id} tx={tx} budgets={budgets} onSaved={handleTxSaved} />
+                  <TxRow key={tx.id} tx={tx} budgets={budgets} rules={rules} onSaved={handleTxSaved} onRuleSuggestion={setRuleSuggestion} />
                 ))}
               </div>
             ))}
