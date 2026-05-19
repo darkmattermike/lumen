@@ -159,19 +159,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* WHAT IF */}
-        <div className={`${styles.zone} ${styles.ask}`}>
-          <div className={styles.zoneTag}>✦ What If</div>
-          <div className={styles.zoneVal}>Live</div>
-          <div className={styles.zoneProse}>
-            Any scenario — dinner, trip, subscription, purchase.{' '}
-            <strong>Lumen runs it</strong> against your real numbers.
-          </div>
-          <div className={styles.quickChips}>
-            <span className="wi-chip" style={{ fontSize: 11, padding: '6px 12px' }}>🍽️ Dinner</span>
-            <span className="wi-chip" style={{ fontSize: 11, padding: '6px 12px' }}>✈️ Trip</span>
-          </div>
-        </div>
       </div>
 
       {/* ── Body: Theater + Aside ── */}

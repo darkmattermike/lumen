@@ -82,7 +82,7 @@
 /* ── Four Zones ── */
 .zones {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .zone {
@@ -261,7 +261,7 @@
   }
   .prose { font-size: 15px; margin-top: 12px; }
   .zones {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
   .zone { padding: 18px 16px; }
   .zoneVal { font-size: 28px; }
