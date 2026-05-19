@@ -343,3 +343,9 @@
 .belowEmpty strong { color: var(--safe); }
 
 @keyframes drawer-open { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
+.halfItemAcct {
+  font-size: 9px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+}

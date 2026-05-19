@@ -273,16 +273,31 @@ export default function Calendar() {
     return { expenses, income, remaining }
   }
 
-  // Build account allocation: for each account, sum which expenses could draw from it
-  // Simple heuristic: checking accounts cover all expenses proportionally
+  // Build account allocation:
+  // 1. Bills with a linked account_id show under that specific account
+  // 2. Bills without an account_id fall under include_in_balance accounts (checking first)
   function accountAllocation(items, accountList) {
-    const totalExpenses = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s, ev) => s + Number(ev.amount), 0)
-    return accountList.map(a => ({
-      ...a,
-      balance: Number(a.balance),
-      covers: a.type === 'checking' || a.type === 'savings',
-      short: a.type === 'checking' && Number(a.balance) < totalExpenses,
-    }))
+    const upcomingItems = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay)
+    return accountList.map(a => {
+      // Bills explicitly linked to this account
+      const linked   = upcomingItems.filter(ev => ev.account_id === a.id)
+      // Bills with no account_id fall to include_in_balance accounts
+      const unlinked = a.include_in_balance
+        ? upcomingItems.filter(ev => !ev.account_id)
+        : []
+      const responsible = [...linked, ...unlinked]
+      const needed  = responsible.reduce((s, ev) => s + Number(ev.amount), 0)
+      const bal     = Number(a.balance)
+      return {
+        ...a,
+        balance: bal,
+        needed,
+        responsible,
+        short: needed > 0 && bal < needed,
+        shortAmt: Math.max(0, needed - bal),
+        surplus: needed > 0 && bal >= needed ? bal - needed : 0,
+      }
+    }).filter(a => a.needed > 0 || a.include_in_balance)
   }
 
   const grid = buildGrid(viewDate.year, viewDate.month)
@@ -450,7 +465,10 @@ export default function Calendar() {
                             return (
                               <div key={i} className={styles.halfItem}>
                                 <span className={styles.halfItemIcon}>{ev.icon}</span>
-                                <span className={styles.halfItemName}>{ev.name}</span>
+                                <span className={styles.halfItemName}>
+                                  {ev.name}
+                                  {ev.account_name && <span className={styles.halfItemAcct}> · {ev.account_name}</span>}
+                                </span>
                                 <span className={styles.halfItemDay} style={{color: isPast ? 'var(--ink-2)' : u?.daysUntil === 0 ? 'var(--warn)' : 'var(--ink-3)'}}>
                                   {isPast ? 'passed' : u?.daysUntil === 0 ? 'today' : `${u?.daysUntil}d`}
                                 </span>
@@ -463,14 +481,14 @@ export default function Calendar() {
                           {accounts.length > 0 && (
                             <div className={styles.allocBox}>
                               <div className={styles.allocLabel}>Account allocation</div>
-                              {alloc.filter(a => a.covers).map((a, i) => (
+                              {alloc.map((a, i) => (
                                 <div key={i} className={styles.allocRow}>
                                   <div>
-                                    <div className={styles.allocName}>{a.name}{a.mask ? ` ····${a.mask}` : ''}</div>
-                                    <div className={styles.allocBal}>Balance: ${fmt(a.balance)}</div>
+                                    <div className={styles.allocName}>{a.icon} {a.name}{a.mask ? ` ····${a.mask}` : ''}</div>
+                                    <div className={styles.allocBal}>Balance ${fmt(a.balance)} · needs ${fmt(a.needed)}</div>
                                   </div>
                                   <div className={`${styles.allocAmt} ${a.short ? styles.allocShort : styles.allocOk}`}>
-                                    {a.short ? `$${fmt(t.expenses - a.balance)} short` : '✓ Covered'}
+                                    {a.short ? `$${fmt(a.shortAmt)} short` : `+$${fmt(a.surplus)} left`}
                                   </div>
                                 </div>
                               ))}
@@ -509,7 +527,10 @@ export default function Calendar() {
                             return (
                               <div key={i} className={styles.halfItem}>
                                 <span className={styles.halfItemIcon}>{ev.icon}</span>
-                                <span className={styles.halfItemName}>{ev.name}</span>
+                                <span className={styles.halfItemName}>
+                                  {ev.name}
+                                  {ev.account_name && <span className={styles.halfItemAcct}> · {ev.account_name}</span>}
+                                </span>
                                 <span className={styles.halfItemDay} style={{color: isPast ? 'var(--ink-2)' : u?.daysUntil === 0 ? 'var(--warn)' : 'var(--ink-3)'}}>
                                   {isPast ? 'passed' : u?.daysUntil === 0 ? 'today' : `${u?.daysUntil}d`}
                                 </span>
