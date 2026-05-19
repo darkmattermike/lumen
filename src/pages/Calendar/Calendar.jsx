@@ -292,48 +292,39 @@ export default function Calendar() {
   }
 
   // Build account allocation:
-  // 1. Bills with a linked account_id show under that specific account
-  // 2. Bills without an account_id fall under include_in_balance accounts (checking first)
-  function accountAllocation(items, accountList) {
-    const upcomingItems = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay)
-    const result = accountList.map(a => {
-      // Coerce IDs to numbers for reliable comparison
-      const aId    = Number(a.id)
-      const linked = upcomingItems.filter(ev => ev.account_id && Number(ev.account_id) === aId)
-      // Bills with no account_id fall to checking/savings accounts (or include_in_balance=true)
-      const isDefault = a.include_in_balance === true || a.type === 'checking' || a.type === 'savings'
-      const unlinked  = isDefault ? upcomingItems.filter(ev => !ev.account_id) : []
-      const responsible = [...linked, ...unlinked]
-      const needed  = responsible.reduce((s, ev) => s + Number(ev.amount), 0)
-      const bal     = Number(a.balance)
+  // Simple allocation: group upcoming expenses by their linked account.
+  // Items with no account go under a single "Unassigned" bucket.
+  // Returns array of { name, mask, icon, balance, needed, short, shortAmt, surplus }
+  function accountAllocation(items) {
+    const upcoming = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay)
+    if (!upcoming.length) return []
+
+    const allAccounts = (acctData?.accounts || []).filter(a => !a.is_debt)
+    const buckets = {}   // keyed by account id or 'none'
+
+    for (const ev of upcoming) {
+      const key = ev.account_id ? String(ev.account_id) : 'none'
+      if (!buckets[key]) buckets[key] = { key, total: 0 }
+      buckets[key].total += Number(ev.amount)
+    }
+
+    return Object.values(buckets).map(b => {
+      if (b.key === 'none') {
+        return { name: 'Unassigned', mask: null, icon: '❓', balance: null, needed: b.total, short: false, shortAmt: 0, surplus: 0 }
+      }
+      const acct = allAccounts.find(a => String(a.id) === b.key)
+      if (!acct) return null
+      const bal  = Number(acct.balance)
+      const short = bal < b.total
       return {
-        ...a,
-        balance: bal,
-        needed,
-        responsible,
-        short:    needed > 0 && bal < needed,
-        shortAmt: Math.max(0, needed - bal),
-        surplus:  needed > 0 && bal >= needed ? bal - needed : 0,
+        name: acct.name, mask: acct.mask, icon: acct.icon || '🏦',
+        balance: bal, needed: b.total,
+        short, shortAmt: short ? b.total - bal : 0, surplus: short ? 0 : bal - b.total,
       }
-    })
-    // Avoid double-counting unlinked bills: only the first checking/savings account gets them
-    let unlinkedAssigned = false
-    return result.map(a => {
-      const isDefault = a.include_in_balance === true || a.type === 'checking' || a.type === 'savings'
-      if (isDefault && !unlinkedAssigned) { unlinkedAssigned = true; return a }
-      if (isDefault && unlinkedAssigned) {
-        // Strip unlinked from subsequent default accounts
-        const upcomingItems2 = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay)
-        const linked2  = upcomingItems2.filter(ev => ev.account_id && Number(ev.account_id) === Number(a.id))
-        const needed2  = linked2.reduce((s, ev) => s + Number(ev.amount), 0)
-        const bal2     = Number(a.balance)
-        return { ...a, needed: needed2, short: needed2 > 0 && bal2 < needed2, shortAmt: Math.max(0, needed2 - bal2), surplus: needed2 > 0 && bal2 >= needed2 ? bal2 - needed2 : 0 }
-      }
-      return a
-    }).filter(a => a.needed > 0)  // only show accounts with bills due
+    }).filter(Boolean)
   }
 
-  const grid = buildGrid(viewDate.year, viewDate.month)
+    const grid = buildGrid(viewDate.year, viewDate.month)
   const monthLabel = new Date(viewDate.year, viewDate.month, 1)
     .toLocaleString('en-US', { month: 'long', year: 'numeric' })
   const isCurrentMonth = viewDate.year === today.getFullYear() && viewDate.month === today.getMonth()
@@ -475,7 +466,7 @@ export default function Calendar() {
                   const t = halfTotals(firstHalf)
                   const remaining = firstHalf.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s,ev) => s + Number(ev.amount), 0)
                   const passed = todayDay > 15
-                  const alloc  = accountAllocation(firstHalf, (acctData?.accounts || []).filter(a => !a.is_debt))
+                  const alloc  = accountAllocation(firstHalf)
                   return (
                     <div className={styles.halfCard}>
                       <div className={styles.halfHeader} onClick={() => setOpenFirst(o => !o)}>
@@ -537,7 +528,7 @@ export default function Calendar() {
                 {(() => {
                   const t = halfTotals(secondHalf)
                   const remaining = secondHalf.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s,ev) => s + Number(ev.amount), 0)
-                  const alloc  = accountAllocation(secondHalf, (acctData?.accounts || []).filter(a => !a.is_debt))
+                  const alloc  = accountAllocation(secondHalf)
                   return (
                     <div className={styles.halfCard}>
                       <div className={styles.halfHeader} onClick={() => setOpenSecond(o => !o)}>
