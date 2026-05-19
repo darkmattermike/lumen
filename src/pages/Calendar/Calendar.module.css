@@ -371,3 +371,88 @@
 }
 .acctSelect:focus { border-color: rgba(91,196,233,.4); }
 .acctSelect option { background: #0d1117; color: #f4f4f1; }
+
+/* ── Inline recurring row editor ── */
+.recRow { margin-bottom: 2px; }
+
+.eventRowOpen {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.recChevron {
+  font-size: 16px; color: var(--ink-3); flex-shrink: 0;
+  transition: transform .2s ease; line-height: 1;
+  margin-left: 2px;
+}
+
+.recEditor {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(93,202,165,.15);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 14px 16px;
+  animation: drawer-open .18s ease;
+}
+
+.recEditorGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.recField { display: flex; flex-direction: column; gap: 4px; }
+
+.recLabel {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase;
+}
+
+.recInput, .recSelect {
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--ink-4);
+  border-radius: 7px; padding: 7px 10px;
+  font-family: var(--font-sans); font-size: 12px;
+  color: var(--ink-0); outline: none;
+  transition: border var(--t-base);
+  width: 100%;
+  color-scheme: dark;
+}
+.recInput:focus, .recSelect:focus { border-color: rgba(93,202,165,.4); }
+.recSelect { cursor: pointer; }
+.recSelect option { background: #0d1117; color: #f4f4f1; }
+
+.recError {
+  font-size: 11px; color: var(--debt);
+  background: rgba(232,115,99,.07);
+  border: 1px solid rgba(232,115,99,.2);
+  border-radius: 7px; padding: 7px 10px;
+  margin-bottom: 10px;
+}
+
+.recFooter {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding-top: 10px; border-top: 1px solid var(--ink-5);
+}
+
+.recCancel {
+  padding: 7px 16px; background: transparent;
+  border: 1px solid var(--ink-4); border-radius: 7px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-3); cursor: pointer;
+  transition: all var(--t-base);
+}
+.recCancel:hover { border-color: var(--ink-2); color: var(--ink-1); }
+
+.recSave {
+  padding: 7px 20px; background: rgba(93,202,165,.1);
+  border: 1px solid rgba(93,202,165,.3); border-radius: 7px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--safe); cursor: pointer;
+  transition: all var(--t-base);
+}
+.recSave:hover:not(:disabled) { background: var(--safe); color: #040608; }
+.recSave:disabled { opacity: .5; cursor: not-allowed; }

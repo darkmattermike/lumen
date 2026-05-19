@@ -252,6 +252,140 @@ function RecurringModal({ item, onClose, onSaved }) {
   )
 }
 
+
+// ── Inline-editable recurring row ────────────────────────────
+function RecurringRow({ ev, isPast, daysUntil, typeColor, freqLabel, isCurrentMonth, accounts, onDeleted, onUpdated }) {
+  const [open, setOpen]     = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState('')
+  const [form, setForm]     = useState({
+    name:         ev.name         || '',
+    amount:       Math.abs(Number(ev.amount)) || '',
+    day_of_month: ev.day_of_month || '',
+    type:         ev.type         || 'bill',
+    icon:         ev.icon         || '📦',
+    account_id:   ev.account_id   || '',
+  })
+
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
+
+  async function handleSave() {
+    setSaving(true)
+    setError('')
+    try {
+      const payload = {
+        name:         form.name.trim(),
+        amount:       Number(form.amount),
+        type:         form.type,
+        icon:         form.icon,
+        day_of_month: Number(form.day_of_month),
+        account_id:   form.account_id ? Number(form.account_id) : null,
+      }
+      await api.updateRecurring(ev.id, payload)
+      // Update local state immediately — no full refresh needed
+      onUpdated(ev.id, payload)
+      setOpen(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const color = typeColor[form.type] || 'var(--warn)'
+
+  return (
+    <div className={styles.recRow}>
+      {/* ── Main row ── */}
+      <div
+        className={`${styles.eventRow} ${open ? styles.eventRowOpen : ''}`}
+        style={form.type === 'income' ? { background: 'rgba(93,202,165,.04)', borderRadius: 8, padding: '8px 4px' } : {}}
+        onClick={() => setOpen(o => !o)}
+      >
+        <div className={styles.eventDate} style={isPast ? {color:'var(--ink-2)'} : form.type==='income' ? {color:'rgba(93,202,165,.6)'} : {}}>
+          Day {ev.day_of_month}
+        </div>
+        <div className={styles.eventDot} style={{background: isPast ? 'var(--ink-2)' : color}} />
+        <div className={styles.eventInfo}>
+          <div className={styles.eventName} style={isPast ? {color:'var(--ink-1)'} : form.type==='income' ? {color:'rgba(93,202,165,.9)'} : {}}>
+            {form.icon} {form.name}
+          </div>
+          <div className={styles.eventType} style={isPast ? {color:'var(--ink-2)'} : form.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
+            {freqLabel}{isCurrentMonth ? (isPast ? ' · passed' : daysUntil === 0 ? ' · Today' : ` · in ${daysUntil} day${daysUntil===1?'':'s'}`) : ''}
+          </div>
+        </div>
+        <div className={styles.eventAmt} style={{color: isPast ? 'var(--ink-1)' : color}}>
+          {form.type === 'income' ? '+' : '−'}${fmt(Number(form.amount))}
+        </div>
+        <div className={styles.recChevron} style={{transform: open ? 'rotate(90deg)' : 'rotate(0deg)'}}>›</div>
+        <button className={styles.eventDelete} onClick={e => { e.stopPropagation(); onDeleted(ev.id) }}>✕</button>
+      </div>
+
+      {/* ── Inline editor ── */}
+      {open && (
+        <div className={styles.recEditor}>
+          <div className={styles.recEditorGrid}>
+
+            <div className={styles.recField}>
+              <div className={styles.recLabel}>Name</div>
+              <input className={styles.recInput} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Name" />
+            </div>
+
+            <div className={styles.recField}>
+              <div className={styles.recLabel}>Amount ($)</div>
+              <input className={styles.recInput} type="number" min="0" step="0.01" value={form.amount} onChange={e => set('amount', e.target.value)} />
+            </div>
+
+            <div className={styles.recField}>
+              <div className={styles.recLabel}>Day of Month</div>
+              <input className={styles.recInput} type="number" min="1" max="31" value={form.day_of_month} onChange={e => set('day_of_month', e.target.value)} />
+            </div>
+
+            <div className={styles.recField}>
+              <div className={styles.recLabel}>Type</div>
+              <select className={styles.recSelect} value={form.type} onChange={e => set('type', e.target.value)}>
+                <option value="bill">Bill</option>
+                <option value="subscription">Subscription</option>
+                <option value="income">Income</option>
+                <option value="transfer">Transfer</option>
+              </select>
+            </div>
+
+            <div className={styles.recField}>
+              <div className={styles.recLabel}>Account</div>
+              <select className={styles.recSelect} value={form.account_id} onChange={e => set('account_id', e.target.value)}>
+                <option value="">— None —</option>
+                {(accounts || []).filter(a => !a.is_debt).map(a => (
+                  <option key={a.id} value={a.id}>{a.icon || ''} {a.name}{a.mask ? ` ····${a.mask}` : ''}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.recField}>
+              <div className={styles.recLabel}>Icon</div>
+              <select className={styles.recSelect} value={form.icon} onChange={e => set('icon', e.target.value)}>
+                {['🏠','⚡','🌐','📱','🎵','📺','☁️','🚗','💊','🐾','🎓','💰','💼','🏋️','🍽️','☕','🎮','📦','✈️','🔧'].map(ic => (
+                  <option key={ic} value={ic}>{ic}</option>
+                ))}
+              </select>
+            </div>
+
+          </div>
+
+          {error && <div className={styles.recError}>{error}</div>}
+
+          <div className={styles.recFooter}>
+            <button className={styles.recCancel} onClick={() => setOpen(false)}>Cancel</button>
+            <button className={styles.recSave} onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────
 export default function Calendar() {
   const today = new Date()
@@ -263,11 +397,21 @@ export default function Calendar() {
   const [openSecond, setOpenSecond]   = useState(false)
   const { data, loading, error, refresh } = useApi(api.calendar)
   const { data: acctData } = useApi(api.accounts)
+  const [localExpanded, setLocalExpanded] = useState(null)
+
+  // Update a single item locally — no full refresh
+  function handleUpdated(id, patch) {
+    setLocalExpanded(prev => {
+      const base = prev ?? (data?.expanded ?? [])
+      return base.map(ev => ev.id === id ? { ...ev, ...patch } : ev)
+    })
+  }
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
 
-  const { recurring = [], expanded = [], upcoming = [], remainingBills = 0, accounts = [] } = data
+  const { recurring = [], expanded: rawExpanded = [], upcoming = [], remainingBills = 0, accounts = [] } = data
+  const expanded = localExpanded ?? rawExpanded
 
   // Use expanded (biweekly items appear on each occurrence date) for the calendar grid
   const eventMap = {}
@@ -603,32 +747,20 @@ export default function Calendar() {
             const isPast = isCurrentMonth && ev.day_of_month < today.getDate()
             const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
             const daysUntil = upcomingEntry?.daysUntil
-            const baseItem  = recurring.find(r => r.id === ev.id) || ev
             const freqLabel = ev.frequency === 'biweekly' ? 'biweekly' : ev.type
             return (
-              <div
+              <RecurringRow
                 key={`${ev.id}-${ev.day_of_month}-${idx}`}
-                className={styles.eventRow}
-                style={ev.type==='income' ? {background:'rgba(93,202,165,.04)',borderRadius:8,padding:'8px 4px'} : {}}
-              >
-                <div className={styles.eventDate} style={isPast ? {color:'var(--ink-2)'} : ev.type==='income' ? {color:'rgba(93,202,165,.6)'} : {}}>
-                  Day {ev.day_of_month}
-                </div>
-                <div className={styles.eventDot} style={{background: isPast ? 'var(--ink-2)' : typeColor[ev.type] || 'var(--warn)'}} />
-                <div className={styles.eventInfo}>
-                  <div className={styles.eventName} style={isPast ? {color:'var(--ink-1)'} : ev.type==='income' ? {color:'rgba(93,202,165,.9)'} : {}}>
-                    {ev.icon} {ev.name}
-                  </div>
-                  <div className={styles.eventType} style={isPast ? {color:'var(--ink-2)'} : ev.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
-                    {freqLabel}{isCurrentMonth ? (isPast ? ' · passed' : daysUntil === 0 ? ' · Today' : ` · in ${daysUntil} day${daysUntil===1?'':'s'}`) : ''}
-                  </div>
-                </div>
-                <div className={styles.eventAmt} style={{color: isPast ? 'var(--ink-1)' : typeColor[ev.type] || 'var(--warn)'}}>
-                  {ev.type==='income' ? '+' : '−'}${fmt(ev.amount)}
-                </div>
-                <button className={styles.eventEdit} onClick={() => setEditItem(baseItem)} title="Edit">✎</button>
-                <button className={styles.eventDelete} onClick={() => handleDelete(ev.id)}>✕</button>
-              </div>
+                ev={ev}
+                isPast={isPast}
+                daysUntil={daysUntil}
+                typeColor={typeColor}
+                freqLabel={freqLabel}
+                isCurrentMonth={isCurrentMonth}
+                accounts={acctData?.accounts || []}
+                onDeleted={handleDelete}
+                onUpdated={handleUpdated}
+              />
             )
           })}
         </div>
