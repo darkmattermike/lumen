@@ -511,23 +511,6 @@ export default function Budgets() {
               color="blue"
             />
 
-            <div style={{marginTop:20}}>
-              <div className="section-label" style={{marginBottom:12}}>Budget Summary</div>
-              <div className={styles.rolloverCard}>
-                <div className={styles.rolloverNote}>Remaining cap for each category this {monthName}.</div>
-                {budgets.map(b=>(
-                  <div key={b.id} className={styles.rolloverRow}>
-                    <span className={styles.rolloverName}>
-                      {b.completed && <span style={{color:'var(--safe)',marginRight:4}}>✓</span>}
-                      {b.icon} {b.name}
-                    </span>
-                    <span className={styles.rolloverAmt} style={{color:b.pct>100?'var(--debt)':b.completed?'var(--safe)':'var(--safe)'}}>
-                      {b.pct>100?`−$${fmt(b.spent-b.cap)} over`:`$${fmt(b.cap-b.spent)} left`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </ScreenWrap>

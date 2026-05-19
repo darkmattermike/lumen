@@ -332,3 +332,30 @@
 }
 
 @keyframes ai-pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .header {
+    grid-template-columns: 1fr;
+    padding: 24px 16px 20px;
+    gap: 16px;
+  }
+  .title { font-size: 36px; }
+  .headerRight { align-items: flex-start; }
+  .headerBtns { flex-wrap: wrap; }
+  .body {
+    padding: 16px;
+    grid-template-columns: 1fr;
+  }
+  .aiRecs { margin-top: 20px; }
+  .colorGrid { grid-template-columns: repeat(6, 1fr); }
+  .catCard { padding: 14px; }
+  .aiLimitsTable { overflow-x: auto; }
+  .aiLimitsHead,
+  .aiLimitsRow { grid-template-columns: 2fr 1fr 1fr auto; }
+  /* hide middle column on very small screens */
+  .aiLimitsHead span:nth-child(3),
+  .aiLimitsRow span:nth-child(3) { display: none; }
+  .overlay { padding: 0; align-items: flex-end; }
+  .modal { max-width: 100%; border-radius: 20px 20px 0 0; max-height: 90dvh; }
+}

@@ -22,3 +22,18 @@
   min-width: 0;
   background: var(--bg-0);
 }
+
+@media (max-width: 768px) {
+  .shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: visible;
+  }
+  .inner {
+    flex-direction: column;
+  }
+  .main {
+    width: 100%;
+    overflow-x: hidden;
+  }
+}

@@ -332,3 +332,88 @@ body {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ══════════════════════════════════════════
+   MOBILE RESPONSIVE — 768px and below
+   Targets: iPhone 17 Pro Max (430px), Samsung S24 (360px)
+══════════════════════════════════════════ */
+
+/* Mobile layout tokens */
+@media (max-width: 768px) {
+  :root {
+    --rail-w:   0px;
+    --pad-x:    16px;
+    --pad-y:    20px;
+    --tab-bar-h: 60px;
+  }
+
+  /* Push page content above the bottom tab bar */
+  body {
+    padding-bottom: var(--tab-bar-h);
+  }
+
+  #root {
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+}
+
+/* ── Bottom tab bar (mobile nav) ── */
+.mobileNav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileNav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    height: var(--tab-bar-h);
+    background: rgba(7, 9, 13, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--ink-5);
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .mobileNavBtn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    height: 100%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 4px;
+    min-width: 44px;
+    transition: color var(--t-fast);
+    color: var(--ink-3);
+  }
+
+  .mobileNavBtn.mobileNavOn {
+    color: var(--safe);
+  }
+
+  .mobileNavIcon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .mobileNavLabel {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+}

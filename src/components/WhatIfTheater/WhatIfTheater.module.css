@@ -224,3 +224,18 @@
   transition: all var(--t-fast);
 }
 .dismissPlanBtn:hover { color: var(--ink-2); border-color: rgba(255,255,255,.18); }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .theater { padding: 20px 16px 28px; }
+  .spotlight {
+    grid-template-columns: 1fr;
+    padding: 20px 16px;
+  }
+  .dotCol { display: none; }
+  .chips { gap: 6px; }
+  .chip { font-size: 11px; padding: 7px 12px; }
+  .responseText { font-size: 15px; }
+  .pinBar { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .noKey { padding: 20px 0; }
+}

@@ -245,3 +245,42 @@
 .plansBannerArrow { font-size: 14px; color: rgba(167,139,255,.4); }
 
 @keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 28px 20px 24px;
+    gap: 20px;
+  }
+  .dotCol { display: none; }
+  .rightCol { min-width: 0; }
+  .amount {
+    font-size: 56px;
+    letter-spacing: -1px;
+  }
+  .prose { font-size: 15px; margin-top: 12px; }
+  .zones {
+    grid-template-columns: 1fr 1fr;
+  }
+  .zone { padding: 18px 16px; }
+  .zoneVal { font-size: 28px; }
+  .body {
+    grid-template-columns: 1fr;
+  }
+  .aside {
+    border-left: none;
+    border-top: 1px solid rgba(93,202,165,.08);
+    padding: 20px 16px;
+  }
+  .plansBanner {
+    margin: 0 8px;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+  .plansBannerRight {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

@@ -120,3 +120,16 @@
 .ncSub strong { color: var(--ink-1); }
 
 @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .header { padding: 24px 16px 20px; }
+  .title { font-size: 36px; }
+  .stats { gap: 6px; }
+  .stat { padding: 8px 10px; }
+  .tabs { padding: 0 16px; overflow-x: auto; }
+  .body { padding: 16px; }
+  .cardList { max-width: 100%; }
+  .card { padding: 12px; }
+  .paneHeader { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
