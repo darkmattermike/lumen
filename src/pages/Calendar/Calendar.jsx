@@ -745,7 +745,7 @@ export default function Calendar() {
             <div className={styles.belowEmpty}>
               No recurring items yet. Click <strong>+ Add Recurring</strong> to get started.
             </div>
-          ) : allSorted.filter(ev => !isCurrentMonth || ev.day_of_month >= todayDay).map((ev, idx) => {
+          ) : allSorted.map((ev, idx) => {
             const isPast = isCurrentMonth && ev.day_of_month < todayDay
             const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
             const daysUntil = upcomingEntry?.daysUntil
