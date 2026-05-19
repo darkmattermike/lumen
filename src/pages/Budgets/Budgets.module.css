@@ -1,5 +1,5 @@
 .header {
-  padding: 44px 56px 32px;
+  padding: 28px 32px 20px;
   border-bottom: 1px solid var(--ink-5);
   display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start;
   background: radial-gradient(ellipse at 90% 20%,rgba(167,139,255,.1) 0%,transparent 50%),linear-gradient(180deg,#0a0810 0%,var(--bg-1) 100%);
@@ -23,7 +23,7 @@
 .addBtn:hover { background:var(--safe);color:#040608; }
 
 /* 60/40 split */
-.body { padding:32px 56px;display:grid;grid-template-columns:7fr 3fr;gap:28px;align-items:start; }
+.body { padding:20px 32px;display:grid;grid-template-columns:7fr 3fr;gap:28px;align-items:start; }
 
 /* ── Category card ── */
 .catCard {
@@ -359,3 +359,51 @@
   .overlay { padding: 0; align-items: flex-end; }
   .modal { max-width: 100%; border-radius: 20px 20px 0 0; max-height: 90dvh; }
 }
+
+/* ── Inline edit button ── */
+.editBtn {
+  background:transparent;border:none;color:var(--ink-3);font-size:12px;
+  cursor:pointer;padding:3px 6px;border-radius:5px;
+  transition:all var(--t-fast);flex-shrink:0;
+}
+.editBtn:hover { color:var(--calm);background:rgba(91,196,233,.08); }
+
+/* ── Inline edit form ── */
+.catEditForm {
+  border-top:1px solid var(--ink-5);
+  padding:10px 12px;
+  background:rgba(255,255,255,.02);
+  animation:drawer-open .15s ease;
+}
+.catEditGrid {
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;
+}
+.catEditField { display:flex;flex-direction:column;gap:3px; }
+.catEditLabel {
+  font-family:var(--font-mono);font-size:9px;color:var(--ink-3);
+  letter-spacing:1px;text-transform:uppercase;
+}
+.catEditInput {
+  background:rgba(255,255,255,.04);border:1px solid var(--ink-4);
+  border-radius:6px;padding:6px 8px;
+  font-family:var(--font-sans);font-size:11px;color:var(--ink-0);
+  outline:none;transition:border var(--t-base);width:100%;
+}
+.catEditInput:focus { border-color:rgba(93,202,165,.4); }
+.catEditInput option { background:#0d1117;color:#f4f4f1; }
+.catEditFooter { display:flex;justify-content:flex-end;gap:6px; }
+.catEditCancel {
+  padding:5px 14px;background:transparent;border:1px solid var(--ink-4);
+  border-radius:6px;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:1px;text-transform:uppercase;color:var(--ink-3);cursor:pointer;
+}
+.catEditCancel:hover { border-color:var(--ink-2);color:var(--ink-1); }
+.catEditSave {
+  padding:5px 16px;background:rgba(93,202,165,.1);border:1px solid rgba(93,202,165,.3);
+  border-radius:6px;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:1px;text-transform:uppercase;color:var(--safe);cursor:pointer;
+}
+.catEditSave:hover:not(:disabled) { background:var(--safe);color:#040608; }
+.catEditSave:disabled { opacity:.5;cursor:not-allowed; }
+
+@keyframes drawer-open { from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)} }

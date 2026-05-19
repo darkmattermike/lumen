@@ -1,5 +1,5 @@
 .header {
-  padding: 44px 56px 32px;
+  padding: 28px 32px 20px;
   border-bottom: 1px solid var(--ink-5);
   display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start;
   background: radial-gradient(ellipse at 85% 20%, rgba(93,202,165,.08) 0%, transparent 50%),
@@ -22,7 +22,7 @@
 .avatarEmail { font-size:11px;color:var(--ink-3);font-family:var(--font-mono); }
 
 /* Body */
-.body { padding:40px 56px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start; }
+.body { padding:24px 32px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start; }
 .left  { display:flex;flex-direction:column;gap:20px; }
 .right { display:flex;flex-direction:column;gap:20px; }
 

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import styles from './Rail.module.css'
 
@@ -12,12 +13,22 @@ const NAV_ITEMS = [
   { path: '/gmail',        icon: '✉', label: 'Gmail' },
 ]
 
-// Primary tabs shown in the mobile bottom bar (5 max for comfort)
-const MOBILE_PRIMARY = ['/dashboard', '/transactions', '/budgets', '/calendar', '/settings']
+const MOBILE_ALL = [
+  { path: '/dashboard',    icon: '⬡', label: 'Home'    },
+  { path: '/transactions', icon: '↕', label: 'Txns'    },
+  { path: '/budgets',      icon: '◎', label: 'Budgets' },
+  { path: '/accounts',     icon: '⬦', label: 'Accounts'},
+  { path: '/analytics',    icon: '⌁', label: 'Stats'   },
+  { path: '/calendar',     icon: '◷', label: 'Calendar'},
+  { path: '/rules',        icon: '⊙', label: 'Rules'   },
+  { path: '/gmail',        icon: '✉', label: 'Gmail'   },
+  { path: '/settings',     icon: '⚙', label: 'Settings'},
+]
 
 export default function Rail() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
     <>
@@ -34,42 +45,28 @@ export default function Rail() {
             <span className={styles.tip}>{label.toUpperCase()}</span>
           </button>
         ))}
-
         <div className={styles.sep} />
-
-        <button
-          className={styles.rb}
-          style={{ color: 'rgba(167,139,255,0.6)' }}
-          aria-label="WHAT IF"
-        >
-          ✦
-          <span className={styles.tip}>WHAT IF</span>
+        <button className={styles.rb} style={{ color: 'rgba(167,139,255,0.6)' }} aria-label="WHAT IF">
+          ✦<span className={styles.tip}>WHAT IF</span>
         </button>
-
         <button
           className={`${styles.rb} ${styles.bottom} ${pathname === '/settings' ? styles.on : ''}`}
           onClick={() => navigate('/settings')}
           aria-label="SETTINGS"
         >
-          ⚙
-          <span className={styles.tip}>SETTINGS</span>
+          ⚙<span className={styles.tip}>SETTINGS</span>
         </button>
       </nav>
 
-      {/* ── Mobile bottom tab bar ── */}
-      <nav className="mobileNav">
-        {[
-          { path: '/dashboard',    icon: '⬡', label: 'Home'     },
-          { path: '/transactions', icon: '↕', label: 'Txns'     },
-          { path: '/budgets',      icon: '◎', label: 'Budgets'  },
-          { path: '/calendar',     icon: '◷', label: 'Calendar' },
-          { path: '/settings',     icon: '⚙', label: 'More'     },
-        ].map(({ path, icon, label }) => (
+      {/* ── Mobile bottom tab bar — scrollable ── */}
+      <nav className="mobileNav" style={{overflowX:'auto',justifyContent:'flex-start',gap:0}}>
+        {MOBILE_ALL.map(({ path, icon, label }) => (
           <button
             key={path}
-            className={`mobileNavBtn ${pathname === path || (path === '/settings' && !MOBILE_PRIMARY.includes(pathname)) ? 'mobileNavOn' : ''}`}
+            className={`mobileNavBtn ${pathname === path ? 'mobileNavOn' : ''}`}
             onClick={() => navigate(path)}
             aria-label={label}
+            style={{minWidth:56,flexShrink:0}}
           >
             <span className="mobileNavIcon">{icon}</span>
             <span className="mobileNavLabel">{label}</span>

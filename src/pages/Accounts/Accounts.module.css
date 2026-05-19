@@ -1,4 +1,4 @@
-.header { padding: 44px 56px 32px; border-bottom: 1px solid var(--ink-5); display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start; background: radial-gradient(ellipse at 10% 70%,rgba(108,140,255,.12) 0%,transparent 45%),linear-gradient(180deg,#070a14 0%,var(--bg-1) 100%); }
+.header { padding: 28px 32px 20px; border-bottom: 1px solid var(--ink-5); display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start; background: radial-gradient(ellipse at 10% 70%,rgba(108,140,255,.12) 0%,transparent 45%),linear-gradient(180deg,#070a14 0%,var(--bg-1) 100%); }
 .pre { font-family: var(--font-mono); font-size: 9px; color: rgba(108,140,255,.5); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px; }
 .title { font-family: var(--font-serif); font-size: 48px; font-weight: 200; color: var(--ink-0); margin-bottom: 10px; line-height: 1; }
 .sub { font-size: 13px; color: var(--ink-2); line-height: 1.65; }
@@ -6,7 +6,7 @@
 .nwLabel { font-family: var(--font-mono); font-size: 9px; color: rgba(108,140,255,.6); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
 .nwAmt { font-family: var(--font-serif); font-size: 42px; font-weight: 200; color: rgba(108,140,255,.9); line-height: 1; }
 
-.body { padding: 40px 56px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.body { padding: 24px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
 .groupLabel { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; grid-column: 1 / -1; }
 .groupLabel + .groupLabel { margin-top: 8px; }
 

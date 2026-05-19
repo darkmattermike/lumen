@@ -1,5 +1,5 @@
 .header {
-  padding: 44px 56px 32px;
+  padding: 28px 32px 20px;
   border-bottom: 1px solid var(--ink-5);
   display: grid;
   grid-template-columns: 1fr auto;
@@ -24,7 +24,7 @@
 .paceSub { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
 
 .filters {
-  padding: 18px 56px;
+  padding: 12px 32px;
   border-bottom: 1px solid var(--ink-5);
   background: var(--bg-1);
   display: flex;
@@ -53,7 +53,7 @@
 
 .body { display: grid; grid-template-columns: 1fr 300px; }
 
-.list { padding: 24px 56px; }
+.list { padding: 16px 32px; }
 
 .dayHead {
   font-family: var(--font-mono); font-size: 9px; color: var(--ink-3);
@@ -598,4 +598,21 @@
     gap: 10px;
   }
   .toastActions { flex-direction: row; }
+}
+
+/* ── Mobile transaction fixes ── */
+@media (max-width: 768px) {
+  .header { padding: 20px 12px 16px; }
+  .stats { gap: 4px; }
+  .stat { padding: 6px 10px; flex: 1; }
+  .statL { font-size: 8px; }
+  .statV { font-size: 14px; }
+  .filters { padding: 8px 12px; gap: 4px; }
+  .filterChip { font-size: 9px; padding: 5px 10px; white-space: nowrap; }
+  .search { font-size: 12px; padding: 7px 10px; }
+  .list { padding: 10px 12px; }
+  .txRow { padding: 8px 10px; gap: 8px; }
+  .txAmt { font-size: 11px; }
+  .txName { font-size: 12px; }
+  .dayHead { font-size: 9px; padding: 8px 0 4px; }
 }

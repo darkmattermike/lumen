@@ -1,4 +1,4 @@
-.header { padding: 44px 56px 32px; border-bottom: 1px solid var(--ink-5); display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start; background: radial-gradient(ellipse at 50% 0%,rgba(240,176,76,.08) 0%,transparent 50%),linear-gradient(180deg,#0d0b07 0%,var(--bg-1) 100%); }
+.header { padding: 28px 32px 20px; border-bottom: 1px solid var(--ink-5); display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start; background: radial-gradient(ellipse at 50% 0%,rgba(240,176,76,.08) 0%,transparent 50%),linear-gradient(180deg,#0d0b07 0%,var(--bg-1) 100%); }
 .pre { font-family: var(--font-mono); font-size: 9px; color: rgba(240,176,76,.5); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px; }
 .title { font-family: var(--font-serif); font-size: 48px; font-weight: 200; color: var(--ink-0); margin-bottom: 10px; line-height: 1; }
 .sub { font-size: 13px; color: var(--ink-2); line-height: 1.65; }
@@ -456,3 +456,16 @@
 }
 .recSave:hover:not(:disabled) { background: var(--safe); color: #040608; }
 .recSave:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Mobile calendar fixes ── */
+@media (max-width: 768px) {
+  .calMain { padding: 8px; }
+  .cell { min-height: 40px; padding: 2px 3px; }
+  .cellDate { font-size: 9px; }
+  .calEvent { font-size: 8px; padding: 1px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dow { gap: 1px; }
+  .grid { gap: 1px; }
+  .dowCell { font-size: 9px; text-align: center; }
+  .belowList { padding: 12px 8px 32px; }
+  .eventRow { padding: 6px 4px; }
+}

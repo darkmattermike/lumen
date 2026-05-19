@@ -36,15 +36,20 @@ const monthName   = today.toLocaleString('en-US',{month:'long'})
 
 // ── Category card ─────────────────────────────────────────────
 function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
-  const [open, setOpen]     = useState(false)
-  const [txs, setTxs]       = useState(null)
+  const [open, setOpen]       = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [txs, setTxs]         = useState(null)
   const [loadingTx, setLoadingTx] = useState(false)
   const [toggling, setToggling]   = useState(false)
+  const [saving, setSaving]       = useState(false)
+  const [editForm, setEditForm]   = useState({ name: cat.name, cap: cat.cap, icon: cat.icon || '📦', color: cat.color || 'safe' })
 
   const color  = COLOR_MAP[cat.color] || 'var(--safe)'
   const pct    = Math.min(cat.pct, 100)
   const isOver = cat.pct > 100
   const isDone = cat.completed
+
+  function setEF(k, v) { setEditForm(f => ({ ...f, [k]: v })) }
 
   async function toggle() {
     if (!open && txs === null) {
@@ -55,6 +60,7 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
       } catch { setTxs([]) }
       finally { setLoadingTx(false) }
     }
+    setEditing(false)
     setOpen(o => !o)
   }
 
@@ -68,6 +74,17 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
     } finally {
       setToggling(false)
     }
+  }
+
+  async function handleSaveEdit(e) {
+    e.stopPropagation()
+    setSaving(true)
+    try {
+      await api.updateBudget(cat.id, { name: editForm.name, cap: Number(editForm.cap), icon: editForm.icon, color: editForm.color })
+      onRefresh()
+      setEditing(false)
+    } catch (err) { console.error(err) }
+    finally { setSaving(false) }
   }
 
   return (
@@ -96,25 +113,58 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
         </div>
         <div className={styles.catChevron} style={{transform: open ? 'rotate(180deg)' : 'rotate(0deg)'}}>›</div>
 
-        {/* Actions — stop propagation so they don't toggle the drawer */}
+        {/* Actions */}
         <div className={styles.catActions} onClick={e => e.stopPropagation()}>
+          <button
+            className={styles.editBtn}
+            onClick={e => { e.stopPropagation(); setEditing(v => !v); setOpen(true) }}
+            title="Edit category"
+          >✎</button>
           <button
             className={`${styles.completeBtn} ${isDone ? styles.completeBtnOn : ''}`}
             onClick={handleComplete}
             disabled={toggling}
             title={isDone ? 'Mark incomplete' : 'Mark complete'}
-          >
-            ✓
-          </button>
+          >✓</button>
           <button
             className={styles.deleteBtn}
             onClick={() => onDelete(cat.id)}
             title="Delete category"
-          >
-            ✕
-          </button>
+          >✕</button>
         </div>
       </div>
+
+      {/* ── Inline edit form ── */}
+      {editing && open && (
+        <div className={styles.catEditForm} onClick={e => e.stopPropagation()}>
+          <div className={styles.catEditGrid}>
+            <div className={styles.catEditField}>
+              <div className={styles.catEditLabel}>Name</div>
+              <input className={styles.catEditInput} value={editForm.name} onChange={e => setEF('name', e.target.value)} />
+            </div>
+            <div className={styles.catEditField}>
+              <div className={styles.catEditLabel}>Monthly Cap ($)</div>
+              <input className={styles.catEditInput} type="number" min="0" step="1" value={editForm.cap} onChange={e => setEF('cap', e.target.value)} />
+            </div>
+            <div className={styles.catEditField}>
+              <div className={styles.catEditLabel}>Icon</div>
+              <select className={styles.catEditInput} value={editForm.icon} onChange={e => setEF('icon', e.target.value)} style={{colorScheme:'dark'}}>
+                {ICON_OPTS.map(ic => <option key={ic} value={ic}>{ic}</option>)}
+              </select>
+            </div>
+            <div className={styles.catEditField}>
+              <div className={styles.catEditLabel}>Color</div>
+              <select className={styles.catEditInput} value={editForm.color} onChange={e => setEF('color', e.target.value)} style={{colorScheme:'dark'}}>
+                {COLOR_OPTS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className={styles.catEditFooter}>
+            <button className={styles.catEditCancel} onClick={() => setEditing(false)}>Cancel</button>
+            <button className={styles.catEditSave} onClick={handleSaveEdit} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Progress bar ── */}
       {!isDone && (
