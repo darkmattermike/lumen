@@ -1,8 +1,8 @@
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import styles from './Rail.module.css'
 import NotificationBell from '../NotificationBell/NotificationBell'
 
-// Flat SVG icon components — no emoji
 const Icon = ({ d, size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d={d} />
@@ -20,8 +20,10 @@ const ICONS = {
   gmail:    'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 0l8 8 8-8',
   goals:    'M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 0v10l4 2',
   settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8.19-2A8.01 8.01 0 0 0 20 12a8 8 0 0 0-.81-3.19l2.22-1.28a1 1 0 0 0 .37-1.37l-2-3.46a1 1 0 0 0-1.37-.37l-2.23 1.29A7.95 7.95 0 0 0 13 3.05V.5a1 1 0 0 0-2 0v2.55a7.95 7.95 0 0 0-3.18 1.57L5.59 3.33a1 1 0 0 0-1.37.37l-2 3.46a1 1 0 0 0 .37 1.37l2.22 1.28A8.01 8.01 0 0 0 4 12c0 1.09.2 2.13.59 3.09L2.37 16.37a1 1 0 0 0-.37 1.37l2 3.46a1 1 0 0 0 1.37.37l2.23-1.29A7.95 7.95 0 0 0 11 20.95v2.55a1 1 0 0 0 2 0v-2.55a7.95 7.95 0 0 0 3.18-1.57l2.23 1.29a1 1 0 0 0 1.37-.37l2-3.46a1 1 0 0 0-.37-1.37l-2.22-1.28z',
+  more:     'M5 12h.01M12 12h.01M19 12h.01',
 }
 
+// Desktop sidebar items
 const NAV_ITEMS = [
   { path: '/dashboard',    icon: 'home',     label: 'Overview'     },
   { path: '/transactions', icon: 'txns',     label: 'Transactions' },
@@ -34,22 +36,51 @@ const NAV_ITEMS = [
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'        },
 ]
 
-const MOBILE_NAV = [
-  { path: '/dashboard',    icon: 'home',     label: 'Home'     },
-  { path: '/transactions', icon: 'txns',     label: 'Txns'     },
-  { path: '/budgets',      icon: 'budgets',  label: 'Budgets'  },
-  { path: '/accounts',     icon: 'accounts', label: 'Accounts' },
-  { path: '/analytics',    icon: 'stats',    label: 'Stats'    },
-  { path: '/calendar',     icon: 'calendar', label: 'Calendar' },
-  { path: '/rules',        icon: 'rules',    label: 'Rules'    },
-  { path: '/goals',        icon: 'goals',    label: 'Goals'    },
-  { path: '/gmail',        icon: 'gmail',    label: 'Gmail'    },
-  { path: '/settings',     icon: 'settings', label: 'Settings' },
+// Mobile primary tabs — always visible
+const MOBILE_PRIMARY = [
+  { path: '/dashboard',    icon: 'home',     label: 'Home'         },
+  { path: '/transactions', icon: 'txns',     label: 'Transactions' },
+  { path: '/budgets',      icon: 'budgets',  label: 'Budgets'      },
+  { path: '/calendar',     icon: 'calendar', label: 'Calendar'     },
+  { path: '/analytics',    icon: 'stats',    label: 'Analytics'    },
+]
+
+// Mobile "More" drawer items
+const MOBILE_MORE = [
+  { path: '/accounts',     icon: 'accounts', label: 'Accounts'  },
+  { path: '/rules',        icon: 'rules',    label: 'Rules'     },
+  { path: '/goals',        icon: 'goals',    label: 'Goals'     },
+  { path: '/gmail',        icon: 'gmail',    label: 'Gmail'     },
+  { path: '/settings',     icon: 'settings', label: 'Settings'  },
 ]
 
 export default function Rail() {
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
+  const navigate          = useNavigate()
+  const { pathname }      = useLocation()
+  const [moreOpen, setMoreOpen] = useState(false)
+  const drawerRef         = useRef(null)
+
+  // Close "More" drawer on outside tap
+  useEffect(() => {
+    if (!moreOpen) return
+    function handler(e) {
+      if (drawerRef.current && !drawerRef.current.contains(e.target)) setMoreOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
+  }, [moreOpen])
+
+  // Close drawer when navigating
+  function go(path) {
+    navigate(path)
+    setMoreOpen(false)
+  }
+
+  const moreActive = MOBILE_MORE.some(m => m.path === pathname)
 
   return (
     <>
@@ -67,33 +98,78 @@ export default function Rail() {
           </button>
         ))}
         <div className={styles.sep} />
-        <div style={{padding:'0 8px 8px'}}>
+        <div style={{ padding: '0 8px 4px' }}>
           <NotificationBell />
         </div>
-        <button className={`${styles.rb} ${styles.bottom} ${pathname === '/settings' ? styles.on : ''}`}
-          onClick={() => navigate('/settings')} aria-label="Settings">
+        <button
+          className={`${styles.rb} ${styles.bottom} ${pathname === '/settings' ? styles.on : ''}`}
+          onClick={() => navigate('/settings')}
+          aria-label="Settings"
+        >
           <Icon d={ICONS.settings} size={17} />
           <span className={styles.tip}>SETTINGS</span>
         </button>
       </nav>
 
-      {/* ── Mobile bottom tab bar — scrollable ── */}
-      <nav className="mobileNav" style={{overflowX:'auto',justifyContent:'flex-start',scrollbarWidth:'none'}}>
-        {MOBILE_NAV.map(({ path, icon, label }) => (
+      {/* ── Mobile bottom tab bar ── */}
+      <nav className={styles.mobileNav}>
+        {/* 5 primary tabs */}
+        {MOBILE_PRIMARY.map(({ path, icon, label }) => (
           <button
             key={path}
-            className={`mobileNavBtn ${pathname === path ? 'mobileNavOn' : ''}`}
-            onClick={() => navigate(path)}
+            className={`${styles.mobileBtn} ${pathname === path ? styles.mobileBtnOn : ''}`}
+            onClick={() => go(path)}
             aria-label={label}
-            style={{minWidth:52,flexShrink:0}}
           >
-            <span className="mobileNavIcon" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <Icon d={ICONS[icon]} size={19} />
+            <span className={styles.mobileBtnIcon}>
+              <Icon d={ICONS[icon]} size={20} />
             </span>
-            <span className="mobileNavLabel">{label}</span>
+            <span className={styles.mobileBtnLabel}>{label}</span>
           </button>
         ))}
+
+        {/* More button */}
+        <button
+          className={`${styles.mobileBtn} ${moreActive || moreOpen ? styles.mobileBtnOn : ''}`}
+          onClick={() => setMoreOpen(v => !v)}
+          aria-label="More"
+        >
+          <span className={styles.mobileBtnIcon}>
+            <Icon d={ICONS.more} size={20} />
+          </span>
+          <span className={styles.mobileBtnLabel}>More</span>
+        </button>
       </nav>
+
+      {/* ── More drawer — slides up above tab bar ── */}
+      {moreOpen && (
+        <>
+          <div className={styles.moreBackdrop} onClick={() => setMoreOpen(false)} />
+          <div className={styles.moreDrawer} ref={drawerRef}>
+            <div className={styles.moreHandle} />
+
+            {/* Lumen notifications row */}
+            <div className={styles.moreNotifRow}>
+              <NotificationBell mobileDrawer />
+            </div>
+
+            <div className={styles.moreGrid}>
+              {MOBILE_MORE.map(({ path, icon, label }) => (
+                <button
+                  key={path}
+                  className={`${styles.moreItem} ${pathname === path ? styles.moreItemOn : ''}`}
+                  onClick={() => go(path)}
+                >
+                  <span className={styles.moreItemIcon}>
+                    <Icon d={ICONS[icon]} size={22} />
+                  </span>
+                  <span className={styles.moreItemLabel}>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 }

@@ -3,11 +3,17 @@ import { api } from '../../data/api'
 import LumenDot from '../LumenDot/LumenDot'
 import styles from './NotificationBell.module.css'
 
-export default function NotificationBell() {
+/**
+ * NotificationBell
+ * Desktop: orb trigger in the rail, panel expands to the right as a chat bubble.
+ * Mobile (mobileDrawer prop): orb + label row inside the More drawer;
+ *   tapping expands an inline panel below rather than a floating bubble.
+ */
+export default function NotificationBell({ mobileDrawer = false }) {
   const [data, setData]       = useState({ notifications: [], unread_count: 0 })
   const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState(false)
-  const panelRef              = useRef(null)
+  const wrapRef               = useRef(null)
 
   async function load() {
     try {
@@ -24,15 +30,15 @@ export default function NotificationBell() {
     return () => clearInterval(id)
   }, [])
 
-  // Close on outside click
+  // Desktop: close panel on outside click
   useEffect(() => {
-    if (!open) return
+    if (!open || mobileDrawer) return
     function handler(e) {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false)
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [open])
+  }, [open, mobileDrawer])
 
   async function handleOpen() {
     const wasOpen = open
@@ -67,9 +73,73 @@ export default function NotificationBell() {
     win:     'var(--safe)',
   }
 
+  const list = (
+    <div className={styles.list}>
+      {data.notifications.map((n, i) => (
+        <div
+          key={n.id}
+          className={`${styles.item} ${!n.read ? styles.unread : ''}`}
+          style={{ '--accent': TYPE_COLOR[n.type] || 'var(--calm)', animationDelay: `${i * 40}ms` }}
+        >
+          <div className={styles.itemTop}>
+            <span className={styles.itemIcon}>{n.icon}</span>
+            <span className={styles.itemTitle}>{n.title}</span>
+            <button className={styles.dismissBtn} onClick={() => dismiss(n.id)} aria-label="Dismiss">×</button>
+          </div>
+          <p className={styles.itemBody}>{n.body}</p>
+          <span className={styles.itemTime}>{relativeTime(n.created_at)}</span>
+        </div>
+      ))}
+    </div>
+  )
+
+  const emptyState = (
+    <div className={styles.empty}>
+      <p className={styles.emptyMsg}>You're all caught up ✓</p>
+      <p className={styles.emptySub}>I'll let you know when something needs attention.</p>
+    </div>
+  )
+
+  // ── Mobile drawer variant ──────────────────────────────────────────────────
+  if (mobileDrawer) {
+    return (
+      <div className={styles.drawerWrap} ref={wrapRef}>
+        <button className={styles.drawerTrigger} onClick={handleOpen}>
+          <LumenDot size={18} rings={open} />
+          <span className={styles.drawerTriggerLabel}>
+            Lumen
+            {data.unread_count > 0 && (
+              <span className={styles.drawerBadge}>{data.unread_count}</span>
+            )}
+          </span>
+          <span className={styles.drawerChevron} style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </span>
+        </button>
+
+        {open && (
+          <div className={styles.drawerPanel}>
+            <div className={styles.drawerPanelHeader}>
+              <span className={styles.drawerPanelLabel}>Notifications</span>
+              {data.notifications.length > 0 && (
+                <button className={styles.clearBtn} onClick={clearAll}>Clear all</button>
+              )}
+            </div>
+            {loading && !data.notifications.length
+              ? <div className={styles.empty}><span className={styles.emptyDots}>···</span></div>
+              : !data.notifications.length ? emptyState : list
+            }
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Desktop rail variant ──────────────────────────────────────────────────
   return (
-    <div className={styles.wrap} ref={panelRef}>
-      {/* Trigger — Lumen orb with unread badge */}
+    <div className={styles.wrap} ref={wrapRef}>
       <button
         className={`${styles.trigger} ${open ? styles.triggerOpen : ''}`}
         onClick={handleOpen}
@@ -82,12 +152,9 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Chat-bubble panel — expands to the right */}
       {open && (
         <div className={styles.bubble}>
-          {/* Bubble tail pointing left toward the orb */}
           <div className={styles.tail} />
-
           <div className={styles.bubbleHeader}>
             <div className={styles.lumenLabel}>
               <LumenDot size={14} />
@@ -97,37 +164,10 @@ export default function NotificationBell() {
               <button className={styles.clearBtn} onClick={clearAll}>Clear all</button>
             )}
           </div>
-
-          {loading && !data.notifications.length && (
-            <div className={styles.empty}>
-              <span className={styles.emptyDots}>···</span>
-            </div>
-          )}
-
-          {!loading && !data.notifications.length && (
-            <div className={styles.empty}>
-              <p className={styles.emptyMsg}>You're all caught up ✓</p>
-              <p className={styles.emptySub}>I'll let you know when something needs attention.</p>
-            </div>
-          )}
-
-          <div className={styles.list}>
-            {data.notifications.map((n, i) => (
-              <div
-                key={n.id}
-                className={`${styles.item} ${!n.read ? styles.unread : ''}`}
-                style={{ '--accent': TYPE_COLOR[n.type] || 'var(--calm)', animationDelay: `${i * 40}ms` }}
-              >
-                <div className={styles.itemTop}>
-                  <span className={styles.itemIcon}>{n.icon}</span>
-                  <span className={styles.itemTitle}>{n.title}</span>
-                  <button className={styles.dismissBtn} onClick={() => dismiss(n.id)} aria-label="Dismiss">×</button>
-                </div>
-                <p className={styles.itemBody}>{n.body}</p>
-                <span className={styles.itemTime}>{relativeTime(n.created_at)}</span>
-              </div>
-            ))}
-          </div>
+          {loading && !data.notifications.length
+            ? <div className={styles.empty}><span className={styles.emptyDots}>···</span></div>
+            : !data.notifications.length ? emptyState : list
+          }
         </div>
       )}
     </div>
