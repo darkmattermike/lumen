@@ -297,7 +297,7 @@ export default function Calendar() {
         shortAmt: Math.max(0, needed - bal),
         surplus: needed > 0 && bal >= needed ? bal - needed : 0,
       }
-    }).filter(a => a.needed > 0 || a.include_in_balance)
+    }).filter(a => a.needed > 0)  // only show accounts that have something due
   }
 
   const grid = buildGrid(viewDate.year, viewDate.month)
