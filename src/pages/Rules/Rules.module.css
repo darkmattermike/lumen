@@ -100,7 +100,8 @@
   background-repeat: no-repeat; background-position: right 10px center;
 }
 .builderSelect:focus { border-color: rgba(91,196,233,.4); }
-.builderSelect option { background: #0d1117; }
+.builderSelect option { background: #0d1117; color: #f4f4f1; }
+.builderSelect { color-scheme: dark; }
 
 .builderInput {
   flex: 1; min-width: 140px;

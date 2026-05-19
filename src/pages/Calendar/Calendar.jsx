@@ -213,10 +213,9 @@ function RecurringModal({ item, onClose, onSaved }) {
 
           <div className={styles.fieldLabel}>Account <span style={{color:'var(--ink-3)',fontWeight:400}}>(optional)</span></div>
           <select
-            className={styles.input}
+            className={styles.acctSelect}
             value={form.account_id}
             onChange={e => set('account_id', e.target.value)}
-            style={{appearance:'auto'}}
           >
             <option value=''>— No specific account —</option>
             {(acctData?.accounts || []).filter(a => !a.is_debt).map(a => (

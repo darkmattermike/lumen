@@ -349,3 +349,25 @@
   color: var(--ink-3);
   font-family: var(--font-mono);
 }
+
+/* ── Account picker select — dark themed ── */
+.acctSelect {
+  width: 100%;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--ink-4);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-0);
+  outline: none;
+  cursor: pointer;
+  transition: border var(--t-base);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234a5161' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  margin-bottom: 12px;
+}
+.acctSelect:focus { border-color: rgba(91,196,233,.4); }
+.acctSelect option { background: #0d1117; color: #f4f4f1; }

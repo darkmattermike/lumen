@@ -174,7 +174,8 @@
   padding-right: 32px;
   cursor: pointer;
 }
-.editorSelect option { background: #0d1117; }
+.editorSelect option { background: #0d1117; color: #f4f4f1; }
+.editorSelect { color-scheme: dark; }
 
 .editorFooter {
   display: flex; align-items: center; justify-content: flex-end;

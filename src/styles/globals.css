@@ -417,3 +417,12 @@ body {
     white-space: nowrap;
   }
 }
+
+/* ── Force dark dropdown lists across all browsers ── */
+select {
+  color-scheme: dark;
+}
+select option {
+  background: #0d1117;
+  color: #f4f4f1;
+}
