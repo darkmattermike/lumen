@@ -616,3 +616,73 @@
   .txName { font-size: 12px; }
   .dayHead { font-size: 9px; padding: 8px 0 4px; }
 }
+
+/* ── Transactions mobile overhaul ── */
+@media (max-width: 768px) {
+  .header {
+    grid-template-columns: 1fr;
+    padding: 16px 14px 14px;
+    gap: 12px;
+  }
+  .title { font-size: 32px; margin-bottom: 6px; }
+  .sub { display: none; }
+  .pre { margin-bottom: 4px; }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .stat { padding: 8px 10px; border-radius: 8px; }
+  .statL { font-size: 8px; margin-bottom: 2px; }
+  .statV { font-size: 18px; }
+  .headerRight {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .pace { display: none; }
+  .aiCatBtn, .enrichBtn {
+    font-size: 8px;
+    padding: 7px 12px;
+    letter-spacing: 1px;
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .enrichMsg { font-size: 9px; width: 100%; text-align: center; }
+
+  /* Filter bar */
+  .filters {
+    padding: 8px 14px;
+    gap: 5px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .filterChip { font-size: 9px; padding: 5px 10px; white-space: nowrap; flex-shrink: 0; }
+  .search { display: none; }
+
+  /* Transaction list */
+  .list { padding: 8px 14px; }
+  .txRow { padding: 8px 0; gap: 8px; }
+  .txIcon { width: 28px; height: 28px; font-size: 13px; }
+  .txName { font-size: 12px; }
+  .txCat { font-size: 10px; }
+  .txAmt { font-size: 12px; }
+  .dayHead { font-size: 9px; margin: 12px 0 4px; }
+
+  /* Editor */
+  .editorGrid { grid-template-columns: 1fr; }
+  .editorFieldFull { grid-column: 1; }
+
+  /* Toast */
+  .toast {
+    width: calc(100% - 20px);
+    bottom: calc(60px + env(safe-area-inset-bottom) + 8px);
+    flex-direction: column;
+    gap: 8px;
+  }
+}

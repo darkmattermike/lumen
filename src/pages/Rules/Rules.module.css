@@ -300,3 +300,45 @@
   .ruleRow { flex-wrap: wrap; gap: 8px; }
   .ruleDesc { flex-wrap: wrap; }
 }
+
+/* ── Rules mobile overhaul ── */
+@media (max-width: 768px) {
+  .header {
+    grid-template-columns: 1fr;
+    padding: 16px 14px 14px;
+    gap: 12px;
+  }
+  .title { font-size: 32px; }
+  .headerRight { flex-direction: row; align-items: center; gap: 8px; }
+  .stats { gap: 6px; flex-wrap: wrap; }
+  .stat { padding: 6px 10px; }
+  .statV { font-size: 18px; }
+
+  .body { grid-template-columns: 1fr; }
+  .mainCol { padding: 12px 14px; }
+  .aside { display: none; }
+
+  /* Builder — single column */
+  .ruleBuilder { gap: 6px; }
+  .builderRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .builderRow .builderLabel { grid-column: 1 / -1; }
+  .builderRowFull {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .builderRowFull .builderLabel { display: none; }
+  .builderSelect, .builderInput { font-size: 12px; padding: 8px 10px; }
+
+  /* Rule rows */
+  .ruleRow { flex-wrap: wrap; gap: 6px; padding: 10px 10px; }
+  .ruleName { font-size: 11px; }
+  .ruleDesc { font-size: 9px; flex-wrap: wrap; }
+
+  .addForm { padding: 14px; }
+  .applyBtn { font-size: 9px; padding: 8px 14px; }
+  .syncNote { padding: 10px 14px; }
+  .syncNoteVal { font-size: 18px; }
+}
