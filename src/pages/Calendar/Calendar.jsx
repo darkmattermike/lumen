@@ -451,10 +451,10 @@ export default function Calendar() {
                               <div key={i} className={styles.halfItem}>
                                 <span className={styles.halfItemIcon}>{ev.icon}</span>
                                 <span className={styles.halfItemName}>{ev.name}</span>
-                                <span className={styles.halfItemDay} style={{color: isPast ? 'var(--ink-4)' : u?.daysUntil === 0 ? 'var(--warn)' : 'var(--ink-3)'}}>
+                                <span className={styles.halfItemDay} style={{color: isPast ? 'var(--ink-2)' : u?.daysUntil === 0 ? 'var(--warn)' : 'var(--ink-3)'}}>
                                   {isPast ? 'passed' : u?.daysUntil === 0 ? 'today' : `${u?.daysUntil}d`}
                                 </span>
-                                <span className={styles.halfItemAmt} style={{color: isPast ? 'var(--ink-3)' : ev.type === 'income' ? 'var(--safe)' : 'var(--debt)'}}>
+                                <span className={styles.halfItemAmt} style={{color: isPast ? 'var(--ink-1)' : ev.type === 'income' ? 'var(--safe)' : 'var(--debt)'}}>
                                   {ev.type === 'income' ? '+' : '−'}${fmt(ev.amount)}
                                 </span>
                               </div>
@@ -510,10 +510,10 @@ export default function Calendar() {
                               <div key={i} className={styles.halfItem}>
                                 <span className={styles.halfItemIcon}>{ev.icon}</span>
                                 <span className={styles.halfItemName}>{ev.name}</span>
-                                <span className={styles.halfItemDay} style={{color: isPast ? 'var(--ink-4)' : u?.daysUntil === 0 ? 'var(--warn)' : 'var(--ink-3)'}}>
+                                <span className={styles.halfItemDay} style={{color: isPast ? 'var(--ink-2)' : u?.daysUntil === 0 ? 'var(--warn)' : 'var(--ink-3)'}}>
                                   {isPast ? 'passed' : u?.daysUntil === 0 ? 'today' : `${u?.daysUntil}d`}
                                 </span>
-                                <span className={styles.halfItemAmt} style={{color: isPast ? 'var(--ink-3)' : ev.type === 'income' ? 'var(--safe)' : 'var(--debt)'}}>
+                                <span className={styles.halfItemAmt} style={{color: isPast ? 'var(--ink-1)' : ev.type === 'income' ? 'var(--safe)' : 'var(--debt)'}}>
                                   {ev.type === 'income' ? '+' : '−'}${fmt(ev.amount)}
                                 </span>
                               </div>
@@ -566,19 +566,19 @@ export default function Calendar() {
                 className={styles.eventRow}
                 style={ev.type==='income' ? {background:'rgba(93,202,165,.04)',borderRadius:8,padding:'8px 4px'} : {}}
               >
-                <div className={styles.eventDate} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.6)'} : {}}>
+                <div className={styles.eventDate} style={isPast ? {color:'var(--ink-2)'} : ev.type==='income' ? {color:'rgba(93,202,165,.6)'} : {}}>
                   Day {ev.day_of_month}
                 </div>
-                <div className={styles.eventDot} style={{background: isPast ? 'var(--ink-4)' : typeColor[ev.type] || 'var(--warn)'}} />
+                <div className={styles.eventDot} style={{background: isPast ? 'var(--ink-2)' : typeColor[ev.type] || 'var(--warn)'}} />
                 <div className={styles.eventInfo}>
-                  <div className={styles.eventName} style={isPast ? {color:'var(--ink-3)'} : ev.type==='income' ? {color:'rgba(93,202,165,.9)'} : {}}>
+                  <div className={styles.eventName} style={isPast ? {color:'var(--ink-1)'} : ev.type==='income' ? {color:'rgba(93,202,165,.9)'} : {}}>
                     {ev.icon} {ev.name}
                   </div>
-                  <div className={styles.eventType} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
+                  <div className={styles.eventType} style={isPast ? {color:'var(--ink-2)'} : ev.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
                     {freqLabel}{isCurrentMonth ? (isPast ? ' · passed' : daysUntil === 0 ? ' · Today' : ` · in ${daysUntil} day${daysUntil===1?'':'s'}`) : ''}
                   </div>
                 </div>
-                <div className={styles.eventAmt} style={{color: isPast ? 'var(--ink-3)' : typeColor[ev.type] || 'var(--warn)'}}>
+                <div className={styles.eventAmt} style={{color: isPast ? 'var(--ink-1)' : typeColor[ev.type] || 'var(--warn)'}}>
                   {ev.type==='income' ? '+' : '−'}${fmt(ev.amount)}
                 </div>
                 <button className={styles.eventEdit} onClick={() => setEditItem(baseItem)} title="Edit">✎</button>
