@@ -85,6 +85,16 @@ export const api = {
   aiCategorize:        ()     => request('/api/lumen/categorize',         { method: 'POST' }),
   aiBudgetLimits:      ()     => request('/api/lumen/budget-limits',      { method: 'POST' }),
   enrichTransactions:  ()     => request('/api/lumen/enrich',           { method: 'POST' }),
+  // Gmail Phase 5
+  gmailPhase5Scan:      ()     => request('/api/gmail/scan/phase5',      { method: 'POST' }),
+  gmailPriceChanges:    ()     => request('/api/gmail/price-changes'),
+  gmailBillSuggestions: ()     => request('/api/gmail/bill-suggestions'),
+  gmailPendingCharges:  ()     => request('/api/gmail/pending-charges'),
+  gmailUnusedSubs:      ()     => request('/api/gmail/unused-subscriptions'),
+  gmailUnsubLink:       (body) => request('/api/gmail/unsubscribe-link',  { method: 'POST', body: JSON.stringify(body) }),
+  gmailUpdatePriceChange: (id, body) => request(`/api/gmail/price-changes/${id}`,   { method: 'PATCH', body: JSON.stringify(body) }),
+  gmailUpdateBillSug:   (id, body) => request(`/api/gmail/bill-suggestions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  gmailUpdatePending:   (id, body) => request(`/api/gmail/pending-charges/${id}`,  { method: 'PATCH', body: JSON.stringify(body) }),
 
   // Lumen streaming ask — returns a raw fetch Response for SSE
   lumenAsk: async (message, context_type = 'general') => {

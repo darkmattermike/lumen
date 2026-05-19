@@ -133,3 +133,33 @@
   .card { padding: 12px; }
   .paneHeader { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
+
+/* ── Action buttons inside cards ── */
+.cardActions { display: flex; gap: 8px; margin-top: 6px; align-items: center; flex-wrap: wrap; }
+
+.findUnsubBtn {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: .5px;
+  padding: 4px 10px; border-radius: 6px;
+  background: rgba(108,140,255,.08); border: 1px solid rgba(108,140,255,.25);
+  color: var(--calm); cursor: pointer; transition: all var(--t-fast);
+}
+.findUnsubBtn:hover:not(:disabled) { background: var(--calm); color: #040608; }
+.findUnsubBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+.unsubLink {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: .5px;
+  padding: 4px 10px; border-radius: 6px;
+  background: rgba(232,115,99,.1); border: 1px solid rgba(232,115,99,.3);
+  color: var(--debt); text-decoration: none; transition: all var(--t-fast);
+  display: inline-block;
+}
+.unsubLink:hover { background: var(--debt); color: #fff; }
+
+.addBillBtn {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: .5px;
+  padding: 4px 10px; border-radius: 6px;
+  background: rgba(93,202,165,.1); border: 1px solid rgba(93,202,165,.3);
+  color: var(--safe); cursor: pointer; transition: all var(--t-fast);
+}
+.addBillBtn:hover:not(:disabled) { background: var(--safe); color: #040608; }
+.addBillBtn:disabled { opacity: .5; cursor: not-allowed; }
