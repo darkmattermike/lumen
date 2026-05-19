@@ -295,13 +295,13 @@ export default function Calendar() {
   // 2. Bills without an account_id fall under include_in_balance accounts (checking first)
   function accountAllocation(items, accountList) {
     const upcomingItems = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay)
-    return accountList.map(a => {
-      // Bills explicitly linked to this account
-      const linked   = upcomingItems.filter(ev => ev.account_id === a.id)
-      // Bills with no account_id fall to include_in_balance accounts
-      const unlinked = a.include_in_balance
-        ? upcomingItems.filter(ev => !ev.account_id)
-        : []
+    const result = accountList.map(a => {
+      // Coerce IDs to numbers for reliable comparison
+      const aId    = Number(a.id)
+      const linked = upcomingItems.filter(ev => ev.account_id && Number(ev.account_id) === aId)
+      // Bills with no account_id fall to checking/savings accounts (or include_in_balance=true)
+      const isDefault = a.include_in_balance === true || a.type === 'checking' || a.type === 'savings'
+      const unlinked  = isDefault ? upcomingItems.filter(ev => !ev.account_id) : []
       const responsible = [...linked, ...unlinked]
       const needed  = responsible.reduce((s, ev) => s + Number(ev.amount), 0)
       const bal     = Number(a.balance)
@@ -310,11 +310,26 @@ export default function Calendar() {
         balance: bal,
         needed,
         responsible,
-        short: needed > 0 && bal < needed,
+        short:    needed > 0 && bal < needed,
         shortAmt: Math.max(0, needed - bal),
-        surplus: needed > 0 && bal >= needed ? bal - needed : 0,
+        surplus:  needed > 0 && bal >= needed ? bal - needed : 0,
       }
-    }).filter(a => a.needed > 0)  // only show accounts that have something due
+    })
+    // Avoid double-counting unlinked bills: only the first checking/savings account gets them
+    let unlinkedAssigned = false
+    return result.map(a => {
+      const isDefault = a.include_in_balance === true || a.type === 'checking' || a.type === 'savings'
+      if (isDefault && !unlinkedAssigned) { unlinkedAssigned = true; return a }
+      if (isDefault && unlinkedAssigned) {
+        // Strip unlinked from subsequent default accounts
+        const upcomingItems2 = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay)
+        const linked2  = upcomingItems2.filter(ev => ev.account_id && Number(ev.account_id) === Number(a.id))
+        const needed2  = linked2.reduce((s, ev) => s + Number(ev.amount), 0)
+        const bal2     = Number(a.balance)
+        return { ...a, needed: needed2, short: needed2 > 0 && bal2 < needed2, shortAmt: Math.max(0, needed2 - bal2), surplus: needed2 > 0 && bal2 >= needed2 ? bal2 - needed2 : 0 }
+      }
+      return a
+    }).filter(a => a.needed > 0)  // only show accounts with bills due
   }
 
   const grid = buildGrid(viewDate.year, viewDate.month)
