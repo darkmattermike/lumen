@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import PageShell from '../../components/PageShell/PageShell'
+import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import { api } from '../../data/api'
 import styles from './Goals.module.css'
 
@@ -121,7 +121,13 @@ export default function Goals() {
   const totalDebt = goals.filter(g => g.type === 'debt_payoff').reduce((s, g) => s + parseFloat(g.target_amount - (g.current_amount || 0)), 0)
 
   return (
-    <PageShell title="Goals" subtitle="Track your financial targets">
+    <ScreenWrap>
+      <div className={styles.pageHeader}>
+        <div>
+          <h1 className={styles.pageTitle}>Goals</h1>
+          <p className={styles.pageSub}>Track your financial targets</p>
+        </div>
+      </div>
       {/* Summary strip */}
       <div className={styles.strip}>
         <div className={styles.stripCard}>
@@ -268,6 +274,6 @@ export default function Goals() {
           </div>
         </div>
       )}
-    </PageShell>
+    </ScreenWrap>
   )
 }

@@ -1,3 +1,23 @@
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fg-primary);
+}
+
+.pageSub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
 .strip {
   display: flex;
   align-items: center;
