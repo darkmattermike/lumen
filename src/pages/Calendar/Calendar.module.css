@@ -80,7 +80,7 @@
   cursor: pointer; padding: 2px 5px; border-radius: 4px;
   transition: all var(--t-fast); flex-shrink: 0; margin-left: 2px;
 }
-.eventDelete:hover { color: var(--debt); background: rgba(232,115,99,.08); }
+.eventRow:hover { border-color: var(--ink-3); cursor: pointer; background: rgba(255,255,255,.02); }
 
 /* ── Modal ── */
 .overlay {
