@@ -501,13 +501,13 @@ export default function Budgets() {
             <LumenInsight
               label="Budget Pulse"
               contextType="budgets"
-              prompt="Give me 2-3 sharp, specific insights about my budget this month. Include: (1) any category that's overspent or dangerously close to cap, (2) a historical pattern — am I consistently over or under in any category across the last few months, and (3) a forward projection — based on my pace, what will I likely end at by month end. Use exact dollar figures. No generic advice."
+              prompt="What is the single most important thing about my budget right now — overspent category, cap at risk, or a pattern that stands out."
               color="amber"
             />
             <LumenInsight
               label="Spending Pattern"
               contextType="budgets"
-              prompt="In 2 sentences, identify the single most notable spending pattern across my budget categories over the last 3 months — something I might not have noticed. Be specific with numbers and category names."
+              prompt="One spending pattern across my budget categories over the last 3 months that I should know about."
               color="blue"
             />
 

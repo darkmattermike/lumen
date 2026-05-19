@@ -102,50 +102,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-
-      {/* ── Active Plans Impact Banner ── */}
-      {hasPlans && (
-        <div className={styles.plansBanner}>
-          <div className={styles.plansBannerLeft}>
-            <span className={styles.plansBannerIcon}>📌</span>
-            <div>
-              <div className={styles.plansBannerTitle}>
-                {activePlans.length} pinned plan{activePlans.length !== 1 ? 's' : ''}
-                {plannedSpend > 0 && ` · −$${fmt(plannedSpend)} new costs`}
-                {plannedSavings > 0 && ` · +$${fmt(plannedSavings)} freed up`}
-              </div>
-              <div className={styles.plansBannerSub}>
-                {activePlans.map(p => {
-                  const dir = Number(p.direction ?? 1)
-                  const prefix = dir < 0 ? '↩ skip: ' : '+ '
-                  return prefix + p.question
-                }).join(' · ')}
-              </div>
-            </div>
-          </div>
-          <div className={styles.plansBannerRight}>
-            {plannedSpend > 0 && (
-              <div className={styles.plansBannerStat}>
-                <span className={styles.plansBannerStatLabel}>New costs</span>
-                <span className={styles.plansBannerStatVal} style={{ color: 'var(--debt)' }}>−${fmt(plannedSpend)}</span>
-              </div>
-            )}
-            {plannedSavings > 0 && (
-              <div className={styles.plansBannerStat}>
-                <span className={styles.plansBannerStatLabel}>Freed up</span>
-                <span className={styles.plansBannerStatVal} style={{ color: 'var(--safe)' }}>+${fmt(plannedSavings)}</span>
-              </div>
-            )}
-            <div className={styles.plansBannerArrow}>→</div>
-            <div className={styles.plansBannerStat}>
-              <span className={styles.plansBannerStatLabel}>Net balance</span>
-              <span className={styles.plansBannerStatVal} style={{ color: heroColor }}>${fmt(heroBalance)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Four Principle Zones ── */}
       <div className={styles.zones}>
         {/* WHERE I AM */}

@@ -23,12 +23,12 @@
 .addBtn:hover { background:var(--safe);color:#040608; }
 
 /* 60/40 split */
-.body { padding:32px 56px;display:grid;grid-template-columns:3fr 2fr;gap:32px;align-items:start; }
+.body { padding:32px 56px;display:grid;grid-template-columns:7fr 3fr;gap:28px;align-items:start; }
 
 /* ── Category card ── */
 .catCard {
   background:rgba(255,255,255,.02);border:1px solid var(--ink-5);
-  border-radius:12px;padding:12px 14px;margin-bottom:10px;
+  border-radius:10px;padding:8px 12px;margin-bottom:6px;
   transition:border-color var(--t-fast);
 }
 .catCard:hover { border-color:var(--ink-3); }
@@ -38,12 +38,12 @@
   display:flex;align-items:center;gap:10px;
   cursor:pointer;user-select:none;
 }
-.catIcon { width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0; }
+.catIcon { width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0; }
 .catInfo { flex:1;min-width:0; }
-.catName { font-size:13px;color:var(--ink-0);font-weight:500; }
-.catPeriod { font-size:10px;color:var(--ink-3); }
+.catName { font-size:12px;color:var(--ink-0);font-weight:500; }
+.catPeriod { font-size:9px;color:var(--ink-3); }
 .catNums { text-align:right;flex-shrink:0; }
-.catSpent { font-family:var(--font-mono);font-size:13px; }
+.catSpent { font-family:var(--font-mono);font-size:12px; }
 .catCap { font-size:10px;color:var(--ink-3); }
 .catChevron {
   font-size:16px;color:var(--ink-3);flex-shrink:0;
@@ -57,7 +57,7 @@
 }
 .deleteBtn:hover { color:var(--debt);background:rgba(232,115,99,.08); }
 
-.barTrack { height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin:10px 0 6px; }
+.barTrack { height:2px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin:6px 0 2px; }
 .barFill  { height:100%;border-radius:2px;transition:width .4s ease; }
 .catWarn  { display:flex;align-items:center;gap:6px;font-size:10px;color:var(--warn);margin-bottom:4px; }
 
