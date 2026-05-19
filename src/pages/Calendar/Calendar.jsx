@@ -421,10 +421,12 @@ export default function Calendar() {
   })
 
   // Sidebar list — use expanded so biweekly shows both paydays, sorted by day
+  const todayDay       = today.getDate()
+  const isCurrentMonth = viewDate.year === today.getFullYear() && viewDate.month === today.getMonth()
+
   const allSorted = [...expanded].sort((a, b) => a.day_of_month - b.day_of_month)
 
   // Split allSorted into 1st-15th and 16th-end for the aside
-  const todayDay = today.getDate()
   // Only show upcoming items in the aside half-cards — passed items are done
   const firstHalf  = allSorted.filter(ev => ev.day_of_month <= 15 && (ev.day_of_month >= todayDay || !isCurrentMonth))
   const secondHalf = allSorted.filter(ev => ev.day_of_month > 15  && (ev.day_of_month >= todayDay || !isCurrentMonth))
@@ -472,7 +474,6 @@ export default function Calendar() {
     const grid = buildGrid(viewDate.year, viewDate.month)
   const monthLabel = new Date(viewDate.year, viewDate.month, 1)
     .toLocaleString('en-US', { month: 'long', year: 'numeric' })
-  const isCurrentMonth = viewDate.year === today.getFullYear() && viewDate.month === today.getMonth()
 
   function prevMonth() {
     setSelectedDay(null)
