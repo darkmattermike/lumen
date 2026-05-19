@@ -44,9 +44,11 @@ function RecurringModal({ item, onClose, onSaved }) {
     icon:         item?.icon              || '📦',
     frequency:    item?.frequency         || 'monthly',
     start_date:   item?.start_date ? String(item.start_date).slice(0, 10) : '',
+    account_id:   item?.account_id        || '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
+  const { data: acctData }  = useApi(api.accounts)
 
   const isBiweekly = form.frequency === 'biweekly'
 
@@ -69,6 +71,7 @@ function RecurringModal({ item, onClose, onSaved }) {
         type:         form.type,
         icon:         form.icon,
         frequency:    form.frequency,
+        account_id:   form.account_id ? Number(form.account_id) : null,
         ...(isBiweekly
           ? { start_date: form.start_date, day_of_month: new Date(form.start_date).getDate() }
           : { day_of_month: Number(form.day_of_month), start_date: null }
@@ -207,6 +210,21 @@ function RecurringModal({ item, onClose, onSaved }) {
               />
             </div>
           )}
+
+          <div className={styles.fieldLabel}>Account <span style={{color:'var(--ink-3)',fontWeight:400}}>(optional)</span></div>
+          <select
+            className={styles.input}
+            value={form.account_id}
+            onChange={e => set('account_id', e.target.value)}
+            style={{appearance:'auto'}}
+          >
+            <option value=''>— No specific account —</option>
+            {(acctData?.accounts || []).filter(a => !a.is_debt).map(a => (
+              <option key={a.id} value={a.id}>
+                {a.icon || ''} {a.name}{a.mask ? ` ····${a.mask}` : ''} · ${Number(a.balance).toLocaleString()}
+              </option>
+            ))}
+          </select>
 
           <div className={styles.preview}>
             <div className={styles.previewIcon}>{form.icon}</div>
