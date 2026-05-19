@@ -265,3 +265,23 @@
   color: var(--ink-3); letter-spacing: .5px;
   padding-left: 21px;
 }
+
+/* Phase B — Duplicate action buttons */
+.itemActions {
+  display: flex; gap: 6px;
+  padding: 4px 0 6px 21px;
+}
+.actionBtnDanger {
+  font-size: 10px; padding: 4px 8px;
+  background: var(--debt); color: #fff;
+  border: none; border-radius: 4px;
+  cursor: pointer; transition: opacity var(--t-fast);
+}
+.actionBtnDanger:hover { opacity: 0.85; }
+.actionBtnNeutral {
+  font-size: 10px; padding: 4px 8px;
+  background: var(--surface-1); color: var(--ink-2);
+  border: 1px solid var(--border); border-radius: 4px;
+  cursor: pointer; transition: opacity var(--t-fast);
+}
+.actionBtnNeutral:hover { opacity: 0.75; }

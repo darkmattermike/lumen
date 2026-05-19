@@ -125,4 +125,10 @@ export const api = {
   // CSV Import
   previewCsv:  (body) => request('/api/import/csv/preview', { method: 'POST', body: JSON.stringify(body) }),
   importCsv:   (body) => request('/api/import/csv',         { method: 'POST', body: JSON.stringify(body) }),
+  recategorize: (body) => request('/api/import/csv/recategorize', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Duplicates (Phase B)
+  getDuplicates:       ()      => request('/api/duplicates'),
+  confirmDuplicate:    (notifId) => request(`/api/duplicates/${notifId}/confirm`, { method: 'POST' }),
+  dismissDuplicate:    (notifId) => request(`/api/duplicates/${notifId}/dismiss`, { method: 'POST' }),
 }

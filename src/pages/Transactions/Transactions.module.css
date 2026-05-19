@@ -125,6 +125,7 @@
 }
 .txInfo { min-width: 0; }
 .txName { font-size: 13px; color: var(--ink-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.txRawName { font-size: 9px; color: var(--ink-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 .txCat  { font-size: 10px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .txAmt  { font-family: var(--font-mono); font-size: 12px; text-align: right; white-space: nowrap; }
 .txChevron {

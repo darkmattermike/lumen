@@ -66,11 +66,33 @@ export default function NotificationBell({ mobileDrawer = false }) {
     setData({ notifications: [], unread_count: 0 })
   }
 
+  async function confirmDuplicate(notifId) {
+    try {
+      await api.confirmDuplicate(notifId)
+      setData(prev => ({
+        ...prev,
+        notifications: prev.notifications.filter(n => n.id !== notifId)
+      }))
+    } catch { /* silent */ }
+  }
+
+  async function dismissDuplicate(notifId) {
+    try {
+      await api.dismissDuplicate(notifId)
+      setData(prev => ({
+        ...prev,
+        notifications: prev.notifications.filter(n => n.id !== notifId)
+      }))
+    } catch { /* silent */ }
+  }
+
   const TYPE_COLOR = {
-    alert:   'var(--debt)',
-    warning: 'var(--warn)',
-    insight: 'var(--calm)',
-    win:     'var(--safe)',
+    alert:             'var(--debt)',
+    warning:           'var(--warn)',
+    insight:           'var(--calm)',
+    win:               'var(--safe)',
+    duplicate:         'var(--warn)',
+    recurring_change:  'var(--calm)',
   }
 
   const list = (
@@ -87,6 +109,16 @@ export default function NotificationBell({ mobileDrawer = false }) {
             <button className={styles.dismissBtn} onClick={() => dismiss(n.id)} aria-label="Dismiss">×</button>
           </div>
           <p className={styles.itemBody}>{n.body}</p>
+          {n.type === 'duplicate' && (
+            <div className={styles.itemActions}>
+              <button className={styles.actionBtnDanger} onClick={() => confirmDuplicate(n.id)}>
+                Yes, remove duplicate
+              </button>
+              <button className={styles.actionBtnNeutral} onClick={() => dismissDuplicate(n.id)}>
+                Not a duplicate
+              </button>
+            </div>
+          )}
           <span className={styles.itemTime}>{relativeTime(n.created_at)}</span>
         </div>
       ))}

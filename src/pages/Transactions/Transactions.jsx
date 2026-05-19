@@ -185,7 +185,10 @@ function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
       <div className={styles.txRow} onClick={() => setOpen(o => !o)}>
         <div className={styles.txIcon}>{tx.icon || (isIncome ? '💰' : '💳')}</div>
         <div className={styles.txInfo}>
-          <div className={styles.txName}>{form.name}</div>
+          <div className={styles.txName}>{tx.cleaned_name || form.name}</div>
+          {tx.cleaned_name && tx.cleaned_name !== tx.name && (
+            <div className={styles.txRawName}>{tx.name}</div>
+          )}
           <div className={styles.txCat}>
             {isTransfer
               ? <span style={{color:'var(--calm)'}}>↔ Transfer — excluded from totals</span>
