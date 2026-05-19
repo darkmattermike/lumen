@@ -11,6 +11,7 @@ import Analytics    from './pages/Analytics/Analytics'
 import Calendar     from './pages/Calendar/Calendar'
 import Rules        from './pages/Rules/Rules'
 import GmailInbox  from './pages/GmailInbox/GmailInbox'
+import Goals        from './pages/Goals/Goals'
 import Settings     from './pages/Settings/Settings'
 import styles from './App.module.css'
 
@@ -35,6 +36,7 @@ function AppShell() {
             <Route path="/calendar"     element={<Calendar />} />
             <Route path="/rules"        element={<Rules />} />
             <Route path="/gmail"        element={<GmailInbox />} />
+            <Route path="/goals"        element={<Goals />} />
             <Route path="/settings"     element={<Settings />} />
           </Routes>
         </main>

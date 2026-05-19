@@ -108,4 +108,21 @@ export const api = {
       body: JSON.stringify({ message, context_type }),
     })
   },
+
+  // Notifications
+  notifications:          ()    => request('/api/notifications'),
+  markNotificationRead:   (id)  => request(`/api/notifications/${id}/read`,    { method: 'PATCH' }),
+  markAllNotificationsRead: ()  => request('/api/notifications/read-all',       { method: 'PATCH' }),
+  dismissNotification:    (id)  => request(`/api/notifications/${id}/dismiss`, { method: 'PATCH' }),
+
+  // Goals
+  goals:         ()         => request('/api/goals'),
+  createGoal:    (body)     => request('/api/goals',      { method: 'POST',  body: JSON.stringify(body) }),
+  updateGoal:    (id, body) => request(`/api/goals/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  contributeGoal: (id, body) => request(`/api/goals/${id}/contribute`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteGoal:    (id)       => request(`/api/goals/${id}`, { method: 'DELETE' }),
+
+  // CSV Import
+  previewCsv:  (body) => request('/api/import/csv/preview', { method: 'POST', body: JSON.stringify(body) }),
+  importCsv:   (body) => request('/api/import/csv',         { method: 'POST', body: JSON.stringify(body) }),
 }

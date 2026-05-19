@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
+import CsvImportModal from '../../components/CsvImportModal/CsvImportModal'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -504,6 +505,7 @@ export default function Transactions() {
   const [activeFilter, setActiveFilter]   = useState('All')
   const [search, setSearch]               = useState('')
   const [showCatModal, setShowCatModal]   = useState(false)
+  const [showCsvImport, setShowCsvImport] = useState(false)
   const [enriching, setEnriching]         = useState(false)
   const [enrichMsg, setEnrichMsg]         = useState('')
 
@@ -685,9 +687,19 @@ export default function Transactions() {
             <button className={styles.enrichBtn} onClick={handleEnrich} disabled={enriching}>
               {enriching ? '...' : '✉ Enrich Names'}
             </button>
+            <button className={styles.enrichBtn} onClick={() => setShowCsvImport(true)}>
+              ↑ Import CSV
+            </button>
             {enrichMsg && <div className={styles.enrichMsg}>{enrichMsg}</div>}
           </div>
         </div>
+
+        {showCsvImport && (
+          <CsvImportModal
+            onClose={() => setShowCsvImport(false)}
+            onImported={() => { setShowCsvImport(false); refresh() }}
+          />
+        )}
 
         <div className={styles.filters}>
           {FILTERS.map(f => (

@@ -1,0 +1,275 @@
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stripCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+}
+
+.stripLabel {
+  font-size: 11px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stripVal {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fg-primary);
+}
+
+.addBtn {
+  margin-left: auto;
+  background: var(--fg-primary);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.addBtn:hover { opacity: 0.8; }
+
+.empty {
+  color: var(--fg-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 40px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+}
+.emptyState h3 { margin: 0; font-size: 18px; color: var(--fg-primary); }
+.emptyState p  { margin: 0; font-size: 14px; color: var(--fg-secondary); max-width: 360px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cardIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cardInfo {
+  flex: 1;
+}
+
+.cardName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+
+.cardType {
+  font-size: 11px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.cardActions {
+  display: flex;
+  gap: 4px;
+  margin-top: -2px;
+}
+.cardActions button {
+  background: none;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--fg-muted);
+  padding: 3px 5px;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+.cardActions button:hover {
+  background: var(--bg-elevated);
+  color: var(--fg-primary);
+}
+
+.progressWrap {
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  width: var(--pct, 0%);
+  background: var(--color, var(--col-calm));
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.cardStats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.statVal {
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+
+.statLabel {
+  color: var(--fg-muted);
+  font-size: 11px;
+}
+
+.statPct {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg-secondary);
+}
+
+.eta, .remaining {
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.complete {
+  font-size: 12px;
+  color: var(--col-safe);
+  font-weight: 600;
+}
+
+/* Modal */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalTitle {
+  margin: 0 0 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg-primary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--fg-secondary);
+  font-weight: 500;
+}
+
+.form input, .form select, .form textarea {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: var(--fg-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form input:focus, .form select:focus {
+  border-color: var(--fg-muted);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.cancelBtn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  color: var(--fg-secondary);
+  cursor: pointer;
+}
+.cancelBtn:hover { background: var(--border); }
+
+.saveBtn {
+  background: var(--fg-primary);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.saveBtn:hover:not(:disabled) { opacity: 0.85; }

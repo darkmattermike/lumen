@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import styles from './Rail.module.css'
+import NotificationBell from '../NotificationBell/NotificationBell'
 
 // Flat SVG icon components — no emoji
 const Icon = ({ d, size = 18 }) => (
@@ -17,6 +18,7 @@ const ICONS = {
   calendar: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
   rules:    'M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z',
   gmail:    'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 0l8 8 8-8',
+  goals:    'M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 0v10l4 2',
   settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8.19-2A8.01 8.01 0 0 0 20 12a8 8 0 0 0-.81-3.19l2.22-1.28a1 1 0 0 0 .37-1.37l-2-3.46a1 1 0 0 0-1.37-.37l-2.23 1.29A7.95 7.95 0 0 0 13 3.05V.5a1 1 0 0 0-2 0v2.55a7.95 7.95 0 0 0-3.18 1.57L5.59 3.33a1 1 0 0 0-1.37.37l-2 3.46a1 1 0 0 0 .37 1.37l2.22 1.28A8.01 8.01 0 0 0 4 12c0 1.09.2 2.13.59 3.09L2.37 16.37a1 1 0 0 0-.37 1.37l2 3.46a1 1 0 0 0 1.37.37l2.23-1.29A7.95 7.95 0 0 0 11 20.95v2.55a1 1 0 0 0 2 0v-2.55a7.95 7.95 0 0 0 3.18-1.57l2.23 1.29a1 1 0 0 0 1.37-.37l2-3.46a1 1 0 0 0-.37-1.37l-2.22-1.28z',
 }
 
@@ -28,6 +30,7 @@ const NAV_ITEMS = [
   { path: '/analytics',    icon: 'stats',    label: 'Analytics'    },
   { path: '/calendar',     icon: 'calendar', label: 'Calendar'     },
   { path: '/rules',        icon: 'rules',    label: 'Rules'        },
+  { path: '/goals',        icon: 'goals',    label: 'Goals'        },
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'        },
 ]
 
@@ -39,6 +42,7 @@ const MOBILE_NAV = [
   { path: '/analytics',    icon: 'stats',    label: 'Stats'    },
   { path: '/calendar',     icon: 'calendar', label: 'Calendar' },
   { path: '/rules',        icon: 'rules',    label: 'Rules'    },
+  { path: '/goals',        icon: 'goals',    label: 'Goals'    },
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'    },
   { path: '/settings',     icon: 'settings', label: 'Settings' },
 ]
@@ -63,6 +67,9 @@ export default function Rail() {
           </button>
         ))}
         <div className={styles.sep} />
+        <div style={{padding:'0 8px 8px'}}>
+          <NotificationBell />
+        </div>
         <button className={`${styles.rb} ${styles.bottom} ${pathname === '/settings' ? styles.on : ''}`}
           onClick={() => navigate('/settings')} aria-label="Settings">
           <Icon d={ICONS.settings} size={17} />
