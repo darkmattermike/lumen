@@ -425,8 +425,9 @@ export default function Calendar() {
 
   // Split allSorted into 1st-15th and 16th-end for the aside
   const todayDay = today.getDate()
-  const firstHalf  = allSorted.filter(ev => ev.day_of_month <= 15)
-  const secondHalf = allSorted.filter(ev => ev.day_of_month > 15)
+  // Only show upcoming items in the aside half-cards — passed items are done
+  const firstHalf  = allSorted.filter(ev => ev.day_of_month <= 15 && (ev.day_of_month >= todayDay || !isCurrentMonth))
+  const secondHalf = allSorted.filter(ev => ev.day_of_month > 15  && (ev.day_of_month >= todayDay || !isCurrentMonth))
 
   function halfTotals(items) {
     const expenses = items.filter(ev => ev.type !== 'income').reduce((s, ev) => s + Number(ev.amount), 0)
@@ -743,7 +744,7 @@ export default function Calendar() {
             <div className={styles.belowEmpty}>
               No recurring items yet. Click <strong>+ Add Recurring</strong> to get started.
             </div>
-          ) : allSorted.map((ev, idx) => {
+          ) : allSorted.filter(ev => !isCurrentMonth || ev.day_of_month >= today.getDate()).map((ev, idx) => {
             const isPast = isCurrentMonth && ev.day_of_month < today.getDate()
             const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
             const daysUntil = upcomingEntry?.daysUntil
