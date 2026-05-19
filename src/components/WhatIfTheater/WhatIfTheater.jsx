@@ -12,6 +12,18 @@ const QUICK_CHIPS = [
   { emoji: '🚗', label: 'Ubers this week (~$45)' },
 ]
 
+// Keywords that indicate the user wants to skip/avoid a cost (frees up money)
+const SAVING_KEYWORDS = [
+  'skip', 'cancel', 'avoid', 'defer', "don't pay", 'not pay',
+  'forgo', 'hold off', 'pause', 'delay', 'drop', 'cut', 'remove',
+  'stop paying', 'not spend', 'save instead',
+]
+
+function detectDirection(text) {
+  const lower = (text || '').toLowerCase()
+  return SAVING_KEYWORDS.some(kw => lower.includes(kw)) ? -1 : 1
+}
+
 // Extract a dollar amount from a response string if present
 function extractAmount(text) {
   const match = text.match(/\$[\d,]+(?:\.\d{1,2})?/)
@@ -86,9 +98,10 @@ export default function WhatIfTheater({ balance, balanceAfterBills, activePlans 
   }
 
   async function handlePin() {
-    const amount = extractAmount(question) || extractAmount(response)
+    const amount    = extractAmount(question) || extractAmount(response)
+    const direction = detectDirection(activeChip || question)
     try {
-      const plan = await api.createPlan({ question: activeChip || question, response, amount })
+      const plan = await api.createPlan({ question: activeChip || question, response, amount, direction })
       setPlans(prev => [plan, ...prev])
       setPinned(true)
     } catch {}

@@ -29,7 +29,7 @@ export default function Dashboard() {
     pressureLabel, pressureScore,
     monthSpent, monthIncome,
     upcomingBills, nextPaycheck,
-    activePlans = [], plannedSpend = 0,
+    activePlans = [], plannedSpend = 0, plannedSavings = 0,
   } = data
 
   const today       = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()
@@ -107,21 +107,35 @@ export default function Dashboard() {
             <span className={styles.plansBannerIcon}>📌</span>
             <div>
               <div className={styles.plansBannerTitle}>
-                {activePlans.length} pinned plan{activePlans.length !== 1 ? 's' : ''} · −${fmt(plannedSpend)} reserved
+                {activePlans.length} pinned plan{activePlans.length !== 1 ? 's' : ''}
+                {plannedSpend > 0 && ` · −$${fmt(plannedSpend)} new costs`}
+                {plannedSavings > 0 && ` · +$${fmt(plannedSavings)} freed up`}
               </div>
               <div className={styles.plansBannerSub}>
-                {activePlans.map(p => p.question).join(' · ')}
+                {activePlans.map(p => {
+                  const dir = Number(p.direction ?? 1)
+                  const prefix = dir < 0 ? '↩ skip: ' : '+ '
+                  return prefix + p.question
+                }).join(' · ')}
               </div>
             </div>
           </div>
           <div className={styles.plansBannerRight}>
-            <div className={styles.plansBannerStat}>
-              <span className={styles.plansBannerStatLabel}>Without plans</span>
-              <span className={styles.plansBannerStatVal}>${fmt(balanceAfterBills)}</span>
-            </div>
+            {plannedSpend > 0 && (
+              <div className={styles.plansBannerStat}>
+                <span className={styles.plansBannerStatLabel}>New costs</span>
+                <span className={styles.plansBannerStatVal} style={{ color: 'var(--debt)' }}>−${fmt(plannedSpend)}</span>
+              </div>
+            )}
+            {plannedSavings > 0 && (
+              <div className={styles.plansBannerStat}>
+                <span className={styles.plansBannerStatLabel}>Freed up</span>
+                <span className={styles.plansBannerStatVal} style={{ color: 'var(--safe)' }}>+${fmt(plannedSavings)}</span>
+              </div>
+            )}
             <div className={styles.plansBannerArrow}>→</div>
             <div className={styles.plansBannerStat}>
-              <span className={styles.plansBannerStatLabel}>After plans</span>
+              <span className={styles.plansBannerStatLabel}>Net balance</span>
               <span className={styles.plansBannerStatVal} style={{ color: heroColor }}>${fmt(heroBalance)}</span>
             </div>
           </div>
