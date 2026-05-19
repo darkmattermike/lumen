@@ -407,3 +407,117 @@
 .catEditSave:disabled { opacity:.5;cursor:not-allowed; }
 
 @keyframes drawer-open { from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)} }
+
+/* ── Phase C: Forecast Panel ─────────────────────────────────────────────── */
+.forecastCard {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.forecastHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.forecastHeader:hover { background: var(--surface-2); }
+.forecastTitle { font-size: 12px; font-weight: 600; color: var(--ink-1); letter-spacing: .3px; }
+.forecastChevron { font-size: 16px; color: var(--ink-3); transition: transform 0.2s; }
+.forecastLoading { padding: 14px; font-size: 11px; color: var(--ink-3); }
+
+.forecastSummary {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px; background: var(--border);
+  border-top: 1px solid var(--border);
+}
+.forecastStat {
+  padding: 10px 12px;
+  background: var(--surface-0);
+}
+.forecastStatVal {
+  font-family: var(--font-mono);
+  font-size: 14px; font-weight: 700;
+  color: var(--ink-0);
+}
+.forecastStatLabel {
+  font-size: 9px; color: var(--ink-3);
+  margin-top: 2px; letter-spacing: .3px;
+}
+
+.forecastAtRisk {
+  padding: 8px 12px;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-0);
+}
+.forecastRiskChip {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(var(--warn-rgb, 245,158,11), 0.12);
+  border: 1px solid rgba(var(--warn-rgb, 245,158,11), 0.25);
+  border-radius: 20px;
+  padding: 3px 8px;
+  font-size: 10px; color: var(--ink-1);
+}
+.forecastRiskPct { font-family: var(--font-mono); font-size: 10px; }
+
+.forecastDetail {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-0);
+}
+.forecastRow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 0;
+  font-size: 11px; color: var(--ink-2);
+  border-bottom: 1px solid var(--border);
+}
+.forecastRow:last-child { border-bottom: none; }
+.forecastPos { font-family: var(--font-mono); color: var(--safe); }
+.forecastNeg { font-family: var(--font-mono); color: var(--debt); }
+.forecastTotal {
+  font-weight: 700; color: var(--ink-0);
+  margin-top: 4px; padding-top: 8px;
+  border-top: 1px solid var(--border) !important;
+}
+.forecastTotal span:last-child { font-family: var(--font-mono); font-size: 13px; }
+
+.forecastPaceSection { margin-top: 14px; }
+.forecastPaceTitle {
+  font-size: 10px; color: var(--ink-3); letter-spacing: .4px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.forecastPaceRow {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 7px;
+}
+.forecastPaceName {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10px; color: var(--ink-2);
+  min-width: 80px; flex-shrink: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.forecastPaceBarWrap { flex: 1; min-width: 0; }
+.forecastPaceBar {
+  position: relative;
+  height: 5px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  overflow: visible;
+  margin-bottom: 2px;
+}
+.forecastPaceBarFill {
+  position: absolute; top: 0; left: 0; height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.forecastPaceBarGhost {
+  position: absolute; top: 0; height: 100%;
+  border-radius: 0 3px 3px 0;
+  opacity: 0.3;
+}
+.forecastPacePct {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3);
+}

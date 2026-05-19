@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenDot from '../../components/LumenDot/LumenDot'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
@@ -547,7 +547,10 @@ export default function Budgets() {
           </div>
 
           <div>
-            <div className="section-label" style={{marginBottom:12}}>Lumen Analysis</div>
+            {/* Phase C: Month-End Forecast */}
+            <ForecastPanel />
+
+            <div className="section-label" style={{marginBottom:12,marginTop:20}}>Lumen Analysis</div>
             <LumenInsight
               label="Budget Pulse"
               contextType="budgets"
@@ -565,5 +568,146 @@ export default function Budgets() {
         </div>
       </ScreenWrap>
     </>
+  )
+}
+
+// ── Phase C: Forecast Panel ───────────────────────────────────
+function ForecastPanel() {
+  const [data, setData]       = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    api.budgetForecast()
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div className={styles.forecastCard}>
+      <div className={styles.forecastLoading}>Calculating forecast...</div>
+    </div>
+  )
+  if (!data) return null
+
+  const projBal    = data.projectedBalance
+  const isNeg      = projBal < 0
+  const balColor   = isNeg ? 'var(--debt)' : projBal < 500 ? 'var(--warn)' : 'var(--safe)'
+
+  // Budgets on pace to breach
+  const atRisk = (data.budgetPace || []).filter(b => b.onPaceToBreach && !b.completed)
+
+  return (
+    <div className={styles.forecastCard}>
+      <div className={styles.forecastHeader} onClick={() => setExpanded(e => !e)}>
+        <span className={styles.forecastTitle}>📅 Month-End Forecast</span>
+        <span className={styles.forecastChevron} style={{transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'}}>›</span>
+      </div>
+
+      {/* Always-visible summary row */}
+      <div className={styles.forecastSummary}>
+        <div className={styles.forecastStat}>
+          <div className={styles.forecastStatVal} style={{color: balColor}}>
+            {isNeg ? '−' : ''}${fmt(Math.abs(projBal))}
+          </div>
+          <div className={styles.forecastStatLabel}>Projected Balance</div>
+        </div>
+        <div className={styles.forecastStat}>
+          <div className={styles.forecastStatVal}>${fmt(data.dailyPace)}</div>
+          <div className={styles.forecastStatLabel}>Daily Pace</div>
+        </div>
+        <div className={styles.forecastStat}>
+          <div className={styles.forecastStatVal}>{data.daysLeft}</div>
+          <div className={styles.forecastStatLabel}>Days Left</div>
+        </div>
+      </div>
+
+      {/* At-risk budget chips */}
+      {atRisk.length > 0 && (
+        <div className={styles.forecastAtRisk}>
+          {atRisk.map(b => (
+            <div key={b.id} className={styles.forecastRiskChip}>
+              <span>{b.icon || '📊'}</span>
+              <span>{b.name}</span>
+              <span className={styles.forecastRiskPct} style={{color:'var(--warn)'}}>
+                ~{b.projectedPct}%
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div className={styles.forecastDetail}>
+          <div className={styles.forecastRow}>
+            <span>Current balance</span>
+            <span>${fmt(data.currentBalance)}</span>
+          </div>
+          <div className={styles.forecastRow}>
+            <span>+ Remaining income</span>
+            <span className={styles.forecastPos}>+${fmt(data.remainingIncome)}</span>
+          </div>
+          <div className={styles.forecastRow}>
+            <span>− Remaining bills</span>
+            <span className={styles.forecastNeg}>−${fmt(data.remainingBills)}</span>
+          </div>
+          <div className={styles.forecastRow}>
+            <span>− Projected spending</span>
+            <span className={styles.forecastNeg}>−${fmt(data.projectedDiscretionary)}</span>
+          </div>
+          <div className={`${styles.forecastRow} ${styles.forecastTotal}`}>
+            <span>Projected balance</span>
+            <span style={{color: balColor}}>{isNeg ? '−' : ''}${fmt(Math.abs(projBal))}</span>
+          </div>
+
+          {/* Per-budget pace bars */}
+          {(data.budgetPace || []).filter(b => !b.completed && b.cap > 0).length > 0 && (
+            <div className={styles.forecastPaceSection}>
+              <div className={styles.forecastPaceTitle}>Category Pace</div>
+              {(data.budgetPace || [])
+                .filter(b => !b.completed && b.cap > 0)
+                .sort((a, b) => b.projectedPct - a.projectedPct)
+                .map(b => {
+                  const projPct  = Math.min(b.projectedPct, 150)
+                  const currPct  = Math.min(b.pct, 100)
+                  const barColor = b.onPaceToBreach ? 'var(--debt)' : b.pct > 80 ? 'var(--warn)' : 'var(--safe)'
+                  return (
+                    <div key={b.id} className={styles.forecastPaceRow}>
+                      <div className={styles.forecastPaceName}>
+                        <span>{b.icon || '📦'}</span>
+                        <span>{b.name}</span>
+                      </div>
+                      <div className={styles.forecastPaceBarWrap}>
+                        {/* Current spend bar */}
+                        <div className={styles.forecastPaceBar}>
+                          <div
+                            className={styles.forecastPaceBarFill}
+                            style={{width: `${currPct}%`, background: barColor, opacity: 0.9}}
+                          />
+                          {/* Projected extension (ghost bar) */}
+                          {b.projectedPct > b.pct && (
+                            <div
+                              className={styles.forecastPaceBarGhost}
+                              style={{
+                                left:  `${currPct}%`,
+                                width: `${Math.min(projPct - currPct, 100 - currPct)}%`,
+                                background: barColor,
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className={styles.forecastPacePct} style={{color: b.onPaceToBreach ? 'var(--debt)' : 'var(--ink-3)'}}>
+                          {b.pct}% → ~{b.projectedPct}%
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
