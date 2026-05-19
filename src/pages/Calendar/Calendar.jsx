@@ -474,7 +474,7 @@ export default function Calendar() {
                   const t = halfTotals(firstHalf)
                   const remaining = firstHalf.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s,ev) => s + Number(ev.amount), 0)
                   const passed = todayDay > 15
-                  const alloc  = accountAllocation(firstHalf, accounts)
+                  const alloc  = accountAllocation(firstHalf, (acctData?.accounts || []).filter(a => !a.is_debt))
                   return (
                     <div className={styles.halfCard}>
                       <div className={styles.halfHeader} onClick={() => setOpenFirst(o => !o)}>
@@ -510,7 +510,7 @@ export default function Calendar() {
                               </div>
                             )
                           })}
-                          {accounts.length > 0 && (
+                          {(acctData?.accounts?.length > 0) && (
                             <div className={styles.allocBox}>
                               <div className={styles.allocLabel}>Account allocation</div>
                               {alloc.map((a, i) => (
@@ -536,7 +536,7 @@ export default function Calendar() {
                 {(() => {
                   const t = halfTotals(secondHalf)
                   const remaining = secondHalf.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s,ev) => s + Number(ev.amount), 0)
-                  const alloc  = accountAllocation(secondHalf, accounts)
+                  const alloc  = accountAllocation(secondHalf, (acctData?.accounts || []).filter(a => !a.is_debt))
                   return (
                     <div className={styles.halfCard}>
                       <div className={styles.halfHeader} onClick={() => setOpenSecond(o => !o)}>
@@ -572,7 +572,7 @@ export default function Calendar() {
                               </div>
                             )
                           })}
-                          {accounts.length > 0 && (
+                          {(acctData?.accounts?.length > 0) && (
                             <div className={styles.allocBox}>
                               <div className={styles.allocLabel}>Account allocation</div>
                               {alloc.filter(a => a.covers).map((a, i) => (
