@@ -1,29 +1,27 @@
 import { useState, useEffect, useRef } from 'react'
 import { api } from '../../data/api'
+import LumenDot from '../LumenDot/LumenDot'
 import styles from './NotificationBell.module.css'
 
 export default function NotificationBell() {
-  const [data, setData]         = useState({ notifications: [], unread_count: 0 })
-  const [open, setOpen]         = useState(false)
-  const [loading, setLoading]   = useState(false)
-  const panelRef                = useRef(null)
+  const [data, setData]       = useState({ notifications: [], unread_count: 0 })
+  const [open, setOpen]       = useState(false)
+  const [loading, setLoading] = useState(false)
+  const panelRef              = useRef(null)
 
   async function load() {
     try {
       setLoading(true)
       const d = await api.notifications()
       setData(d)
-    } catch {
-      // silent
-    } finally {
-      setLoading(false)
-    }
+    } catch { /* silent */ }
+    finally { setLoading(false) }
   }
 
   useEffect(() => {
     load()
-    const interval = setInterval(load, 60_000) // poll every minute
-    return () => clearInterval(interval)
+    const id = setInterval(load, 60_000)
+    return () => clearInterval(id)
   }, [])
 
   // Close on outside click
@@ -37,8 +35,9 @@ export default function NotificationBell() {
   }, [open])
 
   async function handleOpen() {
+    const wasOpen = open
     setOpen(v => !v)
-    if (!open && data.unread_count > 0) {
+    if (!wasOpen && data.unread_count > 0) {
       await api.markAllNotificationsRead()
       setData(prev => ({
         ...prev,
@@ -56,59 +55,76 @@ export default function NotificationBell() {
     }))
   }
 
-  const TYPE_COLORS = {
-    alert:   'var(--col-debt)',
-    warning: 'var(--col-warn)',
-    insight: 'var(--col-calm)',
-    win:     'var(--col-safe)',
+  async function clearAll() {
+    for (const n of data.notifications) await api.dismissNotification(n.id)
+    setData({ notifications: [], unread_count: 0 })
+  }
+
+  const TYPE_COLOR = {
+    alert:   'var(--debt)',
+    warning: 'var(--warn)',
+    insight: 'var(--calm)',
+    win:     'var(--safe)',
   }
 
   return (
     <div className={styles.wrap} ref={panelRef}>
-      <button className={styles.bell} onClick={handleOpen} aria-label="Notifications">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
+      {/* Trigger — Lumen orb with unread badge */}
+      <button
+        className={`${styles.trigger} ${open ? styles.triggerOpen : ''}`}
+        onClick={handleOpen}
+        aria-label="Lumen notifications"
+        title="Notifications"
+      >
+        <LumenDot size={22} rings={open} />
         {data.unread_count > 0 && (
           <span className={styles.badge}>{data.unread_count > 9 ? '9+' : data.unread_count}</span>
         )}
       </button>
 
+      {/* Chat-bubble panel — expands to the right */}
       {open && (
-        <div className={styles.panel}>
-          <div className={styles.header}>
-            <span>Notifications</span>
+        <div className={styles.bubble}>
+          {/* Bubble tail pointing left toward the orb */}
+          <div className={styles.tail} />
+
+          <div className={styles.bubbleHeader}>
+            <div className={styles.lumenLabel}>
+              <LumenDot size={14} />
+              <span>Lumen</span>
+            </div>
             {data.notifications.length > 0 && (
-              <button className={styles.clearBtn} onClick={async () => {
-                for (const n of data.notifications) await api.dismissNotification(n.id)
-                setData({ notifications: [], unread_count: 0 })
-              }}>Clear all</button>
+              <button className={styles.clearBtn} onClick={clearAll}>Clear all</button>
             )}
           </div>
 
           {loading && !data.notifications.length && (
-            <div className={styles.empty}>Loading…</div>
+            <div className={styles.empty}>
+              <span className={styles.emptyDots}>···</span>
+            </div>
           )}
 
           {!loading && !data.notifications.length && (
             <div className={styles.empty}>
-              <span style={{fontSize:28}}>🔔</span>
-              <p>You're all caught up</p>
+              <p className={styles.emptyMsg}>You're all caught up ✓</p>
+              <p className={styles.emptySub}>I'll let you know when something needs attention.</p>
             </div>
           )}
 
           <div className={styles.list}>
-            {data.notifications.map(n => (
-              <div key={n.id} className={`${styles.item} ${!n.read ? styles.unread : ''}`}
-                style={{ '--accent': TYPE_COLORS[n.type] || 'var(--col-calm)' }}>
-                <span className={styles.icon}>{n.icon}</span>
-                <div className={styles.body}>
-                  <div className={styles.title}>{n.title}</div>
-                  <div className={styles.text}>{n.body}</div>
-                  <div className={styles.time}>{relativeTime(n.created_at)}</div>
+            {data.notifications.map((n, i) => (
+              <div
+                key={n.id}
+                className={`${styles.item} ${!n.read ? styles.unread : ''}`}
+                style={{ '--accent': TYPE_COLOR[n.type] || 'var(--calm)', animationDelay: `${i * 40}ms` }}
+              >
+                <div className={styles.itemTop}>
+                  <span className={styles.itemIcon}>{n.icon}</span>
+                  <span className={styles.itemTitle}>{n.title}</span>
+                  <button className={styles.dismissBtn} onClick={() => dismiss(n.id)} aria-label="Dismiss">×</button>
                 </div>
-                <button className={styles.x} onClick={() => dismiss(n.id)} aria-label="Dismiss">×</button>
+                <p className={styles.itemBody}>{n.body}</p>
+                <span className={styles.itemTime}>{relativeTime(n.created_at)}</span>
               </div>
             ))}
           </div>
@@ -121,8 +137,8 @@ export default function NotificationBell() {
 function relativeTime(ts) {
   if (!ts) return ''
   const diff = (Date.now() - new Date(ts)) / 1000
-  if (diff < 60)   return 'just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 60)    return 'just now'
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
   return `${Math.floor(diff / 86400)}d ago`
 }

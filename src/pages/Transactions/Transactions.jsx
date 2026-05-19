@@ -666,6 +666,18 @@ export default function Transactions() {
               <div className={styles.stat}><div className={styles.statL}>Net</div><div className={styles.statV} style={{color:net>=0?'var(--safe)':'var(--debt)'}}>{net>=0?'+':'−'}${fmtK(Math.abs(net))}</div></div>
               <div className={styles.stat}><div className={styles.statL}>Transactions</div><div className={styles.statV}>{count}</div></div>
             </div>
+            <div className={styles.headerBtns}>
+              <button className={styles.aiCatBtn} onClick={() => setShowCatModal(true)}>
+                ✦ Auto-Categorize
+              </button>
+              <button className={styles.enrichBtn} onClick={handleEnrich} disabled={enriching}>
+                {enriching ? '...' : '✉ Enrich Names'}
+              </button>
+              <button className={styles.enrichBtn} onClick={() => setShowCsvImport(true)}>
+                ↑ Import CSV
+              </button>
+              {enrichMsg && <div className={styles.enrichMsg}>{enrichMsg}</div>}
+            </div>
           </div>
           <div className={styles.headerRight}>
             <div className={styles.pace}>
@@ -681,16 +693,6 @@ export default function Transactions() {
               <div className={styles.paceReading}>{spendPct>80?'Over Pace':spendPct>60?'Watch':'On Pace'}</div>
               <div className={styles.paceSub}>{daysLeft} days remaining</div>
             </div>
-            <button className={styles.aiCatBtn} onClick={() => setShowCatModal(true)}>
-              ✦ Auto-Categorize
-            </button>
-            <button className={styles.enrichBtn} onClick={handleEnrich} disabled={enriching}>
-              {enriching ? '...' : '✉ Enrich Names'}
-            </button>
-            <button className={styles.enrichBtn} onClick={() => setShowCsvImport(true)}>
-              ↑ Import CSV
-            </button>
-            {enrichMsg && <div className={styles.enrichMsg}>{enrichMsg}</div>}
           </div>
         </div>
 

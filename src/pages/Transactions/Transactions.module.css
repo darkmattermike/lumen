@@ -263,8 +263,18 @@
 .typeBtn:hover { border-color: var(--ink-3); color: var(--ink-1); }
 .typeBtnOn { font-weight: 700; }
 
-/* ── Header right column (pace + AI button) ── */
+/* ── Header right column (pace) ── */
 .headerRight { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+
+/* ── Header buttons row — horizontal, left-aligned under stats ── */
+.headerBtns {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
 
 .aiCatBtn {
   padding: 9px 18px;
