@@ -262,6 +262,7 @@ export default function Calendar() {
   const [openFirst, setOpenFirst]     = useState(false)
   const [openSecond, setOpenSecond]   = useState(false)
   const { data, loading, error, refresh } = useApi(api.calendar)
+  const { data: acctData } = useApi(api.accounts)
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
