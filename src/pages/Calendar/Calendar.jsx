@@ -502,18 +502,17 @@ export default function Calendar() {
                               </div>
                             )
                           })}
-                          <div style={{fontSize:10,color:'orange',fontFamily:'monospace',padding:'4px 0',wordBreak:'break-all'}}>todayDay={todayDay} | secondHalf={JSON.stringify(secondHalf.map(e=>({d:e.day_of_month,t:e.type,aid:e.account_id,n:e.name})))} | alloc={JSON.stringify(alloc)}</div>
-                          {(acctData?.accounts?.length > 0) && (
+                          {alloc.length > 0 && (
                             <div className={styles.allocBox}>
                               <div className={styles.allocLabel}>Account allocation</div>
                               {alloc.map((a, i) => (
                                 <div key={i} className={styles.allocRow}>
                                   <div>
                                     <div className={styles.allocName}>{a.icon} {a.name}{a.mask ? ` ····${a.mask}` : ''}</div>
-                                    <div className={styles.allocBal}>Balance ${fmt(a.balance)} · needs ${fmt(a.needed)}</div>
+                                    <div className={styles.allocBal}>Balance ${a.balance !== null ? fmt(a.balance) : '—'} · needs ${fmt(a.needed)}</div>
                                   </div>
                                   <div className={`${styles.allocAmt} ${a.short ? styles.allocShort : styles.allocOk}`}>
-                                    {a.short ? `$${fmt(a.shortAmt)} short` : `+$${fmt(a.surplus)} left`}
+                                    {a.name === 'Unassigned' ? '—' : a.short ? `$${fmt(a.shortAmt)} short` : `+$${fmt(a.surplus)} left`}
                                   </div>
                                 </div>
                               ))}
@@ -565,17 +564,17 @@ export default function Calendar() {
                               </div>
                             )
                           })}
-                          {(acctData?.accounts?.length > 0) && (
+                          {alloc.length > 0 && (
                             <div className={styles.allocBox}>
                               <div className={styles.allocLabel}>Account allocation</div>
-                              {alloc.filter(a => a.covers).map((a, i) => (
+                              {alloc.map((a, i) => (
                                 <div key={i} className={styles.allocRow}>
                                   <div>
-                                    <div className={styles.allocName}>{a.name}{a.mask ? ` ····${a.mask}` : ''}</div>
-                                    <div className={styles.allocBal}>Balance: ${fmt(a.balance)}</div>
+                                    <div className={styles.allocName}>{a.icon} {a.name}{a.mask ? ` ····${a.mask}` : ''}</div>
+                                    <div className={styles.allocBal}>Balance ${a.balance !== null ? fmt(a.balance) : '—'} · needs ${fmt(a.needed)}</div>
                                   </div>
                                   <div className={`${styles.allocAmt} ${a.short ? styles.allocShort : styles.allocOk}`}>
-                                    {a.short ? `$${fmt(remaining - a.balance)} short` : '✓ Covered'}
+                                    {a.name === 'Unassigned' ? '—' : a.short ? `$${fmt(a.shortAmt)} short` : `+$${fmt(a.surplus)} left`}
                                   </div>
                                 </div>
                               ))}
