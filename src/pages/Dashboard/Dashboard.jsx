@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenDot from '../../components/LumenDot/LumenDot'
 import PressureGauge from '../../components/PressureGauge/PressureGauge'
@@ -20,6 +22,8 @@ const LABEL_COLOR = { SAFE: 'var(--safe)', WATCH: 'var(--warn)', TIGHT: 'var(--w
 
 export default function Dashboard() {
   const { data, loading, error } = useApi(api.dashboard)
+  const navigate = useNavigate()
+  const theaterRef = useRef(null)
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
@@ -216,7 +220,9 @@ export default function Dashboard() {
 
       {/* ── Body: Theater + Aside ── */}
       <div className={styles.body}>
+        <div ref={theaterRef}>
         <WhatIfTheater balance={balance} balanceAfterBills={balanceAfterBills} activePlans={activePlans} plannedSpend={plannedSpend} />
+        </div>
 
         <div className={styles.aside}>
           <div className={styles.asideLabel}>Bill Schedule</div>
@@ -229,13 +235,13 @@ export default function Dashboard() {
           <LumenInsight
             label="Pressure & Bills"
             contextType="dashboard"
-            prompt="In 2-3 sentences, give me the most important thing to know about my current financial pressure — upcoming bills vs balance, and what to watch."
+            prompt="What is the single most important thing about my current financial pressure right now — consider upcoming bills, balance, any skip plans, and incoming paychecks."
             color="blue"
           />
           <LumenInsight
             label="This Month"
             contextType="dashboard"
-            prompt="In 2-3 sentences, summarize how this month is going — income vs spending, net position, and one thing that stands out."
+            prompt="One finding about how this month is going — income, spending, or one category that stands out."
             color="green"
           />
         </div>
