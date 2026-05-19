@@ -502,7 +502,7 @@ export default function Calendar() {
                               </div>
                             )
                           })}
-                          <div style={{fontSize:10,color:'orange',fontFamily:'monospace',padding:'4px 0',wordBreak:'break-all'}}>DEBUG: accts={JSON.stringify((acctData?.accounts||[]).map(a=>a.id+'='+a.name))} alloc={JSON.stringify(alloc)}</div>
+                          <div style={{fontSize:10,color:'orange',fontFamily:'monospace',padding:'4px 0',wordBreak:'break-all'}}>todayDay={todayDay} | secondHalf={JSON.stringify(secondHalf.map(e=>({d:e.day_of_month,t:e.type,aid:e.account_id,n:e.name})))} | alloc={JSON.stringify(alloc)}</div>
                           {(acctData?.accounts?.length > 0) && (
                             <div className={styles.allocBox}>
                               <div className={styles.allocLabel}>Account allocation</div>
