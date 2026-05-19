@@ -111,6 +111,7 @@ function RuleRow({ rule, budgets, onDelete, onToggle, onSaved }) {
             </div>
 
             <div className={styles.builderRow}>
+              <span className={styles.builderLabel}>→ then</span>
               <select
                 className={styles.builderSelect}
                 value={form.action}
@@ -142,7 +143,7 @@ function RuleRow({ rule, budgets, onDelete, onToggle, onSaved }) {
               )}
             </div>
 
-            <div className={styles.builderRow}>
+            <div className={styles.builderRowFull}>
               <span className={styles.builderLabel}>Label (optional)</span>
               <input
                 className={styles.builderInput}
@@ -270,6 +271,7 @@ function AddRuleForm({ budgets, onSaved }) {
         </div>
 
         <div className={styles.builderRow}>
+          <span className={styles.builderLabel}>→ then</span>
           <select
             className={styles.builderSelect}
             value={form.action}
@@ -313,7 +315,7 @@ function AddRuleForm({ budgets, onSaved }) {
           )}
         </div>
 
-        <div className={styles.builderRow}>
+        <div className={styles.builderRowFull}>
           <span className={styles.builderLabel}>Label (optional)</span>
           <input
             className={styles.builderInput}

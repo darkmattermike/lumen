@@ -242,12 +242,14 @@ export default function Calendar() {
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem]   = useState(null)
   const [selectedDay, setSelectedDay] = useState(null)
+  const [openFirst, setOpenFirst]     = useState(false)
+  const [openSecond, setOpenSecond]   = useState(false)
   const { data, loading, error, refresh } = useApi(api.calendar)
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
 
-  const { recurring = [], expanded = [], upcoming = [], remainingBills = 0 } = data
+  const { recurring = [], expanded = [], upcoming = [], remainingBills = 0, accounts = [] } = data
 
   // Use expanded (biweekly items appear on each occurrence date) for the calendar grid
   const eventMap = {}
@@ -258,6 +260,30 @@ export default function Calendar() {
 
   // Sidebar list — use expanded so biweekly shows both paydays, sorted by day
   const allSorted = [...expanded].sort((a, b) => a.day_of_month - b.day_of_month)
+
+  // Split allSorted into 1st-15th and 16th-end for the aside
+  const todayDay = today.getDate()
+  const firstHalf  = allSorted.filter(ev => ev.day_of_month <= 15)
+  const secondHalf = allSorted.filter(ev => ev.day_of_month > 15)
+
+  function halfTotals(items) {
+    const expenses = items.filter(ev => ev.type !== 'income').reduce((s, ev) => s + Number(ev.amount), 0)
+    const income   = items.filter(ev => ev.type === 'income').reduce((s, ev) => s + Number(ev.amount), 0)
+    const remaining = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s, ev) => s + Number(ev.amount), 0)
+    return { expenses, income, remaining }
+  }
+
+  // Build account allocation: for each account, sum which expenses could draw from it
+  // Simple heuristic: checking accounts cover all expenses proportionally
+  function accountAllocation(items, accountList) {
+    const totalExpenses = items.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s, ev) => s + Number(ev.amount), 0)
+    return accountList.map(a => ({
+      ...a,
+      balance: Number(a.balance),
+      covers: a.type === 'checking' || a.type === 'savings',
+      short: a.type === 'checking' && Number(a.balance) < totalExpenses,
+    }))
+  }
 
   const grid = buildGrid(viewDate.year, viewDate.month)
   const monthLabel = new Date(viewDate.year, viewDate.month, 1)
@@ -382,65 +408,184 @@ export default function Calendar() {
           </div>
 
           <div className={styles.aside}>
-            {isCurrentMonth && (
-              <div className={styles.remaining}>
-                <div className={styles.remLabel}>Remaining this Cycle</div>
-                <div className={styles.remVal}>${fmt(remainingBills)}</div>
-                <div className={styles.remSub}>Committed bills left this month</div>
-              </div>
-            )}
-
             <div className={styles.spotlightWrap}>
               <LumenInsight
                 label="Your Schedule"
                 contextType="calendar"
-                prompt="In 1-2 sentences, flag the single most important thing about this month's bills and budget — especially any categories near their cap. Be specific and direct, no fluff."
+                prompt="Flag the single most important thing about this month's bills, timing, and balance — be specific."
                 color="green"
                 showWhenNoKey
               />
             </div>
 
-            <div className={styles.upcomingHead}>
-              {isCurrentMonth ? 'This Month' : `Events in ${monthLabel}`}
-            </div>
+            {isCurrentMonth && (
+              <>
+                <div className={styles.remLabel}>Remaining in {monthLabel.split(' ')[0]}</div>
 
-            {allSorted.length === 0 ? (
-              <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0',lineHeight:1.65}}>
-                No recurring items yet. Click <strong style={{color:'var(--safe)'}}>+ Add Recurring</strong> to get started.
-              </div>
-            ) : allSorted.map((ev, idx) => {
-              const isPast = isCurrentMonth && ev.day_of_month < today.getDate()
-              const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
-              const daysUntil = upcomingEntry?.daysUntil
-              const baseItem  = recurring.find(r => r.id === ev.id) || ev
-              const freqLabel = ev.frequency === 'biweekly' ? 'biweekly' : ev.type
-              return (
-                <div
-                  key={`${ev.id}-${ev.day_of_month}-${idx}`}
-                  className={styles.eventRow}
-                  style={ev.type==='income' ? {background:'rgba(93,202,165,.04)',borderRadius:8,padding:'8px 4px'} : {}}
-                >
-                  <div className={styles.eventDate} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.6)'} : {}}>
-                    Day {ev.day_of_month}
-                  </div>
-                  <div className={styles.eventDot} style={{background: isPast ? 'var(--ink-4)' : typeColor[ev.type] || 'var(--warn)'}} />
-                  <div className={styles.eventInfo}>
-                    <div className={styles.eventName} style={isPast ? {color:'var(--ink-3)'} : ev.type==='income' ? {color:'rgba(93,202,165,.9)'} : {}}>
-                      {ev.icon} {ev.name}
+                {/* ── 1st–15th half ── */}
+                {(() => {
+                  const t = halfTotals(firstHalf)
+                  const remaining = firstHalf.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s,ev) => s + Number(ev.amount), 0)
+                  const passed = todayDay > 15
+                  const alloc  = accountAllocation(firstHalf, accounts)
+                  return (
+                    <div className={styles.halfCard}>
+                      <div className={styles.halfHeader} onClick={() => setOpenFirst(o => !o)}>
+                        <div className={styles.halfLeft}>
+                          <div className={styles.halfRange}>May 1 – 15</div>
+                          <div className={styles.halfCount}>{firstHalf.length} items{passed ? ' · all passed' : remaining > 0 ? ` · $${fmt(remaining)} remaining` : ''}</div>
+                        </div>
+                        <div className={styles.halfRight}>
+                          <div className={styles.halfTotal} style={{color: passed ? 'var(--ink-3)' : 'var(--debt)'}}>
+                            ${fmt(t.expenses)}
+                          </div>
+                          <span className={`${styles.halfChevron} ${openFirst ? styles.halfChevronOpen : ''}`}>›</span>
+                        </div>
+                      </div>
+                      {openFirst && (
+                        <div className={styles.halfBody}>
+                          {firstHalf.map((ev, i) => {
+                            const isPast = ev.day_of_month < todayDay
+                            const u = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
+                            return (
+                              <div key={i} className={styles.halfItem}>
+                                <span className={styles.halfItemIcon}>{ev.icon}</span>
+                                <span className={styles.halfItemName}>{ev.name}</span>
+                                <span className={styles.halfItemDay} style={{color: isPast ? 'var(--ink-4)' : u?.daysUntil === 0 ? 'var(--warn)' : 'var(--ink-3)'}}>
+                                  {isPast ? 'passed' : u?.daysUntil === 0 ? 'today' : `${u?.daysUntil}d`}
+                                </span>
+                                <span className={styles.halfItemAmt} style={{color: isPast ? 'var(--ink-3)' : ev.type === 'income' ? 'var(--safe)' : 'var(--debt)'}}>
+                                  {ev.type === 'income' ? '+' : '−'}${fmt(ev.amount)}
+                                </span>
+                              </div>
+                            )
+                          })}
+                          {accounts.length > 0 && (
+                            <div className={styles.allocBox}>
+                              <div className={styles.allocLabel}>Account allocation</div>
+                              {alloc.filter(a => a.covers).map((a, i) => (
+                                <div key={i} className={styles.allocRow}>
+                                  <div>
+                                    <div className={styles.allocName}>{a.name}{a.mask ? ` ····${a.mask}` : ''}</div>
+                                    <div className={styles.allocBal}>Balance: ${fmt(a.balance)}</div>
+                                  </div>
+                                  <div className={`${styles.allocAmt} ${a.short ? styles.allocShort : styles.allocOk}`}>
+                                    {a.short ? `$${fmt(t.expenses - a.balance)} short` : '✓ Covered'}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <div className={styles.eventType} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
-                      {freqLabel}{isCurrentMonth ? (isPast ? ' · passed' : daysUntil === 0 ? ' · Today' : ` · in ${daysUntil} day${daysUntil===1?'':'s'}`) : ''}
+                  )
+                })()}
+
+                {/* ── 16th–end half ── */}
+                {(() => {
+                  const t = halfTotals(secondHalf)
+                  const remaining = secondHalf.filter(ev => ev.type !== 'income' && ev.day_of_month >= todayDay).reduce((s,ev) => s + Number(ev.amount), 0)
+                  const alloc  = accountAllocation(secondHalf, accounts)
+                  return (
+                    <div className={styles.halfCard}>
+                      <div className={styles.halfHeader} onClick={() => setOpenSecond(o => !o)}>
+                        <div className={styles.halfLeft}>
+                          <div className={styles.halfRange}>May 16 – 31</div>
+                          <div className={styles.halfCount}>{secondHalf.length} items{remaining > 0 ? ` · $${fmt(remaining)} remaining` : ' · all passed'}</div>
+                        </div>
+                        <div className={styles.halfRight}>
+                          <div className={styles.halfTotal} style={{color: remaining > 0 ? 'var(--debt)' : 'var(--ink-3)'}}>
+                            ${fmt(t.expenses)}
+                          </div>
+                          <span className={`${styles.halfChevron} ${openSecond ? styles.halfChevronOpen : ''}`}>›</span>
+                        </div>
+                      </div>
+                      {openSecond && (
+                        <div className={styles.halfBody}>
+                          {secondHalf.map((ev, i) => {
+                            const isPast = ev.day_of_month < todayDay
+                            const u = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
+                            return (
+                              <div key={i} className={styles.halfItem}>
+                                <span className={styles.halfItemIcon}>{ev.icon}</span>
+                                <span className={styles.halfItemName}>{ev.name}</span>
+                                <span className={styles.halfItemDay} style={{color: isPast ? 'var(--ink-4)' : u?.daysUntil === 0 ? 'var(--warn)' : 'var(--ink-3)'}}>
+                                  {isPast ? 'passed' : u?.daysUntil === 0 ? 'today' : `${u?.daysUntil}d`}
+                                </span>
+                                <span className={styles.halfItemAmt} style={{color: isPast ? 'var(--ink-3)' : ev.type === 'income' ? 'var(--safe)' : 'var(--debt)'}}>
+                                  {ev.type === 'income' ? '+' : '−'}${fmt(ev.amount)}
+                                </span>
+                              </div>
+                            )
+                          })}
+                          {accounts.length > 0 && (
+                            <div className={styles.allocBox}>
+                              <div className={styles.allocLabel}>Account allocation</div>
+                              {alloc.filter(a => a.covers).map((a, i) => (
+                                <div key={i} className={styles.allocRow}>
+                                  <div>
+                                    <div className={styles.allocName}>{a.name}{a.mask ? ` ····${a.mask}` : ''}</div>
+                                    <div className={styles.allocBal}>Balance: ${fmt(a.balance)}</div>
+                                  </div>
+                                  <div className={`${styles.allocAmt} ${a.short ? styles.allocShort : styles.allocOk}`}>
+                                    {a.short ? `$${fmt(remaining - a.balance)} short` : '✓ Covered'}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className={styles.eventAmt} style={{color: isPast ? 'var(--ink-3)' : typeColor[ev.type] || 'var(--warn)'}}>
-                    {ev.type==='income' ? '+' : '−'}${fmt(ev.amount)}
-                  </div>
-                  <button className={styles.eventEdit} onClick={() => setEditItem(baseItem)} title="Edit">✎</button>
-                  <button className={styles.eventDelete} onClick={() => handleDelete(ev.id)}>✕</button>
-                </div>
-              )
-            })}
+                  )
+                })()}
+              </>
+            )}
           </div>
+        </div>
+
+        {/* ── Full recurring list below calendar ── */}
+        <div className={styles.belowList}>
+          <div className={styles.belowHead}>
+            {isCurrentMonth ? 'This Month' : `Events in ${monthLabel}`}
+          </div>
+          {allSorted.length === 0 ? (
+            <div className={styles.belowEmpty}>
+              No recurring items yet. Click <strong>+ Add Recurring</strong> to get started.
+            </div>
+          ) : allSorted.map((ev, idx) => {
+            const isPast = isCurrentMonth && ev.day_of_month < today.getDate()
+            const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
+            const daysUntil = upcomingEntry?.daysUntil
+            const baseItem  = recurring.find(r => r.id === ev.id) || ev
+            const freqLabel = ev.frequency === 'biweekly' ? 'biweekly' : ev.type
+            return (
+              <div
+                key={`${ev.id}-${ev.day_of_month}-${idx}`}
+                className={styles.eventRow}
+                style={ev.type==='income' ? {background:'rgba(93,202,165,.04)',borderRadius:8,padding:'8px 4px'} : {}}
+              >
+                <div className={styles.eventDate} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.6)'} : {}}>
+                  Day {ev.day_of_month}
+                </div>
+                <div className={styles.eventDot} style={{background: isPast ? 'var(--ink-4)' : typeColor[ev.type] || 'var(--warn)'}} />
+                <div className={styles.eventInfo}>
+                  <div className={styles.eventName} style={isPast ? {color:'var(--ink-3)'} : ev.type==='income' ? {color:'rgba(93,202,165,.9)'} : {}}>
+                    {ev.icon} {ev.name}
+                  </div>
+                  <div className={styles.eventType} style={isPast ? {color:'var(--ink-4)'} : ev.type==='income' ? {color:'rgba(93,202,165,.4)'} : {}}>
+                    {freqLabel}{isCurrentMonth ? (isPast ? ' · passed' : daysUntil === 0 ? ' · Today' : ` · in ${daysUntil} day${daysUntil===1?'':'s'}`) : ''}
+                  </div>
+                </div>
+                <div className={styles.eventAmt} style={{color: isPast ? 'var(--ink-3)' : typeColor[ev.type] || 'var(--warn)'}}>
+                  {ev.type==='income' ? '+' : '−'}${fmt(ev.amount)}
+                </div>
+                <button className={styles.eventEdit} onClick={() => setEditItem(baseItem)} title="Edit">✎</button>
+                <button className={styles.eventDelete} onClick={() => handleDelete(ev.id)}>✕</button>
+              </div>
+            )
+          })}
         </div>
       </ScreenWrap>
     </>

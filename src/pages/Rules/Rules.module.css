@@ -63,14 +63,32 @@
   letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
 }
 
-.ruleBuilder { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-
-.builderRow {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+.ruleBuilder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
 }
+
+/* Row 1: label | operator select | match input */
+.builderRow {
+  display: grid;
+  grid-template-columns: 148px 148px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Row 3: label | input — spans full width but aligned to same grid */
+.builderRowFull {
+  display: grid;
+  grid-template-columns: 148px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
 .builderLabel {
   font-family: var(--font-mono); font-size: 10px; color: var(--ink-3);
-  white-space: nowrap; flex-shrink: 0;
+  white-space: nowrap;
 }
 .builderSelect {
   background: rgba(255,255,255,.04); border: 1px solid var(--ink-4);
