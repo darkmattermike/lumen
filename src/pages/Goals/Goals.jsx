@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
+import AnimatedBar from '../../components/AnimatedBar/AnimatedBar'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { api } from '../../data/api'
 import styles from './Goals.module.css'
@@ -45,12 +46,7 @@ function GoalCard({ goal, onEdit, onContribute, onDelete }) {
       </div>
 
       {/* Progress bar */}
-      <div className={styles.progressTrack}>
-        <div
-          className={styles.progressFill}
-          style={{ width: `${pct}%`, background: `var(${meta.accentVar})` }}
-        />
-      </div>
+      <AnimatedBar pct={pct} color={`var(${meta.accentVar})`} height={4} />
 
       <div className={styles.cardStats}>
         <div className={styles.cardStat}>

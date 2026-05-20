@@ -433,3 +433,75 @@ select option {
   background: #0d1117;
   color: #f4f4f1;
 }
+
+/* ── LumenDot mood classes ────────────────────────────────── */
+
+/* Thinking — faster, cooler pulse */
+.dot-thinking {
+  animation: dot-thinking 1.2s ease-in-out infinite !important;
+  filter: hue-rotate(40deg);
+}
+@keyframes dot-thinking {
+  0%,100% { transform: scale(1);    opacity: 0.8; }
+  50%      { transform: scale(1.06); opacity: 1;   }
+}
+
+/* Speaking — rapid gentle shimmer */
+.dot-speaking {
+  animation: dot-speaking 0.6s ease-in-out infinite !important;
+}
+@keyframes dot-speaking {
+  0%,100% { opacity: 0.85; }
+  50%      { opacity: 1; box-shadow: 0 0 0 1px rgba(93,202,165,.15), 0 0 20px rgba(93,202,165,.6), 0 0 50px rgba(93,202,165,.25); }
+}
+
+/* Happy — bouncy */
+.dot-happy {
+  animation: dot-happy 1.8s cubic-bezier(.36,.07,.19,.97) infinite !important;
+}
+@keyframes dot-happy {
+  0%,100% { transform: scale(1) translateY(0); }
+  30%      { transform: scale(1.08) translateY(-2px); }
+  60%      { transform: scale(0.96) translateY(0); }
+}
+
+/* Alert — urgent red pulse */
+.dot-alert {
+  animation: dot-alert 0.8s ease-in-out infinite !important;
+  filter: hue-rotate(120deg) saturate(1.5);
+}
+@keyframes dot-alert {
+  0%,100% { transform: scale(1);    box-shadow: 0 0 16px rgba(232,115,99,.5); }
+  50%      { transform: scale(1.1); box-shadow: 0 0 28px rgba(232,115,99,.8); }
+}
+
+/* Excited — burst spin */
+.dot-excited {
+  animation: dot-excited 0.5s cubic-bezier(.36,.07,.19,.97) !important;
+}
+@keyframes dot-excited {
+  0%   { transform: scale(1)    rotate(0deg); }
+  25%  { transform: scale(1.2)  rotate(-8deg); }
+  50%  { transform: scale(0.95) rotate(5deg); }
+  75%  { transform: scale(1.1)  rotate(-3deg); }
+  100% { transform: scale(1)    rotate(0deg); }
+}
+
+/* Unread — slow wiggle */
+.dot-unread {
+  animation: dot-unread 3s ease-in-out infinite !important;
+}
+@keyframes dot-unread {
+  0%,85%,100% { transform: translateX(0); }
+  88%         { transform: translateX(-2px); }
+  92%         { transform: translateX(2px); }
+  96%         { transform: translateX(-1px); }
+}
+
+/* Loading — spin */
+.dot-loading {
+  animation: dot-loading 1.4s linear infinite !important;
+}
+@keyframes dot-loading {
+  to { transform: rotate(360deg); }
+}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenDot from '../../components/LumenDot/LumenDot'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
+import AnimatedBar from '../../components/AnimatedBar/AnimatedBar'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -168,9 +169,7 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
 
       {/* ── Progress bar ── */}
       {!isDone && (
-        <div className={styles.barTrack}>
-          <div className={`${styles.barFill} ${isOver && cat.pct > 90 ? styles.barPulse : ''}`} style={{'--bar-target': `${pct}%`, background: isOver ? 'var(--debt)' : color, opacity:.6}} />
-        </div>
+        <AnimatedBar pct={pct} color={color} height={3} />
       )}
       {isDone && (
         <div className={styles.doneBar} />

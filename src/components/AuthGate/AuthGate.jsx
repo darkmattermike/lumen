@@ -7,6 +7,7 @@ export default function AuthGate() {
   const { login, register } = useAuth()
   const [mode, setMode]     = useState('login') // 'login' | 'register'
   const [form, setForm]     = useState({ name: '', email: '', password: '' })
+  const [termsAgreed, setTermsAgreed] = useState(false)
   const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -23,7 +24,12 @@ export default function AuthGate() {
       if (mode === 'login') {
         await login(form.email, form.password)
       } else {
-        await register(form.email, form.password, form.name)
+        if (!termsAgreed) {
+          setError('You must agree to the Terms of Service and Privacy Policy')
+          setLoading(false)
+          return
+        }
+        await register(form.email, form.password, form.name, true)
       }
     } catch (err) {
       setError(err.message)
@@ -109,6 +115,22 @@ export default function AuthGate() {
           </div>
 
           {error && <div className={styles.error}>{error}</div>}
+
+          {mode === 'register' && (
+            <label className={styles.termsCheck}>
+              <input
+                type="checkbox"
+                checked={termsAgreed}
+                onChange={e => { setTermsAgreed(e.target.checked); setError('') }}
+              />
+              <span>
+                I agree to the{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>,{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>, and{' '}
+                <a href="/data-usage" target="_blank" rel="noopener noreferrer">Data Usage Policy</a>
+              </span>
+            </label>
+          )}
 
           <button className={styles.submit} type="submit" disabled={loading}>
             {loading

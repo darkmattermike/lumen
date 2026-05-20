@@ -114,7 +114,7 @@ function RuleToast({ suggestion, onAccept, onDismiss }) {
 }
 
 // ── Expandable transaction row ────────────────────────────────
-function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
+function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion, onLearned }) {
   const [open, setOpen]     = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -150,18 +150,15 @@ function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
         date:     form.date,
         note:     form.note || null,
         tx_type:  form.tx_type,
-        // Pass original category so backend can record a correction for AI learning
-        _original_category: tx.category,
+        // Pass original category so backend can record the correction for learning
+        _original_category: tx.category || null,
       })
       setOpen(false)
       onSaved(tx.id, saved)
 
-      // Show brief learning confirmation if category changed
-      if (form.category && form.category !== tx.category) {
-        setError('') // clear errors
-        // Brief flash — reuse error state but style it green via a flag
-        setLearnedMsg('✓ Lumen learned this correction')
-        setTimeout(() => setLearnedMsg(''), 2500)
+      // Show "Lumen learned this" feedback when category was corrected
+      if (form.category && form.category !== (tx.category || '')) {
+        onLearned?.(`✦ Lumen learned: "${tx.cleaned_name || tx.name}" → ${form.category}`)
       }
 
       // ── Suggest creating a rule for each changed field ──────
@@ -524,6 +521,7 @@ export default function Transactions() {
   const [search, setSearch]               = useState('')
   const [showCatModal, setShowCatModal]   = useState(false)
   const [showCsvImport, setShowCsvImport]   = useState(false)
+  const [learnedToast, setLearnedToast]     = useState(null)
   const [showDocUpload, setShowDocUpload]     = useState(false)
   const [enriching, setEnriching]         = useState(false)
   const [enrichMsg, setEnrichMsg]         = useState('')
@@ -733,6 +731,11 @@ export default function Transactions() {
 
         <MergeReview onResolved={refresh} />
 
+        {/* Merchant learning toast */}
+        {learnedToast && (
+          <div className={styles.learnedToast}>{learnedToast}</div>
+        )}
+
         <div className={styles.filters}>
           {FILTERS.map(f => (
             <button key={f}
@@ -755,7 +758,9 @@ export default function Transactions() {
               <div key={date}>
                 <div className={styles.dayHead}>{date}</div>
                 {txs.map(tx => (
-                  <TxRow key={tx.id} tx={tx} budgets={budgets} rules={rules} onSaved={handleTxSaved} onRuleSuggestion={setRuleSuggestion} />
+                  <TxRow key={tx.id} tx={tx} budgets={budgets} rules={rules} onSaved={handleTxSaved} onRuleSuggestion={setRuleSuggestion}
+                    onLearned={msg => { setLearnedToast(msg); setTimeout(() => setLearnedToast(null), 3500) }}
+                  />
                 ))}
               </div>
             ))}

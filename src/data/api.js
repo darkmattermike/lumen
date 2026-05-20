@@ -20,9 +20,15 @@ async function request(path, options = {}, _retry = true) {
   try { data = await res.json() } catch { data = {} }
 
   if (!res.ok) {
-    if (res.status === 401 && data?.expired && _retry && window.__lumenRefresh) {
-      const newToken = await window.__lumenRefresh()
-      if (newToken) return request(path, options, false)
+    // Attempt silent token refresh on any 401 (expired OR missing token)
+    // Skip retry for the refresh endpoint itself to avoid infinite loops
+    if (res.status === 401 && _retry && !path.includes('/auth/refresh') && window.__lumenRefresh) {
+      try {
+        const newToken = await window.__lumenRefresh()
+        if (newToken) return request(path, options, false)
+      } catch {
+        // Refresh failed — fall through to throw the original error
+      }
     }
     const err = new Error(data.error || 'Request failed')
     err.status  = res.status

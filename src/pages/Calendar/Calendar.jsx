@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
+import RecurringSuggestions from '../../components/RecurringSuggestions/RecurringSuggestions'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -766,6 +767,7 @@ export default function Calendar() {
             )
           })}
         </div>
+        <RecurringSuggestions onAccepted={refresh} />
       </ScreenWrap>
     </>
   )

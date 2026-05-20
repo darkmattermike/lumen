@@ -17,6 +17,9 @@ import LumenChat    from './pages/LumenChat/LumenChat'
 import Debt         from './pages/Debt/Debt'
 import Insights     from './pages/Insights/Insights'
 import Onboarding   from './components/Onboarding/Onboarding'
+import { TermsOfService, PrivacyPolicy, DataUsagePolicy } from './pages/Legal/Legal'
+import PushPromptBanner from './components/PushPromptBanner/PushPromptBanner'
+import { api } from './data/api'
 import styles from './App.module.css'
 
 function AppShell() {
@@ -50,9 +53,13 @@ function AppShell() {
             <Route path="/chat"        element={<LumenChat />} />
             <Route path="/debt"        element={<Debt />} />
             <Route path="/insights"    element={<Insights />} />
+            <Route path="/terms"       element={<TermsOfService />} />
+            <Route path="/privacy"     element={<PrivacyPolicy />} />
+            <Route path="/data-usage"  element={<DataUsagePolicy />} />
           </Routes>
         </main>
       </div>
+      <PushPromptBanner />
     </div>
   )
 }

@@ -169,3 +169,27 @@
   color: var(--ink-3);
   letter-spacing: 0.5px;
 }
+
+.termsCheck {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ink-3);
+  line-height: 1.5;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.termsCheck input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--safe);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+.termsCheck a {
+  color: var(--calm);
+  text-decoration: none;
+}
+.termsCheck a:hover { text-decoration: underline; }

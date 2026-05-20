@@ -63,8 +63,8 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
-  async function register(email, password, name) {
-    const data = await api.register({ email, password, name })
+  async function register(email, password, name, terms_agreed = false) {
+    const data = await api.register({ email, password, name, terms_agreed })
     localStorage.setItem('lumen_token', data.token)
     setUser(data.user)
     return data.user

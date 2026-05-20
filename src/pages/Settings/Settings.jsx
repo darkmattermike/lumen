@@ -139,23 +139,17 @@ function PasswordSection() {
 // ── API Keys section ──────────────────────────────────────────
 function ApiKeysSection({ data, onRefresh }) {
   const [anthropic, setAnthropic] = useState('')
-  const [google, setGoogle]       = useState('')
   const [showAnthropic, setShowAnthropic] = useState(false)
-  const [showGoogle, setShowGoogle]       = useState(false)
   const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState('')
 
   async function saveKeys() {
-    if (!anthropic && !google) return setStatus('Error: Enter at least one key')
+    if (!anthropic) return setStatus('Error: Enter an API key')
     setSaving(true)
     try {
-      await api.updateKeys({
-        ...(anthropic ? { anthropic_key: anthropic } : {}),
-        ...(google    ? { google_key:    google }    : {}),
-      })
+      await api.updateKeys({ anthropic_key: anthropic })
       setStatus('Keys saved')
       setAnthropic('')
-      setGoogle('')
       onRefresh()
     } catch (err) {
       setStatus(`Error: ${err.message}`)
@@ -167,8 +161,8 @@ function ApiKeysSection({ data, onRefresh }) {
   async function removeKey(type) {
     if (!window.confirm(`Remove your ${type} key?`)) return
     try {
-      await api.updateKeys({ [type === 'anthropic' ? 'anthropic_key' : 'google_key']: null })
-      setStatus(`${type === 'anthropic' ? 'Anthropic' : 'Google'} key removed`)
+      await api.updateKeys({ anthropic_key: null })
+      setStatus('Anthropic key removed')
       onRefresh()
     } catch (err) {
       setStatus(`Error: ${err.message}`)
@@ -211,38 +205,8 @@ function ApiKeysSection({ data, onRefresh }) {
         </div>
       </Field>
 
-      {/* Google */}
-      <Field
-        label="Google API Key"
-        hint="Used for Google Sign-In and future Google integrations."
-      >
-        <div className={styles.keyRow}>
-          {data.has_google_key ? (
-            <div className={styles.keyExisting}>
-              <div className={styles.keyBadge}>
-                <span className={styles.keyDot} />
-                Connected {data.google_key_hint}
-              </div>
-              <button className={styles.keyRemove} onClick={() => removeKey('google')}>Remove</button>
-            </div>
-          ) : (
-            <div className={styles.keyInputWrap}>
-              <input
-                className={styles.input}
-                type={showGoogle ? 'text' : 'password'}
-                value={google}
-                onChange={e => { setGoogle(e.target.value); setStatus('') }}
-                placeholder="AIza..."
-              />
-              <button className={styles.keyToggle} onClick={() => setShowGoogle(s => !s)}>
-                {showGoogle ? 'Hide' : 'Show'}
-              </button>
-            </div>
-          )}
-        </div>
-      </Field>
 
-      {(!data.has_anthropic_key || !data.has_google_key) && (
+      {!data.has_anthropic_key && (
         <div className={styles.fieldActions}>
           <SaveStatus status={status} />
           <button className={styles.saveBtn} onClick={saveKeys} disabled={saving}>
@@ -250,7 +214,7 @@ function ApiKeysSection({ data, onRefresh }) {
           </button>
         </div>
       )}
-      {(data.has_anthropic_key || data.has_google_key) && status && (
+      {data.has_anthropic_key && status && (
         <div className={styles.fieldActions}>
           <SaveStatus status={status} />
         </div>
@@ -428,6 +392,69 @@ function AccountInfoSection({ data, onLogout }) {
   )
 }
 
+// ── Legal section ─────────────────────────────────────────────
+function LegalSection({ data }) {
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'
+  return (
+    <Section title="Legal & Privacy" subtitle="Policies you agreed to when creating your account.">
+      <Field label="Terms of Service">
+        <div className={styles.legalRow}>
+          <span className={styles.legalStatus}>✓ Agreed {fmtDate(data.terms_agreed_at)}</span>
+          <a className={styles.legalLink} href="/terms" target="_blank" rel="noopener noreferrer">View →</a>
+        </div>
+      </Field>
+      <Field label="Privacy Policy">
+        <div className={styles.legalRow}>
+          <span className={styles.legalStatus}>✓ Agreed {fmtDate(data.privacy_agreed_at)}</span>
+          <a className={styles.legalLink} href="/privacy" target="_blank" rel="noopener noreferrer">View →</a>
+        </div>
+      </Field>
+      <Field label="Data Usage Policy">
+        <div className={styles.legalRow}>
+          <span className={styles.legalStatus}>Governs how your financial data is processed</span>
+          <a className={styles.legalLink} href="/data-usage" target="_blank" rel="noopener noreferrer">View →</a>
+        </div>
+      </Field>
+    </Section>
+  )
+}
+
+// ── Data section ──────────────────────────────────────────────
+function DataSection() {
+  const BASE = import.meta.env.VITE_API_URL || ''
+  const token = localStorage.getItem('token') || ''
+  const now = new Date()
+  const year  = now.getFullYear()
+  const month = now.getMonth() + 1
+  const from  = `${year}-01-01`
+  const to    = now.toISOString().split('T')[0]
+
+  function exportUrl(path) {
+    return `${BASE}${path}&token=${token}`
+  }
+
+  return (
+    <Section title="Export Your Data" subtitle="Download your financial data at any time. All exports include data you've entered and synced.">
+      <div className={styles.exportGrid}>
+        {[
+          { label: 'Transactions (CSV)', sub: 'Last 90 days', href: exportUrl(`/api/export/transactions?format=csv&from=${from}&to=${to}`) },
+          { label: 'Transactions (JSON)', sub: 'Last 90 days', href: exportUrl(`/api/export/transactions?format=json&from=${from}&to=${to}`) },
+          { label: 'Accounts (CSV)', sub: 'Current balances', href: exportUrl('/api/export/accounts?format=csv') },
+          { label: 'Full Export (JSON)', sub: 'Everything — transactions, accounts, budgets, goals', href: exportUrl('/api/export/full') },
+        ].map(e => (
+          <a key={e.label} href={e.href} className={styles.exportCard} download>
+            <span className={styles.exportIcon}>↓</span>
+            <div>
+              <div className={styles.exportLabel}>{e.label}</div>
+              <div className={styles.exportSub}>{e.sub}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </Section>
+  )
+}
+
 // ── Main Settings page ────────────────────────────────────────
 export default function Settings() {
   const { logout } = useAuth()
@@ -457,10 +484,12 @@ export default function Settings() {
         <div className={styles.left}>
           <ProfileSection  data={data} onRefresh={refresh} />
           <PasswordSection />
+          <LegalSection    data={data} />
         </div>
         <div className={styles.right}>
           <ApiKeysSection  data={data} onRefresh={refresh} />
           <GmailSection    data={data} onRefresh={refresh} />
+          <DataSection     data={data} />
           <AccountInfoSection data={data} onLogout={logout} />
         </div>
       </div>

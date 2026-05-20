@@ -288,8 +288,8 @@ function NetWorthTab() {
       {allPoints.length > 1 && (
         <svg viewBox={`0 0 ${W} ${H}`} className={styles.nwChart}>
           {minV < 0 && <line x1={PAD.l} y1={zeroY} x2={W - PAD.r} y2={zeroY} stroke="var(--border)" strokeDasharray="3,3" strokeWidth="0.5" />}
-          {history.length > 0 && <path d={histPath} fill="none" stroke="var(--safe)" strokeWidth="2" />}
-          <path d={projPath} fill="none" stroke="var(--calm)" strokeWidth="1.5" strokeDasharray="4,3" />
+          {history.length > 0 && <path d={histPath} fill="none" stroke="var(--safe)" strokeWidth="2" className={styles.animatedLine} />}
+          <path d={projPath} fill="none" stroke="var(--calm)" strokeWidth="1.5" strokeDasharray="4,3" className={styles.animatedLine} />
           {xs.slice(0, histLen).map((x, i) => (
             <circle key={i} cx={x} cy={ys[i]} r="2.5" fill="var(--safe)" />
           ))}

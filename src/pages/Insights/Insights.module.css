@@ -230,3 +230,13 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+/* Line draw animation */
+.animatedLine {
+  stroke-dasharray: 3000;
+  stroke-dashoffset: 3000;
+  animation: draw-line 1.2s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}

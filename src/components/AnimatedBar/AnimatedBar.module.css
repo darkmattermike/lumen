@@ -1,0 +1,30 @@
+.track {
+  background: rgba(255,255,255,.06);
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.fill {
+  border-radius: 2px;
+  transition: background 0.3s ease;
+  will-change: width;
+}
+
+/* Gentle pulse when warning (80-100%) */
+.pulse {
+  animation: bar-pulse 2.2s ease-in-out infinite;
+}
+@keyframes bar-pulse {
+  0%,100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+/* Flash when over budget */
+.flash {
+  animation: bar-flash 1s ease-in-out infinite;
+}
+@keyframes bar-flash {
+  0%,100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
