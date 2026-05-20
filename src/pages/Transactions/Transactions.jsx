@@ -3,6 +3,7 @@ import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import CsvImportModal from '../../components/CsvImportModal/CsvImportModal'
 import DocumentUpload from '../../components/DocumentUpload/DocumentUpload'
+import MergeReview from '../../components/MergeReview/MergeReview'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -186,7 +187,10 @@ function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
       <div className={styles.txRow} onClick={() => setOpen(o => !o)}>
         <div className={styles.txIcon}>{tx.icon || (isIncome ? '💰' : '💳')}</div>
         <div className={styles.txInfo}>
-          <div className={styles.txName}>{tx.cleaned_name || form.name}</div>
+          <div className={styles.txName}>
+            {tx.cleaned_name || form.name}
+            {tx.status === 'pending' && <span className={styles.pendingBadge}>pending</span>}
+          </div>
           {tx.cleaned_name && tx.cleaned_name !== tx.name && (
             <div className={styles.txRawName}>{tx.name}</div>
           )}
@@ -716,6 +720,8 @@ export default function Transactions() {
             onImported={() => { setShowCsvImport(false); refresh() }}
           />
         )}
+
+        <MergeReview onResolved={refresh} />
 
         <div className={styles.filters}>
           {FILTERS.map(f => (

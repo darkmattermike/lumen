@@ -697,3 +697,18 @@
     gap: 8px;
   }
 }
+
+.pendingBadge {
+  display: inline-block;
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(240,176,76,.1);
+  border: 1px solid rgba(240,176,76,.3);
+  color: var(--warn);
+  vertical-align: middle;
+}

@@ -113,6 +113,14 @@ export const api = {
   // Feature 8: DNA
   spendingDna:          ()        => request('/api/insights/dna'),
   generateDna:          (force)   => request('/api/insights/dna/generate', { method: 'POST', body: JSON.stringify({ force: !!force }) }),
+
+  // Pending transactions & merge candidates
+  pending:                  ()    => request('/api/pending'),
+  scanBankAlerts:           ()    => request('/api/pending/scan', { method: 'POST' }),
+  mergeCandidates:          ()    => request('/api/pending/candidates'),
+  mergeCandidate:     (id)        => request(`/api/pending/candidates/${id}/merge`,    { method: 'POST' }),
+  keepSeparate:       (id)        => request(`/api/pending/candidates/${id}/separate`, { method: 'POST' }),
+  dismissPending:     (id)        => request(`/api/pending/${id}`, { method: 'DELETE' }),
   // Feature 9: Lifetime
   lifetimeStats:        ()        => request('/api/insights/lifetime'),
   // Feature 10: Notification Intelligence
