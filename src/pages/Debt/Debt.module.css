@@ -1,0 +1,183 @@
+.page { max-width: 1000px; margin: 0 auto; }
+
+/* Header */
+.header { margin-bottom: 20px; }
+.title  { font-size: 20px; font-weight: 800; color: var(--ink-0); }
+.sub    { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+
+/* Empty */
+.empty { text-align: center; padding: 60px 20px; }
+.emptyIcon  { font-size: 40px; margin-bottom: 12px; }
+.emptyTitle { font-size: 16px; font-weight: 700; color: var(--ink-1); }
+.emptySub   { font-size: 12px; color: var(--ink-3); margin-top: 6px; max-width: 320px; margin-inline: auto; }
+
+/* Summary strip */
+.summaryStrip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; margin-bottom: 20px;
+}
+.summaryItem {
+  padding: 14px 16px;
+  background: var(--surface-1);
+}
+.summaryVal   { font-size: 18px; font-weight: 800; font-family: var(--font-mono); color: var(--ink-0); }
+.summaryLabel { font-size: 10px; color: var(--ink-3); margin-top: 2px; text-transform: uppercase; letter-spacing: .4px; }
+
+/* Body layout */
+.body { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+
+/* Extra payment card */
+.extraCard {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-bottom: 14px;
+}
+.extraLabel {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; color: var(--ink-2); margin-bottom: 12px; font-weight: 600;
+}
+.extraAmt { font-family: var(--font-mono); font-size: 14px; color: var(--ink-0); font-weight: 800; }
+.slider {
+  width: 100%; accent-color: var(--calm);
+  height: 4px; cursor: pointer;
+}
+.sliderTicks {
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: var(--ink-4); margin-top: 4px;
+  font-family: var(--font-mono);
+}
+
+/* Winner banner */
+.winner {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-left: 3px solid var(--calm);
+  border-radius: 10px; padding: 10px 14px;
+  margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;
+}
+.winnerBadge { font-size: 11px; font-weight: 700; color: var(--ink-0); }
+.winnerDesc  { font-size: 11px; color: var(--ink-2); line-height: 1.5; }
+
+.comparing { font-size: 11px; color: var(--ink-3); padding: 8px 0; }
+
+/* Strategy cards */
+.stratCard {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px;
+  margin-bottom: 12px;
+}
+.stratHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.stratLabel { font-size: 11px; font-weight: 700; color: var(--ink-1); }
+.stratDate  { font-size: 11px; font-family: var(--font-mono); color: var(--ink-3); }
+.stratBar {
+  height: 6px; background: var(--surface-2);
+  border-radius: 3px; overflow: hidden; margin-bottom: 10px;
+}
+.stratBarFill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.stratStats { display: flex; gap: 20px; }
+.stratStat  { display: flex; flex-direction: column; gap: 2px; }
+.stratStatVal   { font-size: 14px; font-weight: 700; font-family: var(--font-mono); color: var(--ink-0); }
+.stratStatLabel { font-size: 9px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .4px; }
+
+.payoffOrder { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+.payoffChip {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; color: var(--ink-2);
+}
+.payoffNum {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; flex-shrink: 0;
+}
+.payoffDate { margin-left: auto; font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); }
+
+/* Savings banner */
+.savingsBanner {
+  background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 12px; color: var(--ink-2); margin-bottom: 14px;
+}
+
+/* Extra payment calc */
+.calcCard {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px;
+}
+.calcTitle  { font-size: 12px; font-weight: 700; color: var(--ink-1); margin-bottom: 14px; }
+.calcControls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.calcGroup  { display: flex; flex-direction: column; gap: 4px; }
+.calcLabel  { font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .4px; }
+.calcSelect, .calcInput {
+  background: var(--surface-0); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 10px;
+  font-size: 12px; color: var(--ink-0); font-family: inherit;
+}
+.calcAmtRow { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); }
+.calcInput  { width: 70px; }
+.calcLoading { font-size: 11px; color: var(--ink-3); padding: 4px 0; }
+
+.calcCompare { display: flex; align-items: center; gap: 12px; }
+.calcCol { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.calcColLabel    { font-size: 9px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .4px; }
+.calcColVal      { font-size: 18px; font-weight: 800; font-family: var(--font-mono); color: var(--ink-0); }
+.calcColSub      { font-size: 10px; color: var(--ink-3); }
+.calcColInterest { font-size: 11px; font-family: var(--font-mono); }
+.calcColHighlight .calcColVal { color: var(--safe); }
+.calcArrow { font-size: 18px; color: var(--ink-4); flex-shrink: 0; }
+
+.calcSavings {
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--ink-2);
+}
+
+/* Right column — debt list */
+.rightCol { display: flex; flex-direction: column; gap: 0; }
+.sectionLabel {
+  font-size: 10px; font-weight: 700; color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+.debtList {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+}
+.debtRow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+}
+.debtRow:last-child { border-bottom: none; }
+.debtLeft  { min-width: 0; }
+.debtName  { font-size: 13px; font-weight: 600; color: var(--ink-0); }
+.debtMeta  { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.debtRate  { font-size: 10px; font-weight: 700; font-family: var(--font-mono); }
+.debtUtil  { font-size: 10px; color: var(--ink-3); }
+.debtType  { font-size: 10px; color: var(--ink-3); text-transform: capitalize; }
+.debtRight { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.debtBalance { font-size: 14px; font-weight: 800; font-family: var(--font-mono); color: var(--debt); }
+.debtMinRow { display: flex; align-items: center; }
+.debtMinBtn {
+  font-size: 10px; color: var(--ink-3);
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 7px; cursor: pointer;
+}
+.debtMinBtn:hover { border-color: var(--calm); color: var(--calm); }
+.debtMinEdit { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--ink-2); }
+.debtMinInput {
+  width: 60px; background: var(--surface-0); border: 1px solid var(--calm);
+  border-radius: 6px; padding: 3px 6px; font-size: 11px; color: var(--ink-0);
+}
+.debtMinSave   { background: var(--calm);    color: #fff; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 11px; }
+.debtMinCancel { background: var(--surface-2); color: var(--ink-3); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 11px; }
+
+.minNote { font-size: 10px; color: var(--ink-4); margin-top: 8px; line-height: 1.5; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .body           { grid-template-columns: 1fr; }
+  .summaryStrip   { grid-template-columns: repeat(2, 1fr); }
+  .calcControls   { grid-template-columns: 1fr; }
+}

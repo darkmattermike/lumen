@@ -21,6 +21,8 @@ const ICONS = {
   goals:    'M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 0v10l4 2',
   settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8.19-2A8.01 8.01 0 0 0 20 12a8 8 0 0 0-.81-3.19l2.22-1.28a1 1 0 0 0 .37-1.37l-2-3.46a1 1 0 0 0-1.37-.37l-2.23 1.29A7.95 7.95 0 0 0 13 3.05V.5a1 1 0 0 0-2 0v2.55a7.95 7.95 0 0 0-3.18 1.57L5.59 3.33a1 1 0 0 0-1.37.37l-2 3.46a1 1 0 0 0 .37 1.37l2.22 1.28A8.01 8.01 0 0 0 4 12c0 1.09.2 2.13.59 3.09L2.37 16.37a1 1 0 0 0-.37 1.37l2 3.46a1 1 0 0 0 1.37.37l2.23-1.29A7.95 7.95 0 0 0 11 20.95v2.55a1 1 0 0 0 2 0v-2.55a7.95 7.95 0 0 0 3.18-1.57l2.23 1.29a1 1 0 0 0 1.37-.37l2-3.46a1 1 0 0 0-.37-1.37l-2.22-1.28z',
   more:     'M5 12h.01M12 12h.01M19 12h.01',
+  chat:     'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+  debt:     'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z',
 }
 
 // Desktop sidebar items
@@ -33,6 +35,8 @@ const NAV_ITEMS = [
   { path: '/calendar',     icon: 'calendar', label: 'Calendar'     },
   { path: '/rules',        icon: 'rules',    label: 'Rules'        },
   { path: '/goals',        icon: 'goals',    label: 'Goals'        },
+  { path: '/debt',         icon: 'debt',     label: 'Debt'         },
+  { path: '/chat',         icon: 'chat',     label: 'Ask Lumen'    },
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'        },
 ]
 
@@ -50,6 +54,8 @@ const MOBILE_MORE = [
   { path: '/accounts',     icon: 'accounts', label: 'Accounts'  },
   { path: '/rules',        icon: 'rules',    label: 'Rules'     },
   { path: '/goals',        icon: 'goals',    label: 'Goals'     },
+  { path: '/debt',         icon: 'debt',     label: 'Debt'      },
+  { path: '/chat',         icon: 'chat',     label: 'Ask Lumen' },
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'     },
   { path: '/settings',     icon: 'settings', label: 'Settings'  },
 ]

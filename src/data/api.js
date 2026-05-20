@@ -52,6 +52,19 @@ export const api = {
   forecastPoints:       (days)       => request(`/api/forecast/points?days=${days||90}`),
   forecastAlerts:       ()           => request('/api/forecast/alerts',           { method: 'POST' }),
   proactiveAlerts:      ()           => request('/api/forecast/proactive-alerts',   { method: 'POST' }),
+
+  // Phase F: Conversational upgrades
+  nlQuery:          (body) => request('/api/lumen/query',             { method: 'POST', body: JSON.stringify(body) }),
+  purchaseDecision: (body) => request('/api/lumen/purchase-decision', { method: 'POST', body: JSON.stringify(body) }),
+  goalPlan:         (body) => request('/api/lumen/goal-plan',         { method: 'POST', body: JSON.stringify(body) }),
+  scenario:         (body) => request('/api/lumen/scenario',          { method: 'POST', body: JSON.stringify(body) }),
+
+  // Phase G: Debt Strategy
+  debt:                    ()      => request('/api/debt'),
+  debtCompare:             (body)  => request('/api/debt/compare',              { method: 'POST', body: JSON.stringify(body) }),
+  debtExtraPayment:        (body)  => request('/api/debt/extra-payment',        { method: 'POST', body: JSON.stringify(body) }),
+  debtPayoffOpportunities: ()      => request('/api/debt/payoff-opportunities', { method: 'POST' }),
+  debtSetMinPayment:       (id, body) => request(`/api/debt/${id}/minimum-payment`, { method: 'PATCH', body: JSON.stringify(body) }),
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),

@@ -13,6 +13,8 @@ import Rules        from './pages/Rules/Rules'
 import GmailInbox  from './pages/GmailInbox/GmailInbox'
 import Goals        from './pages/Goals/Goals'
 import Settings     from './pages/Settings/Settings'
+import LumenChat    from './pages/LumenChat/LumenChat'
+import Debt         from './pages/Debt/Debt'
 import styles from './App.module.css'
 
 function AppShell() {
@@ -38,6 +40,8 @@ function AppShell() {
             <Route path="/gmail"        element={<GmailInbox />} />
             <Route path="/goals"        element={<Goals />} />
             <Route path="/settings"     element={<Settings />} />
+            <Route path="/chat"        element={<LumenChat />} />
+            <Route path="/debt"        element={<Debt />} />
           </Routes>
         </main>
       </div>
