@@ -4,31 +4,31 @@ import LumenDot from '../../components/LumenDot/LumenDot'
 import { api } from '../../data/api'
 import styles from './LumenChat.module.css'
 
-// ── Suggestion chips grouped by mode ─────────────────────────────────────────
+// ── Suggestion chips ──────────────────────────────────────────────────────────
 const SUGGESTIONS = [
-  { label: 'Can I afford a $800 laptop?',          mode: 'purchase',  icon: '🛒' },
-  { label: 'How much on dining last 60 days?',      mode: 'query',     icon: '🔍' },
-  { label: 'Save $5,000 by end of year',            mode: 'goal',      icon: '🎯' },
-  { label: "What's my spending floor this month?",  mode: 'scenario',  icon: '📊' },
-  { label: 'Show all Amazon charges this month',    mode: 'query',     icon: '🔍' },
-  { label: 'What if I cut dining in half?',         mode: 'scenario',  icon: '📊' },
-  { label: 'Can I afford a weekend trip for $400?', mode: 'purchase',  icon: '🛒' },
-  { label: 'Build a $1,000 emergency fund',         mode: 'goal',      icon: '🎯' },
+  { label: 'Can I afford a $800 laptop?',          mode: 'purchase', icon: '🛒' },
+  { label: 'How much on dining last 60 days?',      mode: 'query',    icon: '🔍' },
+  { label: 'Save $5,000 by end of year',            mode: 'goal',     icon: '🎯' },
+  { label: "What's my spending floor this month?",  mode: 'scenario', icon: '📊' },
+  { label: 'Show all Amazon charges this month',    mode: 'query',    icon: '🔍' },
+  { label: 'What if I cut dining in half?',         mode: 'scenario', icon: '📊' },
+  { label: 'Can I afford a weekend trip for $400?', mode: 'purchase', icon: '🛒' },
+  { label: 'Build a $1,000 emergency fund',         mode: 'goal',     icon: '🎯' },
 ]
 
 const MODE_LABELS = {
-  purchase: { label: 'Purchase Decision', color: 'var(--calm)',  icon: '🛒' },
-  query:    { label: 'Data Query',         color: 'var(--safe)',  icon: '🔍' },
-  goal:     { label: 'Goal Planning',      color: 'var(--goal)',  icon: '🎯' },
-  scenario: { label: 'Scenario Model',     color: 'var(--warn)',  icon: '📊' },
-  chat:     { label: 'Lumen',              color: 'var(--calm)',  icon: '✦'  },
+  purchase: { label: 'Purchase Decision', color: 'var(--calm)', icon: '🛒' },
+  query:    { label: 'Data Query',         color: 'var(--safe)', icon: '🔍' },
+  goal:     { label: 'Goal Planning',      color: 'var(--goal)', icon: '🎯' },
+  scenario: { label: 'Scenario Model',     color: 'var(--warn)', icon: '📊' },
+  chat:     { label: 'Lumen',              color: 'var(--calm)', icon: '✦'  },
 }
 
 const VERDICT_CONFIG = {
-  yes:     { color: 'var(--safe)',  label: 'Yes',      icon: '✅' },
-  yes_but: { color: 'var(--warn)',  label: 'Go for it — but',  icon: '⚠️' },
-  wait:    { color: 'var(--warn)',  label: 'Wait',     icon: '⏳' },
-  no:      { color: 'var(--debt)',  label: 'Not right now', icon: '❌' },
+  yes:     { color: 'var(--safe)',  label: 'Yes',             icon: '✅' },
+  yes_but: { color: 'var(--warn)',  label: 'Go for it — but', icon: '⚠️' },
+  wait:    { color: 'var(--warn)',  label: 'Wait',            icon: '⏳' },
+  no:      { color: 'var(--debt)',  label: 'Not right now',   icon: '❌' },
 }
 
 function detectMode(text) {
@@ -53,9 +53,7 @@ function PurchaseMessage({ data }) {
       </div>
       <div className={styles.purchaseHeadline}>{data.headline}</div>
       <p className={styles.purchaseReasoning}>{data.reasoning}</p>
-      {data.alternative && (
-        <div className={styles.purchaseAlt}>💡 {data.alternative}</div>
-      )}
+      {data.alternative && <div className={styles.purchaseAlt}>💡 {data.alternative}</div>}
     </div>
   )
 }
@@ -89,25 +87,21 @@ function GoalMessage({ data }) {
   const g = data.goal || {}
   const p = data.plan || {}
   const feasibilityColor = {
-    easy:         'var(--safe)',
-    stretch:      'var(--warn)',
-    aggressive:   'var(--warn)',
-    not_feasible: 'var(--debt)',
+    easy: 'var(--safe)', stretch: 'var(--warn)',
+    aggressive: 'var(--warn)', not_feasible: 'var(--debt)',
   }[p.feasibility] || 'var(--calm)'
-
   return (
     <div className={styles.goalCard}>
       <div className={styles.goalHeader}>
         <span className={styles.goalIcon}>{g.icon || '🎯'}</span>
         <div>
           <div className={styles.goalName}>{g.name}</div>
-          <div className={styles.goalTarget}>${Number(g.target_amount || 0).toLocaleString()}
+          <div className={styles.goalTarget}>
+            ${Number(g.target_amount || 0).toLocaleString()}
             {g.target_date && ` · by ${new Date(g.target_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
           </div>
         </div>
-        <div className={styles.goalBadge} style={{ color: feasibilityColor }}>
-          {p.feasibility || 'savings'}
-        </div>
+        <div className={styles.goalBadge} style={{ color: feasibilityColor }}>{p.feasibility || 'savings'}</div>
       </div>
       {g.monthly_contribution > 0 && (
         <div className={styles.goalContrib}>
@@ -130,8 +124,7 @@ function ScenarioMessage({ data }) {
         <div className={styles.scenarioBreakdown}>
           {data.breakdown.map((row, i) => (
             <div key={i} className={`${styles.scenarioRow} ${row.highlight ? styles.scenarioRowHL : ''}`}>
-              <span>{row.label}</span>
-              <span>{row.value}</span>
+              <span>{row.label}</span><span>{row.value}</span>
             </div>
           ))}
         </div>
@@ -142,18 +135,14 @@ function ScenarioMessage({ data }) {
   )
 }
 
-function ChatMessage({ text }) {
-  return <p className={styles.chatText}>{text}</p>
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function LumenChat() {
-  const [messages, setMessages]   = useState([])
-  const [input, setInput]         = useState('')
-  const [loading, setLoading]     = useState(false)
+  const [messages,   setMessages]   = useState([])
+  const [input,      setInput]      = useState('')
+  const [loading,    setLoading]    = useState(false)
   const [streamText, setStreamText] = useState('')
-  const inputRef                  = useRef(null)
-  const bottomRef                 = useRef(null)
+  const inputRef  = useRef(null)
+  const bottomRef = useRef(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -168,47 +157,34 @@ export default function LumenChat() {
     if (!msg || loading) return
     setInput('')
     setLoading(true)
-
     const mode = detectMode(msg)
     addMessage('user', mode, msg)
-
     try {
       if (mode === 'purchase') {
-        // Extract amount from message
         const amtMatch = msg.match(/\$?([\d,]+(?:\.\d{2})?)/)?.[1]
         const amount   = amtMatch ? parseFloat(amtMatch.replace(',', '')) : 100
         const item     = msg.replace(/can i afford|should i buy|\$[\d,]+/gi, '').trim() || msg
-        const data     = await api.purchaseDecision({ item, amount, message: msg })
-        addMessage('assistant', 'purchase', null, data)
-
+        addMessage('assistant', 'purchase', null, await api.purchaseDecision({ item, amount, message: msg }))
       } else if (mode === 'query') {
-        const data = await api.nlQuery({ message: msg })
-        addMessage('assistant', 'query', null, data)
-
+        addMessage('assistant', 'query', null, await api.nlQuery({ message: msg }))
       } else if (mode === 'goal') {
-        const data = await api.goalPlan({ message: msg })
-        addMessage('assistant', 'goal', null, data)
-
+        addMessage('assistant', 'goal', null, await api.goalPlan({ message: msg }))
       } else if (mode === 'scenario') {
-        const data = await api.scenario({ message: msg })
-        addMessage('assistant', 'scenario', null, data)
-
+        addMessage('assistant', 'scenario', null, await api.scenario({ message: msg }))
       } else {
-        // Streaming chat
         let full = ''
         setStreamText('')
         const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lumen/ask`, {
-          method:  'POST',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-          body:    JSON.stringify({ message: msg, context_type: 'chat' }),
+          body: JSON.stringify({ message: msg, context_type: 'chat' }),
         })
         const reader = response.body.getReader()
         const dec    = new TextDecoder()
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
-          const chunk = dec.decode(value)
-          for (const line of chunk.split('\n')) {
+          for (const line of dec.decode(value).split('\n')) {
             if (!line.startsWith('data: ')) continue
             try {
               const evt = JSON.parse(line.slice(6))
@@ -235,22 +211,18 @@ export default function LumenChat() {
   const isEmpty = messages.length === 0 && !loading
 
   return (
-    <div className={styles.pageOuter}>
-      <div className={styles.page}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <LumenDot
-              size={32}
-              mood={loading ? 'thinking' : 'idle'}
-              rings={!loading}
-              tooltip={loading ? null : "Ask me anything about your money"}
-            />
-            <div>
-              <div className={styles.headerTitle}>Lumen</div>
-              <div className={styles.headerSub}>Ask anything about your money</div>
-            </div>
+    <ScreenWrap>
+      {/* ── Header — same pattern as Rules/Goals ── */}
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <LumenDot size={44} rings={!loading} />
+          <div>
+            <div className={styles.pre}>AI Assistant</div>
+            <h1 className={styles.title}>Lumen</h1>
+            <p className={styles.sub}>Ask anything about your money — queries, purchase decisions, goals, what-ifs.</p>
           </div>
+        </div>
+        <div className={styles.headerRight}>
           <div className={styles.modeChips}>
             {Object.entries(MODE_LABELS).filter(([k]) => k !== 'chat').map(([key, cfg]) => (
               <div key={key} className={styles.modeChip} style={{ '--chip-color': cfg.color }}>
@@ -259,9 +231,11 @@ export default function LumenChat() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Message area */}
-        <div className={styles.messages}>
+      {/* ── Chat body — scrollable thread + sticky input ── */}
+      <div className={styles.chatBody}>
+        <div className={styles.thread}>
           {isEmpty && (
             <div className={styles.empty}>
               <div className={styles.emptyTitle}>What do you want to know?</div>
@@ -279,42 +253,47 @@ export default function LumenChat() {
           {messages.map(msg => (
             <div key={msg.id} className={`${styles.msg} ${styles[msg.role]}`}>
               {msg.role === 'assistant' && (
-                <div className={styles.msgMeta}>
-                  <span className={styles.msgMode} style={{ color: MODE_LABELS[msg.mode]?.color }}>
-                    {MODE_LABELS[msg.mode]?.icon} {MODE_LABELS[msg.mode]?.label}
-                  </span>
-                </div>
+                <div className={styles.msgAvatar}><LumenDot size={18} /></div>
               )}
-              <div className={styles.msgBubble}>
-                {msg.role === 'user' && <p className={styles.userText}>{msg.content}</p>}
-                {msg.role === 'assistant' && msg.mode === 'purchase'  && <PurchaseMessage data={msg.structured} />}
-                {msg.role === 'assistant' && msg.mode === 'query'     && <QueryMessage    data={msg.structured} />}
-                {msg.role === 'assistant' && msg.mode === 'goal'      && <GoalMessage     data={msg.structured} />}
-                {msg.role === 'assistant' && msg.mode === 'scenario'  && <ScenarioMessage data={msg.structured} />}
-                {msg.role === 'assistant' && msg.mode === 'chat'      && <ChatMessage     text={msg.content} />}
+              <div className={styles.msgContent}>
+                {msg.role === 'assistant' && (
+                  <div className={styles.msgMode} style={{ color: MODE_LABELS[msg.mode]?.color }}>
+                    {MODE_LABELS[msg.mode]?.icon} {MODE_LABELS[msg.mode]?.label}
+                  </div>
+                )}
+                <div className={styles.msgBubble}>
+                  {msg.role === 'user'                               && <p className={styles.userText}>{msg.content}</p>}
+                  {msg.role === 'assistant' && msg.mode === 'purchase' && <PurchaseMessage data={msg.structured} />}
+                  {msg.role === 'assistant' && msg.mode === 'query'    && <QueryMessage    data={msg.structured} />}
+                  {msg.role === 'assistant' && msg.mode === 'goal'     && <GoalMessage     data={msg.structured} />}
+                  {msg.role === 'assistant' && msg.mode === 'scenario' && <ScenarioMessage data={msg.structured} />}
+                  {msg.role === 'assistant' && msg.mode === 'chat'     && <p className={styles.chatText}>{msg.content}</p>}
+                </div>
               </div>
             </div>
           ))}
 
-          {/* Streaming indicator */}
+          {/* Streaming */}
           {loading && streamText && (
             <div className={`${styles.msg} ${styles.assistant}`}>
-              <div className={styles.msgMeta}>
-                <span className={styles.msgMode} style={{ color: 'var(--calm)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <LumenDot size={8} mood="speaking" />✦ Lumen
-              </span>
-              </div>
-              <div className={styles.msgBubble}>
-                <p className={styles.chatText}>{streamText}<span className={styles.cursor}>▌</span></p>
+              <div className={styles.msgAvatar}><LumenDot size={18} /></div>
+              <div className={styles.msgContent}>
+                <div className={styles.msgMode} style={{ color: 'var(--calm)' }}>✦ Lumen</div>
+                <div className={styles.msgBubble}>
+                  <p className={styles.chatText}>{streamText}<span className={styles.cursor}>▌</span></p>
+                </div>
               </div>
             </div>
           )}
 
           {loading && !streamText && (
             <div className={`${styles.msg} ${styles.assistant}`}>
-              <div className={styles.msgBubble}>
-                <div className={styles.thinking}>
-                  <LumenDot size={14} mood="thinking" rings />
+              <div className={styles.msgAvatar}><LumenDot size={18} /></div>
+              <div className={styles.msgContent}>
+                <div className={styles.msgBubble}>
+                  <div className={styles.thinking}>
+                    <span className={styles.dot} /><span className={styles.dot} /><span className={styles.dot} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -323,7 +302,7 @@ export default function LumenChat() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
+        {/* ── Input bar ── */}
         <div className={styles.inputRow}>
           <textarea
             ref={inputRef}
@@ -341,12 +320,12 @@ export default function LumenChat() {
             disabled={loading || !input.trim()}
             aria-label="Send"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
           </button>
         </div>
       </div>
-    </div>
+    </ScreenWrap>
   )
 }
