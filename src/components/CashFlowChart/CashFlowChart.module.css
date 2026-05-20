@@ -1,0 +1,139 @@
+.wrap {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+/* Header */
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px 8px;
+}
+.titleRow {
+  display: flex; align-items: center; gap: 8px;
+}
+.title {
+  font-size: 12px; font-weight: 600;
+  color: var(--ink-1); letter-spacing: .3px;
+}
+.paceTag {
+  font-size: 9px; font-family: var(--font-mono);
+  color: var(--ink-3); letter-spacing: .3px;
+  background: var(--surface-2);
+  border-radius: 10px; padding: 2px 7px;
+}
+.dayTabs {
+  display: flex; gap: 2px;
+}
+.dayTab {
+  font-size: 10px; font-weight: 500;
+  padding: 3px 8px; border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface-0); color: var(--ink-3);
+  cursor: pointer; transition: all 0.15s;
+}
+.dayTab:hover { color: var(--ink-1); border-color: var(--ink-3); }
+.dayTabActive {
+  background: var(--calm) !important;
+  color: #fff !important;
+  border-color: var(--calm) !important;
+}
+
+/* Chart area */
+.chartWrap {
+  position: relative;
+  padding: 0 4px 4px;
+  border-top: 1px solid var(--border);
+}
+.chartLoading {
+  height: 180px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--ink-3);
+}
+.svg {
+  width: 100%; height: auto;
+  display: block;
+  overflow: visible;
+}
+.axisLabel {
+  font-size: 9px; fill: var(--ink-3);
+  font-family: var(--font-mono, monospace);
+}
+
+/* Hover tooltip */
+.tooltip {
+  position: absolute; top: 8px; right: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  pointer-events: none;
+  text-align: right;
+}
+.tooltipDate {
+  font-size: 9px; color: var(--ink-3);
+  font-family: var(--font-mono); letter-spacing: .3px;
+}
+.tooltipBal {
+  font-size: 14px; font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* Crunch alerts */
+.crunchSection {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--surface-0);
+}
+.crunchAlert {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.crunchIcon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.crunchBody { min-width: 0; }
+.crunchTitle { font-size: 11px; font-weight: 600; color: var(--ink-1); }
+.crunchSub   { font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+
+/* Summary row */
+.summary {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px; background: var(--border);
+  border-top: 1px solid var(--border);
+}
+.summaryItem {
+  padding: 8px 10px;
+  background: var(--surface-0);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.summaryLabel {
+  font-size: 9px; color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: .4px;
+}
+.summaryVal {
+  font-size: 12px; font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--ink-0);
+}
+
+/* Transfer suggestion (used in Dashboard via full forecast) */
+.transferCard {
+  margin: 8px 12px;
+  background: rgba(var(--calm-rgb, 59,130,246), 0.07);
+  border: 1px solid rgba(var(--calm-rgb, 59,130,246), 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.transferTitle { font-size: 11px; font-weight: 600; color: var(--ink-1); margin-bottom: 3px; }
+.transferBody  { font-size: 10px; color: var(--ink-2); line-height: 1.5; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .summary { grid-template-columns: repeat(2, 1fr); }
+  .header  { flex-wrap: wrap; gap: 8px; }
+}

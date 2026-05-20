@@ -46,6 +46,11 @@ export const api = {
   budgetForecast:       ()           => request('/api/budgets/forecast'),
   budgetPaceCheck:      ()           => request('/api/budgets/pace-check',   { method: 'POST' }),
   budgetAutoComplete:   ()           => request('/api/budgets/auto-complete', { method: 'POST' }),
+
+  // Phase D: Cash Flow Forecast
+  forecast:             (days)       => request(`/api/forecast?days=${days||90}`),
+  forecastPoints:       (days)       => request(`/api/forecast/points?days=${days||90}`),
+  forecastAlerts:       ()           => request('/api/forecast/alerts', { method: 'POST' }),
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
