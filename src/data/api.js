@@ -87,6 +87,13 @@ export const api = {
   uploadLoanDoc:       (formData)    => requestForm('/api/documents/loan', formData),
   taxSummary:          (year)        => request(`/api/documents/tax-summary?year=${year||new Date().getFullYear()}`),
   documentHistory:     ()            => request('/api/documents/history'),
+
+  // Phase I: Learning & Personalization
+  healthScore:          ()       => request('/api/learn/health'),
+  behavioralInsights:   ()       => request('/api/learn/insights'),
+  adaptiveSuggestions:  ()       => request('/api/learn/adaptive'),
+  applyAdaptive:        (id)     => request(`/api/learn/adaptive/${id}/apply`, { method: 'POST' }),
+  runLearning:          ()       => request('/api/learn/run', { method: 'POST' }),
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),

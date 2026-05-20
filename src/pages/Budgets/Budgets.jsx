@@ -449,6 +449,19 @@ export default function Budgets() {
   const {data, loading, error, refresh} = useApi(api.budgets)
   const [showModal, setShowModal]           = useState(false)
   const [showAiLimits, setShowAiLimits]     = useState(false)
+  const [adaptiveSuggestions, setAdaptiveSuggestions] = useState([])
+
+  useEffect(() => {
+    api.adaptiveSuggestions()
+      .then(r => setAdaptiveSuggestions(r.suggestions || []))
+      .catch(() => {})
+  }, [])
+
+  async function applyAdaptive(id) {
+    await api.applyAdaptive(id).catch(() => {})
+    setAdaptiveSuggestions(prev => prev.filter(s => s.id !== id))
+    refresh()
+  }
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
@@ -532,6 +545,25 @@ export default function Budgets() {
 
         <div className={styles.body}>
           <div>
+            {/* Phase I: Adaptive Budget Suggestions */}
+            {adaptiveSuggestions.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                {adaptiveSuggestions.slice(0, 3).map(s => (
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 10, padding: '10px 12px', marginBottom: 6 }}>
+                    <span style={{ fontSize: 16 }}>{s.budget_icon || '📅'}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-1)' }}>{s.budget_name} seasonal suggestion</div>
+                      <div style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 1 }}>{s.reason}</div>
+                    </div>
+                    <button onClick={() => applyAdaptive(s.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'var(--calm)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', flexShrink: 0 }}>
+                      Apply ${Number(s.suggested_cap).toLocaleString()}
+                    </button>
+                    <button onClick={() => setAdaptiveSuggestions(prev => prev.filter(x => x.id !== s.id))} style={{ fontSize: 14, color: 'var(--ink-3)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px' }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {budgets.length === 0 ? (
               <div className={styles.empty}>
                 <div className={styles.emptyTitle}>No budget categories yet</div>

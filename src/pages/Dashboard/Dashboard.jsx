@@ -7,6 +7,7 @@ import BillRow from '../../components/BillRow/BillRow'
 import WhatIfTheater from '../../components/WhatIfTheater/WhatIfTheater'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import CashFlowChart from '../../components/CashFlowChart/CashFlowChart'
+import HealthScore from '../../components/HealthScore/HealthScore'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -103,6 +104,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      {/* ── Phase I: Health Score ── */}
+      <HealthScore />
+
       {/* ── Four Principle Zones ── */}
       <div className={styles.zones}>
         {/* WHERE I AM */}
