@@ -1,0 +1,109 @@
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.modal {
+  background: var(--surface-0);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%; max-width: 480px;
+  overflow: hidden;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
+
+.modalHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 18px; border-bottom: 1px solid var(--border);
+}
+.modalTitle { font-size: 15px; font-weight: 700; color: var(--ink-0); }
+.closeBtn {
+  font-size: 20px; color: var(--ink-3); background: none; border: none;
+  cursor: pointer; line-height: 1; padding: 0 2px;
+}
+.closeBtn:hover { color: var(--ink-0); }
+
+/* Doc type grid */
+.typeGrid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; padding: 16px 18px;
+}
+.typeBtn {
+  display: flex; flex-direction: column; gap: 2px;
+  text-align: left; padding: 10px 12px;
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 10px; cursor: pointer;
+  transition: all 0.15s;
+}
+.typeBtn:hover { border-color: var(--calm); }
+.typeBtnOn { border-color: var(--calm) !important; background: rgba(59,130,246,0.06) !important; }
+.typeIcon  { font-size: 18px; }
+.typeLabel { font-size: 12px; font-weight: 600; color: var(--ink-0); }
+.typeDesc  { font-size: 10px; color: var(--ink-3); }
+
+/* Drop zone */
+.dropZone {
+  margin: 0 18px;
+  border: 2px dashed var(--border);
+  border-radius: 12px; padding: 28px 20px;
+  text-align: center; cursor: pointer;
+  transition: all 0.15s;
+}
+.dropZone:hover, .dropZoneDrag { border-color: var(--calm); background: rgba(59,130,246,0.04); }
+.dropZoneHasFile { border-color: var(--safe); border-style: solid; }
+.fileInput { display: none; }
+.dropIcon  { font-size: 28px; margin-bottom: 8px; }
+.dropLabel { font-size: 13px; color: var(--ink-1); font-weight: 500; }
+.dropSub   { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+.fileIcon  { font-size: 28px; margin-bottom: 6px; }
+.fileName  { font-size: 13px; color: var(--ink-0); font-weight: 600; }
+.fileSize  { font-size: 11px; color: var(--ink-3); }
+
+.error {
+  margin: 10px 18px 0;
+  background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; color: var(--debt);
+}
+
+/* Footer */
+.modalFooter {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 16px 18px; border-top: 1px solid var(--border); margin-top: 16px;
+}
+.cancelBtn {
+  padding: 8px 16px; border-radius: 8px;
+  background: var(--surface-1); border: 1px solid var(--border);
+  color: var(--ink-2); font-size: 13px; cursor: pointer;
+}
+.cancelBtn:hover { border-color: var(--ink-3); }
+.submitBtn {
+  padding: 8px 20px; border-radius: 8px;
+  background: var(--calm); color: #fff;
+  border: none; font-size: 13px; cursor: pointer;
+  font-weight: 600; transition: opacity 0.15s;
+}
+.submitBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.submitBtn:not(:disabled):hover { opacity: 0.85; }
+
+/* Result */
+.result { padding: 20px 18px; text-align: center; }
+.resultIcon  { font-size: 32px; margin-bottom: 8px; }
+.resultTitle { font-size: 15px; font-weight: 700; color: var(--ink-0); }
+.resultSub   { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+.resultStats {
+  display: flex; justify-content: center; gap: 24px;
+  margin: 14px 0 10px;
+}
+.resultStat  { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.rsVal   { font-size: 20px; font-weight: 800; font-family: var(--font-mono); color: var(--ink-0); }
+.rsLabel { font-size: 9px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .4px; }
+.resultNote  { font-size: 11px; color: var(--ink-2); margin: 0; line-height: 1.5; }
+.resultSummary { font-size: 12px; color: var(--ink-2); line-height: 1.6; margin: 8px 0; }
+.resultFigures { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; text-align: left; }
+.resultFigure  { display: flex; justify-content: space-between; font-size: 11px; }
+.rfLabel { color: var(--ink-3); }
+.rfVal   { font-weight: 600; color: var(--ink-0); font-family: var(--font-mono); }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import CsvImportModal from '../../components/CsvImportModal/CsvImportModal'
+import DocumentUpload from '../../components/DocumentUpload/DocumentUpload'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -508,7 +509,8 @@ export default function Transactions() {
   const [activeFilter, setActiveFilter]   = useState('All')
   const [search, setSearch]               = useState('')
   const [showCatModal, setShowCatModal]   = useState(false)
-  const [showCsvImport, setShowCsvImport] = useState(false)
+  const [showCsvImport, setShowCsvImport]   = useState(false)
+  const [showDocUpload, setShowDocUpload]     = useState(false)
   const [enriching, setEnriching]         = useState(false)
   const [enrichMsg, setEnrichMsg]         = useState('')
 
@@ -676,6 +678,9 @@ export default function Transactions() {
               <button className={styles.enrichBtn} onClick={handleEnrich} disabled={enriching}>
                 {enriching ? '...' : '✉ Enrich Names'}
               </button>
+              <button className={styles.enrichBtn} onClick={() => setShowDocUpload(true)}>
+                📄 Upload PDF
+              </button>
               <button className={styles.enrichBtn} onClick={() => setShowCsvImport(true)}>
                 ↑ Import CSV
               </button>
@@ -699,6 +704,12 @@ export default function Transactions() {
           </div>
         </div>
 
+        {showDocUpload && (
+          <DocumentUpload
+            onClose={() => setShowDocUpload(false)}
+            onSuccess={() => { setShowDocUpload(false); refresh() }}
+          />
+        )}
         {showCsvImport && (
           <CsvImportModal
             onClose={() => setShowCsvImport(false)}

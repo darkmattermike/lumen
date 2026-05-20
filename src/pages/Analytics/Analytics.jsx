@@ -2,6 +2,7 @@ import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenDot from '../../components/LumenDot/LumenDot'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
+import { useState } from 'react'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
 import styles from './Analytics.module.css'
@@ -197,8 +198,113 @@ export default function Analytics() {
             prompt="In 2-3 sentences, identify the single biggest financial opportunity or risk in my current numbers."
             color="purple"
           />
+
+          {/* Phase H: Tax Summary */}
+          <TaxSummaryPanel />
         </div>
       </div>
     </ScreenWrap>
+  )
+}
+
+// ── Phase H: Tax Summary Panel ────────────────────────────────────────────────
+function TaxSummaryPanel() {
+  const currentYear = new Date().getFullYear()
+  const [year, setYear]       = useState(currentYear)
+  const [data, setData]       = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState(null)
+
+  async function generate() {
+    setLoading(true); setError(null)
+    try {
+      const r = await api.taxSummary(year)
+      setData(r)
+    } catch (err) {
+      setError(err.message)
+    }
+    setLoading(false)
+  }
+
+  const fmtAmt = n => Number(n||0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+
+  return (
+    <div style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginTop: 16 }}>
+      <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: data ? '1px solid var(--border)' : 'none' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-1)' }}>🧾 Tax Year Summary</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <select
+            value={year}
+            onChange={e => { setYear(Number(e.target.value)); setData(null) }}
+            style={{ fontSize: 11, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 6px', color: 'var(--ink-1)' }}
+          >
+            {[currentYear, currentYear - 1, currentYear - 2].map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          <button
+            onClick={generate}
+            disabled={loading}
+            style={{ fontSize: 11, padding: '4px 12px', background: 'var(--calm)', color: '#fff', border: 'none', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}
+          >
+            {loading ? 'Generating…' : data ? 'Refresh' : 'Generate'}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ padding: '10px 14px', fontSize: 11, color: 'var(--debt)' }}>{error}</div>
+      )}
+
+      {data && !loading && (
+        <div style={{ padding: '14px' }}>
+          {/* Top stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 1, background: 'var(--border)', borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
+            {[
+              { label: 'Income', val: `$${fmtAmt(data.total_income)}`, color: 'var(--safe)' },
+              { label: 'Expenses', val: `$${fmtAmt(data.total_expenses)}`, color: 'var(--debt)' },
+              { label: 'Net', val: `${data.net >= 0 ? '+' : ''}$${fmtAmt(data.net)}`, color: data.net >= 0 ? 'var(--safe)' : 'var(--debt)' },
+            ].map(s => (
+              <div key={s.label} style={{ padding: '10px 12px', background: 'var(--surface-0)' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-mono)', color: s.color }}>{s.val}</div>
+                <div style={{ fontSize: 9, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Narrative */}
+          {data.narrative && (
+            <p style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.6, margin: '0 0 12px' }}>{data.narrative}</p>
+          )}
+
+          {/* Potentially deductible */}
+          {data.potentially_deductible?.length > 0 && (
+            <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, padding: '10px 12px', marginBottom: 10 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--calm)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.4px' }}>Possibly Tax-Relevant</div>
+              {data.potentially_deductible.map(d => (
+                <div key={d.category} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-2)', padding: '2px 0' }}>
+                  <span>{d.category}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>${fmtAmt(d.total)}</span>
+                </div>
+              ))}
+              <div style={{ fontSize: 9, color: 'var(--ink-4)', marginTop: 6 }}>Not tax advice — consult a professional.</div>
+            </div>
+          )}
+
+          {/* Top categories */}
+          <div style={{ fontSize: 10, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 6 }}>Top Categories</div>
+          {Object.entries(data.by_category || {})
+            .filter(([, d]) => d.total < 0)
+            .sort((a, b) => a[1].total - b[1].total)
+            .slice(0, 8)
+            .map(([cat, d]) => (
+              <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-2)', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+                <span>{cat} <span style={{ fontSize: 9, color: 'var(--ink-4)' }}>({d.count})</span></span>
+                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--debt)' }}>${fmtAmt(Math.abs(d.total))}</span>
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
   )
 }

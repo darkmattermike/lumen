@@ -20,6 +20,20 @@ async function request(path, options = {}) {
   return data
 }
 
+async function requestForm(path, formData) {
+  const token = localStorage.getItem('token')
+  const res   = await fetch(`${BASE}${path}`, {
+    method:  'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body:    formData,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || `HTTP ${res.status}`)
+  }
+  return res.json()
+}
+
 export const api = {
   // Auth
   register:      (body) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(body) }),
@@ -65,6 +79,14 @@ export const api = {
   debtExtraPayment:        (body)  => request('/api/debt/extra-payment',        { method: 'POST', body: JSON.stringify(body) }),
   debtPayoffOpportunities: ()      => request('/api/debt/payoff-opportunities', { method: 'POST' }),
   debtSetMinPayment:       (id, body) => request(`/api/debt/${id}/minimum-payment`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  // Phase H: Document Intelligence
+  uploadDocument:      (formData)    => requestForm('/api/documents/upload', formData),
+  uploadBankStatement: (formData)    => requestForm('/api/documents/bank-statement', formData),
+  uploadPayStub:       (formData)    => requestForm('/api/documents/pay-stub', formData),
+  uploadLoanDoc:       (formData)    => requestForm('/api/documents/loan', formData),
+  taxSummary:          (year)        => request(`/api/documents/tax-summary?year=${year||new Date().getFullYear()}`),
+  documentHistory:     ()            => request('/api/documents/history'),
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
