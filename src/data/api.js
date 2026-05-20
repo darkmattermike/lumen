@@ -34,8 +34,8 @@ async function request(path, options = {}, _retry = true) {
 
 export const api = {
   // Auth
-  register:      (body) => request('/api/auth/register',   { method: 'POST', body: JSON.stringify(body) }),
-  login:         (body) => request('/api/auth/login',      { method: 'POST', body: JSON.stringify(body) }),
+  register:      (body) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+  login:         (body) => request('/api/auth/login',    { method: 'POST', body: JSON.stringify(body) }),
   me:            ()     => request('/api/auth/me'),
   refresh:       ()     => request('/api/auth/refresh',    { method: 'POST' }),
   logout:        ()     => request('/api/auth/logout',     { method: 'POST' }),
@@ -59,6 +59,77 @@ export const api = {
   deleteBudget:         (id)         => request(`/api/budgets/${id}`, { method: 'DELETE' }),
   completeBudget:       (id, completed) => request(`/api/budgets/${id}/complete`, { method: 'PATCH', body: JSON.stringify({ completed }) }),
   budgetTransactions:   (id)         => request(`/api/budgets/${id}/transactions`),
+  budgetForecast:       ()           => request('/api/budgets/forecast'),
+  budgetPaceCheck:      ()           => request('/api/budgets/pace-check',   { method: 'POST' }),
+  budgetAutoComplete:   ()           => request('/api/budgets/auto-complete', { method: 'POST' }),
+
+  // Phase D: Cash Flow Forecast
+  forecast:             (days)       => request(`/api/forecast?days=${days||90}`),
+  forecastPoints:       (days)       => request(`/api/forecast/points?days=${days||90}`),
+  forecastAlerts:       ()           => request('/api/forecast/alerts',           { method: 'POST' }),
+  proactiveAlerts:      ()           => request('/api/forecast/proactive-alerts',   { method: 'POST' }),
+
+  // Phase F: Conversational upgrades
+  nlQuery:          (body) => request('/api/lumen/query',             { method: 'POST', body: JSON.stringify(body) }),
+  purchaseDecision: (body) => request('/api/lumen/purchase-decision', { method: 'POST', body: JSON.stringify(body) }),
+  goalPlan:         (body) => request('/api/lumen/goal-plan',         { method: 'POST', body: JSON.stringify(body) }),
+  scenario:         (body) => request('/api/lumen/scenario',          { method: 'POST', body: JSON.stringify(body) }),
+
+  // Phase G: Debt Strategy
+  debt:                    ()      => request('/api/debt'),
+  debtCompare:             (body)  => request('/api/debt/compare',              { method: 'POST', body: JSON.stringify(body) }),
+  debtExtraPayment:        (body)  => request('/api/debt/extra-payment',        { method: 'POST', body: JSON.stringify(body) }),
+  debtPayoffOpportunities: ()      => request('/api/debt/payoff-opportunities', { method: 'POST' }),
+  debtSetMinPayment:       (id, body) => request(`/api/debt/${id}/minimum-payment`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  // Phase H: Document Intelligence
+  uploadDocument:      (formData)    => requestForm('/api/documents/upload', formData),
+  uploadBankStatement: (formData)    => requestForm('/api/documents/bank-statement', formData),
+  uploadPayStub:       (formData)    => requestForm('/api/documents/pay-stub', formData),
+  uploadLoanDoc:       (formData)    => requestForm('/api/documents/loan', formData),
+  taxSummary:          (year)        => request(`/api/documents/tax-summary?year=${year||new Date().getFullYear()}`),
+  documentHistory:     ()            => request('/api/documents/history'),
+
+  // Phase I: Learning & Personalization
+  healthScore:          ()       => request('/api/learn/health'),
+  behavioralInsights:   ()       => request('/api/learn/insights'),
+  adaptiveSuggestions:  ()       => request('/api/learn/adaptive'),
+  applyAdaptive:        (id)     => request(`/api/learn/adaptive/${id}/apply`, { method: 'POST' }),
+  runLearning:          ()       => request('/api/learn/run', { method: 'POST' }),
+
+  // New Features
+  // Feature 2: Decisions
+  decisions:            ()        => request('/api/insights/decisions'),
+  createDecision:       (body)    => request('/api/insights/decisions',       { method: 'POST',   body: JSON.stringify(body) }),
+  updateDecision:       (id, body)=> request(`/api/insights/decisions/${id}`, { method: 'PATCH',  body: JSON.stringify(body) }),
+  deleteDecision:       (id)      => request(`/api/insights/decisions/${id}`, { method: 'DELETE' }),
+  decisionOutcome:      (id, body)=> request(`/api/insights/decisions/${id}/outcome`, { method: 'POST', body: JSON.stringify(body) }),
+  // Feature 6: Net Worth
+  netWorth:             (months)  => request(`/api/insights/net-worth?months=${months||12}`),
+  snapshotNetWorth:     ()        => request('/api/insights/net-worth/snapshot', { method: 'POST' }),
+  // Feature 7: Bill History
+  billHistory:          ()        => request('/api/insights/bill-history'),
+  billHistoryAnnual:    ()        => request('/api/insights/bill-history/annual'),
+  // Feature 8: DNA
+  spendingDna:          ()        => request('/api/insights/dna'),
+  generateDna:          (force)   => request('/api/insights/dna/generate', { method: 'POST', body: JSON.stringify({ force: !!force }) }),
+  // Feature 9: Lifetime
+  lifetimeStats:        ()        => request('/api/insights/lifetime'),
+  // Feature 10: Notification Intelligence
+  notifFeedback:        (body)    => request('/api/insights/notification-feedback', { method: 'POST', body: JSON.stringify(body) }),
+  notifSuppression:     ()        => request('/api/insights/notification-suppression'),
+  unsuppressNotif:      (type)    => request(`/api/insights/notification-suppression/${type}/unsuppress`, { method: 'POST' }),
+
+  // Push Notifications
+  updateOnboarding: ()      => request('/api/auth/me/onboarding', { method: 'PATCH' }),
+  vapidKey:        ()       => request('/api/push/vapid-key'),
+  pushSubscribe:   (body)   => request('/api/push/subscribe',  { method: 'POST',   body: JSON.stringify(body) }),
+  pushUnsubscribe: (body)   => request('/api/push/subscribe',  { method: 'DELETE', body: JSON.stringify(body) }),
+  pushTest:        ()       => request('/api/push/test',       { method: 'POST' }),
+
+  // Reports
+  monthlyReport:   (y,m)   => request(`/api/reports/monthly?year=${y}&month=${m}`),
+  monthlyReportUrl:(y,m)   => `${BASE}/api/reports/monthly/html?year=${y}&month=${m}`,
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
@@ -124,4 +195,27 @@ export const api = {
       body: JSON.stringify({ message, context_type }),
     })
   },
+
+  // Notifications
+  notifications:          ()    => request('/api/notifications'),
+  markNotificationRead:   (id)  => request(`/api/notifications/${id}/read`,    { method: 'PATCH' }),
+  markAllNotificationsRead: ()  => request('/api/notifications/read-all',       { method: 'PATCH' }),
+  dismissNotification:    (id)  => request(`/api/notifications/${id}/dismiss`, { method: 'PATCH' }),
+
+  // Goals
+  goals:         ()         => request('/api/goals'),
+  createGoal:    (body)     => request('/api/goals',      { method: 'POST',  body: JSON.stringify(body) }),
+  updateGoal:    (id, body) => request(`/api/goals/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  contributeGoal: (id, body) => request(`/api/goals/${id}/contribute`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteGoal:    (id)       => request(`/api/goals/${id}`, { method: 'DELETE' }),
+
+  // CSV Import
+  previewCsv:  (body) => request('/api/import/csv/preview', { method: 'POST', body: JSON.stringify(body) }),
+  importCsv:   (body) => request('/api/import/csv',         { method: 'POST', body: JSON.stringify(body) }),
+  recategorize: (body) => request('/api/import/csv/recategorize', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Duplicates (Phase B)
+  getDuplicates:       ()      => request('/api/duplicates'),
+  confirmDuplicate:    (notifId) => request(`/api/duplicates/${notifId}/confirm`, { method: 'POST' }),
+  dismissDuplicate:    (notifId) => request(`/api/duplicates/${notifId}/dismiss`, { method: 'POST' }),
 }
