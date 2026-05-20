@@ -235,7 +235,7 @@ export default function LumenChat() {
   const isEmpty = messages.length === 0 && !loading
 
   return (
-    <ScreenWrap>
+    <div className={styles.pageOuter}>
       <div className={styles.page}>
         {/* Header */}
         <div className={styles.header}>
@@ -347,6 +347,6 @@ export default function LumenChat() {
           </button>
         </div>
       </div>
-    </ScreenWrap>
+    </div>
   )
 }

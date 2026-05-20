@@ -198,3 +198,11 @@
   .userMsg { max-width: 88%; }
   .lumenMsg { max-width: 96%; }
 }
+
+/* Outer wrapper — full bleed, no ScreenWrap card */
+.pageOuter {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-0);
+}
