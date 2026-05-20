@@ -45,6 +45,10 @@ export default function NotificationBell({ mobileDrawer = false }) {
     setOpen(v => !v)
     if (!wasOpen && data.unread_count > 0) {
       await api.markAllNotificationsRead()
+      // Feature 10 — track 'opened' for all unread notification types
+      for (const n of data.notifications.filter(x => !x.read)) {
+        api.notifFeedback({ notification_type: n.type, action: 'opened' }).catch(() => {})
+      }
       setData(prev => ({
         ...prev,
         unread_count: 0,
@@ -54,7 +58,10 @@ export default function NotificationBell({ mobileDrawer = false }) {
   }
 
   async function dismiss(id) {
+    const notif = data.notifications.find(n => n.id === id)
     await api.dismissNotification(id)
+    // Feature 10 — track dismiss
+    if (notif?.type) api.notifFeedback({ notification_type: notif.type, action: 'dismissed' }).catch(() => {})
     setData(prev => ({
       ...prev,
       notifications: prev.notifications.filter(n => n.id !== id)

@@ -94,6 +94,29 @@ export const api = {
   adaptiveSuggestions:  ()       => request('/api/learn/adaptive'),
   applyAdaptive:        (id)     => request(`/api/learn/adaptive/${id}/apply`, { method: 'POST' }),
   runLearning:          ()       => request('/api/learn/run', { method: 'POST' }),
+
+  // New Features
+  // Feature 2: Decisions
+  decisions:            ()        => request('/api/insights/decisions'),
+  createDecision:       (body)    => request('/api/insights/decisions',       { method: 'POST',   body: JSON.stringify(body) }),
+  updateDecision:       (id, body)=> request(`/api/insights/decisions/${id}`, { method: 'PATCH',  body: JSON.stringify(body) }),
+  deleteDecision:       (id)      => request(`/api/insights/decisions/${id}`, { method: 'DELETE' }),
+  decisionOutcome:      (id, body)=> request(`/api/insights/decisions/${id}/outcome`, { method: 'POST', body: JSON.stringify(body) }),
+  // Feature 6: Net Worth
+  netWorth:             (months)  => request(`/api/insights/net-worth?months=${months||12}`),
+  snapshotNetWorth:     ()        => request('/api/insights/net-worth/snapshot', { method: 'POST' }),
+  // Feature 7: Bill History
+  billHistory:          ()        => request('/api/insights/bill-history'),
+  billHistoryAnnual:    ()        => request('/api/insights/bill-history/annual'),
+  // Feature 8: DNA
+  spendingDna:          ()        => request('/api/insights/dna'),
+  generateDna:          (force)   => request('/api/insights/dna/generate', { method: 'POST', body: JSON.stringify({ force: !!force }) }),
+  // Feature 9: Lifetime
+  lifetimeStats:        ()        => request('/api/insights/lifetime'),
+  // Feature 10: Notification Intelligence
+  notifFeedback:        (body)    => request('/api/insights/notification-feedback', { method: 'POST', body: JSON.stringify(body) }),
+  notifSuppression:     ()        => request('/api/insights/notification-suppression'),
+  unsuppressNotif:      (type)    => request(`/api/insights/notification-suppression/${type}/unsuppress`, { method: 'POST' }),
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),

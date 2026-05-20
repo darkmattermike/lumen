@@ -1,0 +1,207 @@
+.page { max-width: 800px; margin: 0 auto; }
+
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.pageTitle { font-size: 18px; font-weight: 800; color: var(--ink-0); }
+.pageSub   { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+.tab {
+  font-size: 12px; padding: 6px 14px;
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 20px; cursor: pointer; color: var(--ink-2);
+  transition: all 0.15s;
+}
+.tab:hover { color: var(--ink-0); border-color: var(--ink-3); }
+.tabActive { background: var(--calm) !important; color: #fff !important; border-color: var(--calm) !important; }
+
+.content { min-height: 300px; }
+.loading { padding: 24px 0; font-size: 12px; color: var(--ink-3); }
+
+/* Empty states */
+.emptyState { text-align: center; padding: 40px 20px; }
+.emptyOrb   { display: flex; justify-content: center; margin-bottom: 16px; }
+.emptyTitle { font-size: 15px; font-weight: 700; color: var(--ink-1); }
+.emptySub   { font-size: 12px; color: var(--ink-3); margin-top: 6px; max-width: 320px; margin-inline: auto; line-height: 1.6; }
+.emptyInline { font-size: 12px; color: var(--ink-3); line-height: 1.6; padding: 12px 0; }
+
+/* Action buttons */
+.actionBtn {
+  padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  background: var(--calm); color: #fff; border: none; cursor: pointer;
+  transition: opacity 0.15s; margin-top: 14px;
+}
+.actionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.actionBtn:not(:disabled):hover { opacity: 0.85; }
+.actionBtnSm { padding: 5px 12px; border-radius: 6px; font-size: 11px; background: var(--calm); color: #fff; border: none; cursor: pointer; }
+.cancelBtnSm { padding: 5px 12px; border-radius: 6px; font-size: 11px; background: var(--surface-1); color: var(--ink-2); border: 1px solid var(--border); cursor: pointer; }
+.refreshSmall { background: none; border: none; color: var(--ink-3); cursor: pointer; font-size: 13px; padding: 2px 4px; display: flex; align-items: center; margin-left: auto; }
+.refreshSmall:hover { color: var(--ink-0); }
+
+/* Shared section label */
+.sectionLabel { font-size: 10px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.decisionToolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.decisionToolbar .actionBtn { margin-top: 0; }
+
+/* Stat grid */
+.statGrid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; margin-bottom: 20px;
+}
+.statCell { padding: 12px 14px; background: var(--surface-1); }
+.statVal   { font-size: 16px; font-weight: 800; font-family: var(--font-mono); color: var(--ink-0); }
+.statLabel { font-size: 9px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+.statSub   { font-size: 9px; color: var(--ink-4); }
+
+/* ── DNA ── */
+.dnaCard {
+  background: var(--surface-1); border: 1px solid rgba(93,202,165,.25);
+  border-radius: 12px; padding: 16px; margin-bottom: 16px;
+}
+.dnaHeader { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.dnaTitle  { font-size: 13px; font-weight: 700; color: var(--ink-0); }
+.dnaSub    { font-size: 10px; color: var(--ink-3); }
+.dnaNarrative { font-size: 13px; color: var(--ink-1); line-height: 1.7; }
+
+.dnaStats { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+.dnaSection { padding: 12px 14px; border-top: 1px solid var(--border); }
+.dnaSectionTitle { font-size: 10px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
+
+.merchantRow { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.merchantRow:last-child { border-bottom: none; }
+.merchantRank  { font-size: 9px; color: var(--ink-4); font-family: var(--font-mono); width: 20px; }
+.merchantName  { flex: 1; color: var(--ink-1); }
+.merchantVisits { font-size: 10px; color: var(--ink-3); }
+.merchantTotal  { font-family: var(--font-mono); font-weight: 700; color: var(--ink-0); }
+
+.dnaPastList { margin-top: 12px; }
+.pastDnaRow { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.pastDnaRow:last-child { border-bottom: none; }
+.pastDnaMonth { font-size: 10px; color: var(--ink-3); font-family: var(--font-mono); flex-shrink: 0; width: 70px; }
+.pastDnaNarrative { font-size: 11px; color: var(--ink-2); line-height: 1.5; }
+
+/* ── Decisions ── */
+.followUpBanner {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(232,115,99,.08); border: 1px solid rgba(232,115,99,.2);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+}
+.followUpTitle { font-size: 12px; font-weight: 700; color: var(--ink-0); }
+.followUpSub   { font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+
+.addCard {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.addInput, .addTextarea, .addSelect {
+  background: var(--surface-0); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px;
+  font-size: 12px; color: var(--ink-0); font-family: inherit;
+  width: 100%;
+}
+.addTextarea { resize: vertical; }
+.addRow { display: flex; gap: 8px; align-items: center; }
+.addRow .actionBtn { margin-top: 0; flex-shrink: 0; }
+
+.decisionList { display: flex; flex-direction: column; gap: 8px; }
+.decisionCard {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+}
+.decisionFollowUp { border-color: rgba(232,115,99,.3); background: rgba(232,115,99,.04); }
+.decisionHeader { display: flex; align-items: flex-start; gap: 10px; }
+.decisionIcon   { font-size: 18px; flex-shrink: 0; }
+.decisionMeta   { flex: 1; min-width: 0; }
+.decisionTitle  { font-size: 13px; font-weight: 600; color: var(--ink-0); }
+.decisionDate   { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+.decisionAmount { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--ink-0); flex-shrink: 0; }
+.deleteBtn      { background: none; border: none; color: var(--ink-4); cursor: pointer; font-size: 16px; padding: 0 2px; opacity: 0; transition: opacity .15s; }
+.decisionCard:hover .deleteBtn { opacity: 1; }
+.decisionBody   { font-size: 11px; color: var(--ink-2); margin-top: 6px; line-height: 1.5; }
+.decisionOutcome { font-size: 11px; color: var(--safe); margin-top: 6px; background: rgba(93,202,165,.08); border-radius: 6px; padding: 5px 8px; }
+.followUpBtn    { margin-top: 8px; font-size: 10px; color: var(--debt); background: rgba(232,115,99,.08); border: 1px solid rgba(232,115,99,.2); border-radius: 6px; padding: 5px 10px; cursor: pointer; width: 100%; text-align: left; }
+.outcomeRow     { display: flex; gap: 6px; margin-top: 8px; }
+.outcomeRow .addInput { flex: 1; }
+
+/* ── Net Worth ── */
+.nwSummary { text-align: center; padding: 20px 0 12px; }
+.nwBig   { font-size: 32px; font-weight: 900; font-family: var(--font-mono); }
+.nwLabel { font-size: 11px; color: var(--ink-3); margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; }
+.nwRate  { font-size: 11px; color: var(--safe); margin-top: 6px; }
+.nwChart { width: 100%; height: auto; display: block; margin-bottom: 16px; }
+
+.milestones { margin-top: 4px; }
+.milestoneRow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.milestoneRow:last-child { border-bottom: none; }
+.milestoneAmt  { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--ink-0); min-width: 80px; }
+.milestoneLine { flex: 1; height: 1px; background: var(--border); }
+.milestoneDate { font-size: 11px; color: var(--calm); }
+.milestoneMo   { font-size: 10px; color: var(--ink-3); font-family: var(--font-mono); min-width: 32px; text-align: right; }
+.crossZero { font-size: 12px; color: var(--ink-2); background: rgba(93,202,165,.08); border-radius: 8px; padding: 10px 14px; margin-top: 14px; }
+
+/* ── Bills ── */
+.viewToggle { display: flex; gap: 4px; margin-bottom: 14px; }
+.toggleBtn  { font-size: 11px; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface-1); color: var(--ink-2); cursor: pointer; transition: all .15s; }
+.toggleBtnOn { background: var(--calm); color: #fff; border-color: var(--calm); }
+
+.billSummary { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+.billSummary .statCell { background: var(--surface-1); }
+
+.billList { display: flex; flex-direction: column; gap: 0; background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.billRow { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.billRow:last-child { border-bottom: none; }
+.billName  { font-size: 12px; color: var(--ink-1); flex: 1; text-transform: capitalize; }
+.billAmts  { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.billLast  { color: var(--ink-3); font-family: var(--font-mono); }
+.billArrow { color: var(--ink-4); }
+.billCurrent { font-family: var(--font-mono); font-weight: 700; }
+.billDiff  { font-size: 10px; font-family: var(--font-mono); font-weight: 700; }
+
+.billCard { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.billCard:last-child { border-bottom: none; }
+.billCardName  { font-size: 12px; font-weight: 600; color: var(--ink-0); margin-bottom: 3px; text-transform: capitalize; }
+.billCardStats { display: flex; gap: 12px; font-size: 10px; color: var(--ink-3); }
+
+/* ── Lifetime ── */
+.lifetimeSection { margin-top: 20px; }
+.lifetimeRow { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.lifetimeRow:last-child { border-bottom: none; }
+.lifeRank    { font-size: 9px; color: var(--ink-4); font-family: var(--font-mono); width: 20px; }
+.lifeName    { flex: 1; color: var(--ink-1); }
+.lifeVisits  { font-size: 10px; color: var(--ink-3); }
+.lifeAmt     { font-family: var(--font-mono); font-weight: 700; color: var(--ink-0); min-width: 60px; text-align: right; }
+.lifeBar     { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+.lifeBarFill { height: 100%; background: var(--calm); border-radius: 2px; transition: width .5s ease; }
+
+/* ── Notification Intelligence ── */
+.notifExplain { font-size: 12px; color: var(--ink-2); line-height: 1.6; margin-bottom: 16px; }
+.suppressedList, .statsList { margin-bottom: 20px; }
+.suppressedRow { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.suppressedRow:last-child { border-bottom: none; }
+.suppressedType   { font-size: 12px; font-weight: 600; color: var(--ink-0); text-transform: capitalize; }
+.suppressedReason { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+.unsuppressBtn { font-size: 10px; padding: 4px 10px; border-radius: 6px; background: var(--surface-1); border: 1px solid var(--border); color: var(--ink-2); cursor: pointer; }
+.unsuppressBtn:hover { border-color: var(--calm); color: var(--calm); }
+
+.statsRow { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.statsRow:last-child { border-bottom: none; }
+.statsType  { font-size: 11px; color: var(--ink-1); min-width: 120px; text-transform: capitalize; }
+.statsBar   { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+.statsBarFill { height: 100%; border-radius: 2px; transition: width .4s ease; }
+.statsPct   { font-size: 10px; font-family: var(--font-mono); color: var(--ink-2); min-width: 60px; }
+.statsCount { font-size: 10px; color: var(--ink-3); }
+
+@media (max-width: 600px) {
+  .statGrid { grid-template-columns: repeat(2, 1fr); }
+  .billSummary { grid-template-columns: repeat(2, 1fr); }
+  .tabs { gap: 4px; }
+  .tab { font-size: 11px; padding: 5px 10px; }
+}

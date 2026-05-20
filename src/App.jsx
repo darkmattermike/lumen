@@ -15,6 +15,7 @@ import Goals        from './pages/Goals/Goals'
 import Settings     from './pages/Settings/Settings'
 import LumenChat    from './pages/LumenChat/LumenChat'
 import Debt         from './pages/Debt/Debt'
+import Insights     from './pages/Insights/Insights'
 import styles from './App.module.css'
 
 function AppShell() {
@@ -42,6 +43,7 @@ function AppShell() {
             <Route path="/settings"     element={<Settings />} />
             <Route path="/chat"        element={<LumenChat />} />
             <Route path="/debt"        element={<Debt />} />
+            <Route path="/insights"    element={<Insights />} />
           </Routes>
         </main>
       </div>

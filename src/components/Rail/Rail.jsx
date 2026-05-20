@@ -23,6 +23,7 @@ const ICONS = {
   more:     'M5 12h.01M12 12h.01M19 12h.01',
   chat:     'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
   debt:     'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z',
+  insights: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
 }
 
 // Desktop sidebar items
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { path: '/calendar',     icon: 'calendar', label: 'Calendar'     },
   { path: '/rules',        icon: 'rules',    label: 'Rules'        },
   { path: '/goals',        icon: 'goals',    label: 'Goals'        },
+  { path: '/insights',     icon: 'insights', label: 'Insights'     },
   { path: '/debt',         icon: 'debt',     label: 'Debt'         },
   { path: '/chat',         icon: 'chat',     label: 'Ask Lumen'    },
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'        },
@@ -54,6 +56,7 @@ const MOBILE_MORE = [
   { path: '/accounts',     icon: 'accounts', label: 'Accounts'  },
   { path: '/rules',        icon: 'rules',    label: 'Rules'     },
   { path: '/goals',        icon: 'goals',    label: 'Goals'     },
+  { path: '/insights',     icon: 'insights', label: 'Insights'  },
   { path: '/debt',         icon: 'debt',     label: 'Debt'      },
   { path: '/chat',         icon: 'chat',     label: 'Ask Lumen' },
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'     },
