@@ -5,15 +5,22 @@ import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import { api } from '../../data/api'
 import styles from './Accounts.module.css'
 
-function AccountCard({ acct, onToggleDashboard }) {
+function AccountCard({ acct, onToggleDashboard, onToggleDebt }) {
   const colorMap = { safe: 'var(--safe)', calm: 'var(--calm)', goal: 'var(--goal)', debt: 'var(--debt)' }
   const balColor = colorMap[acct.color] || 'var(--safe)'
   const [toggling, setToggling] = useState(false)
+  const [togglingDebt, setTogglingDebt] = useState(false)
 
   async function handleToggle() {
     setToggling(true)
     await onToggleDashboard(acct.id, !acct.include_in_balance)
     setToggling(false)
+  }
+
+  async function handleToggleDebt() {
+    setTogglingDebt(true)
+    await onToggleDebt(acct.id, !acct.is_debt)
+    setTogglingDebt(false)
   }
 
   return (
@@ -53,7 +60,18 @@ function AccountCard({ acct, onToggleDashboard }) {
           <div className={styles.metaLabel}>Type</div>
           <div className={styles.metaVal} style={{ textTransform: 'capitalize' }}>{acct.type}</div>
         </div>
-        <div className={styles.metaItem} style={{ marginLeft: 'auto', textAlign: 'right' }}>
+        <div className={styles.metaItem} style={{ textAlign: 'right' }}>
+          <div className={styles.metaLabel}>Debt Account</div>
+          <button
+            className={`${styles.dashToggle} ${acct.is_debt ? styles.debtToggleOn : ''}`}
+            onClick={handleToggleDebt}
+            disabled={togglingDebt}
+            title={acct.is_debt ? 'Marked as debt — click to unmark' : 'Not marked as debt — click to mark'}
+          >
+            {acct.is_debt ? 'Is Debt' : 'Not Debt'}
+          </button>
+        </div>
+        <div className={styles.metaItem} style={{ textAlign: 'right' }}>
           <div className={styles.metaLabel}>Dashboard Balance</div>
           <button
             className={`${styles.dashToggle} ${acct.include_in_balance !== false ? styles.dashToggleOn : ''}`}
@@ -125,7 +143,6 @@ export default function Accounts() {
   }
 
   async function handleToggleDashboard(id, include) {
-    // Optimistically update local state
     setData(prev => ({
       ...prev,
       accounts: prev.accounts.map(a => a.id === id ? { ...a, include_in_balance: include } : a),
@@ -134,7 +151,20 @@ export default function Accounts() {
       await api.updateAccount(id, { include_in_balance: include })
     } catch (err) {
       console.error('Toggle failed:', err)
-      load() // revert on failure
+      load()
+    }
+  }
+
+  async function handleToggleDebt(id, isDebt) {
+    setData(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => a.id === id ? { ...a, is_debt: isDebt } : a),
+    }))
+    try {
+      await api.updateAccount(id, { is_debt: isDebt })
+    } catch (err) {
+      console.error('Debt toggle failed:', err)
+      load()
     }
   }
 
@@ -200,13 +230,13 @@ export default function Accounts() {
             {assets.length > 0 && (
               <>
                 <div className={styles.groupLabel}>💳 Checking & Savings</div>
-                {assets.map(a => <AccountCard key={a.id} acct={a} onToggleDashboard={handleToggleDashboard} />)}
+                {assets.map(a => <AccountCard key={a.id} acct={a} onToggleDashboard={handleToggleDashboard} onToggleDebt={handleToggleDebt} />)}
               </>
             )}
             {liabilities.length > 0 && (
               <>
                 <div className={styles.groupLabel} style={{ marginTop: 8 }}>💳 Credit Cards & Loans</div>
-                {liabilities.map(a => <AccountCard key={a.id} acct={a} onToggleDashboard={handleToggleDashboard} />)}
+                {liabilities.map(a => <AccountCard key={a.id} acct={a} onToggleDashboard={handleToggleDashboard} onToggleDebt={handleToggleDebt} />)}
               </>
             )}
           </>

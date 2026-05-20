@@ -142,3 +142,10 @@
   .title { font-size: 36px; }
   .body { padding: 16px; grid-template-columns: 1fr; gap: 16px; }
 }
+
+.debtToggleOn {
+  border-color: rgba(232,115,99,.35);
+  color: var(--debt);
+  background: rgba(232,115,99,.08);
+}
+.debtToggleOn:hover:not(:disabled) { background: rgba(232,115,99,.15); }

@@ -23,6 +23,7 @@ function DnaTab() {
   const [dnas, setDnas]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [genError, setGenError]     = useState(null)
 
   useEffect(() => {
     api.spendingDna().then(r => { setDnas(r.dnas); setLoading(false) }).catch(() => setLoading(false))
@@ -30,11 +31,18 @@ function DnaTab() {
 
   async function generate(force = false) {
     setGenerating(true)
+    setGenError(null)
     try {
-      await api.generateDna(force)
-      const r = await api.spendingDna()
-      setDnas(r.dnas)
-    } catch { /* ignore */ }
+      const result = await api.generateDna(force)
+      if (result?.error === 'NO_KEY') {
+        setGenError('No API key configured. Add your Anthropic key in Settings.')
+      } else {
+        const r = await api.spendingDna()
+        setDnas(r.dnas)
+      }
+    } catch (err) {
+      setGenError(err.message || 'Generation failed. Check your API key in Settings.')
+    }
     setGenerating(false)
   }
 
@@ -51,6 +59,7 @@ function DnaTab() {
           <button className={styles.actionBtn} onClick={() => generate(false)} disabled={generating}>
             {generating ? 'Generating…' : 'Generate Now'}
           </button>
+          {genError && <div className={styles.dnaError}>{genError}</div>}
         </div>
       ) : (
         <>
