@@ -50,7 +50,8 @@ export const api = {
   // Phase D: Cash Flow Forecast
   forecast:             (days)       => request(`/api/forecast?days=${days||90}`),
   forecastPoints:       (days)       => request(`/api/forecast/points?days=${days||90}`),
-  forecastAlerts:       ()           => request('/api/forecast/alerts', { method: 'POST' }),
+  forecastAlerts:       ()           => request('/api/forecast/alerts',           { method: 'POST' }),
+  proactiveAlerts:      ()           => request('/api/forecast/proactive-alerts',   { method: 'POST' }),
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),

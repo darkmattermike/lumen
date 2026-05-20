@@ -93,6 +93,11 @@ export default function NotificationBell({ mobileDrawer = false }) {
     win:               'var(--safe)',
     duplicate:         'var(--warn)',
     recurring_change:  'var(--calm)',
+    // Phase E types
+    anomaly:           'var(--debt)',
+    pattern:           'var(--calm)',
+    subscription:      'var(--calm)',
+    double_billing:    'var(--debt)',
   }
 
   const list = (
