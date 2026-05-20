@@ -117,6 +117,17 @@ export const api = {
   notifFeedback:        (body)    => request('/api/insights/notification-feedback', { method: 'POST', body: JSON.stringify(body) }),
   notifSuppression:     ()        => request('/api/insights/notification-suppression'),
   unsuppressNotif:      (type)    => request(`/api/insights/notification-suppression/${type}/unsuppress`, { method: 'POST' }),
+
+  // Push Notifications
+  updateOnboarding: ()      => request('/api/auth/me/onboarding', { method: 'PATCH' }),
+  vapidKey:        ()       => request('/api/push/vapid-key'),
+  pushSubscribe:   (body)   => request('/api/push/subscribe',  { method: 'POST',   body: JSON.stringify(body) }),
+  pushUnsubscribe: (body)   => request('/api/push/subscribe',  { method: 'DELETE', body: JSON.stringify(body) }),
+  pushTest:        ()       => request('/api/push/test',       { method: 'POST' }),
+
+  // Reports
+  monthlyReport:   (y,m)   => request(`/api/reports/monthly?year=${y}&month=${m}`),
+  monthlyReportUrl:(y,m)   => `${BASE}/api/reports/monthly/html?year=${y}&month=${m}`,
   calendar:             ()           => request('/api/calendar'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),

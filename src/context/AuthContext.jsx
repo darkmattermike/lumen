@@ -34,13 +34,17 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  function completeOnboarding() {
+    setUser(u => u ? { ...u, onboarding_complete: true } : u)
+  }
+
   function logout() {
     localStorage.removeItem('lumen_token')
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   )

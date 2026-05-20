@@ -1,0 +1,143 @@
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--surface-0);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%; max-width: 440px;
+  overflow: hidden;
+  animation: modal-in 0.3s cubic-bezier(0.34,1.2,0.64,1) both;
+}
+@keyframes modal-in {
+  from { transform: scale(0.94) translateY(20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* Progress */
+.progressBar {
+  height: 3px;
+  background: var(--surface-2);
+}
+.progressFill {
+  height: 100%;
+  background: var(--calm);
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Body */
+.body {
+  padding: 32px 28px 20px;
+  min-height: 360px;
+}
+
+/* Footer */
+.footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.skipBtn {
+  font-size: 12px; color: var(--ink-3);
+  background: none; border: none; cursor: pointer; padding: 6px;
+}
+.skipBtn:hover { color: var(--ink-1); }
+.nextBtn {
+  font-size: 13px; font-weight: 700;
+  padding: 9px 20px; border-radius: 10px;
+  background: var(--calm); color: #fff;
+  border: none; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.nextBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.nextBtn:not(:disabled):hover { opacity: 0.85; }
+
+/* Step dots */
+.dots { display: flex; gap: 6px; }
+.dot  { width: 6px; height: 6px; border-radius: 50%; background: var(--surface-2); transition: all 0.2s; }
+.dotActive { background: var(--calm); transform: scale(1.3); }
+.dotDone   { background: rgba(93,202,165,.4); }
+
+/* ── Welcome Step ── */
+.welcomeStep { text-align: center; }
+.welcomeOrb  { display: flex; justify-content: center; margin-bottom: 20px; }
+.welcomeTitle { font-size: 22px; font-weight: 800; color: var(--ink-0); margin-bottom: 12px; }
+.welcomeBody  { font-size: 13px; color: var(--ink-2); line-height: 1.7; margin-bottom: 16px; }
+.pillRow      { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 16px; }
+.pill         { font-size: 10px; padding: 4px 12px; border-radius: 20px; background: rgba(93,202,165,.1); border: 1px solid rgba(93,202,165,.2); color: var(--calm); }
+.welcomeNote  { font-size: 11px; color: var(--ink-4); }
+
+/* ── Form Steps ── */
+.step { }
+.stepIcon  { font-size: 28px; margin-bottom: 10px; }
+.stepTitle { font-size: 18px; font-weight: 800; color: var(--ink-0); margin-bottom: 6px; }
+.stepSub   { font-size: 12px; color: var(--ink-3); line-height: 1.5; margin-bottom: 20px; }
+
+.fields { display: flex; flex-direction: column; gap: 16px; }
+.field  { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 11px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: .4px; }
+.field input, .field select {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px;
+  font-size: 14px; color: var(--ink-0); font-family: inherit;
+  transition: border-color 0.15s;
+}
+.field input:focus, .field select:focus { outline: none; border-color: var(--calm); }
+.field input::placeholder { color: var(--ink-4); }
+
+.amtRow { display: flex; align-items: center; gap: 8px; }
+.amtRow span { font-size: 16px; color: var(--ink-3); flex-shrink: 0; }
+.amtRow input { flex: 1; }
+
+.typeGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.typeBtn {
+  padding: 8px 12px; border-radius: 8px; font-size: 12px;
+  background: var(--surface-1); border: 1px solid var(--border);
+  color: var(--ink-2); cursor: pointer; transition: all 0.15s;
+  text-align: center;
+}
+.typeBtn:hover { border-color: var(--calm); color: var(--ink-0); }
+.typeBtnOn { background: rgba(93,202,165,.1) !important; border-color: var(--calm) !important; color: var(--calm) !important; font-weight: 600; }
+
+/* ── Connect Step ── */
+.connectOptions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.connectOption {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.connectOptionIcon  { font-size: 20px; flex-shrink: 0; }
+.connectOptionTitle { font-size: 13px; font-weight: 600; color: var(--ink-0); }
+.connectOptionSub   { font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+
+/* Push card */
+.pushCard {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(93,202,165,.06);
+  border: 1px solid rgba(93,202,165,.2);
+  border-radius: 12px; padding: 14px;
+}
+.pushLeft { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.pushTitle { font-size: 12px; font-weight: 600; color: var(--ink-0); }
+.pushSub   { font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+.pushBtn {
+  font-size: 12px; font-weight: 600; padding: 6px 16px;
+  background: var(--calm); color: #fff; border: none;
+  border-radius: 8px; cursor: pointer; flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.pushBtn:hover { opacity: 0.85; }
+.pushEnabled { font-size: 12px; color: var(--calm); font-weight: 700; flex-shrink: 0; }
+
+@media (max-width: 480px) {
+  .body    { padding: 24px 20px 16px; }
+  .footer  { padding: 14px 20px 20px; }
+  .welcomeTitle { font-size: 20px; }
+}

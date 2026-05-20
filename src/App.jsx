@@ -16,13 +16,19 @@ import Settings     from './pages/Settings/Settings'
 import LumenChat    from './pages/LumenChat/LumenChat'
 import Debt         from './pages/Debt/Debt'
 import Insights     from './pages/Insights/Insights'
+import Onboarding   from './components/Onboarding/Onboarding'
 import styles from './App.module.css'
 
 function AppShell() {
-  const { user, loading } = useAuth()
+  const { user, loading, completeOnboarding } = useAuth()
 
   if (loading) return <LoadingShell />
   if (!user)   return <AuthGate />
+
+  // Show onboarding for new users who haven't completed it
+  if (user && user.onboarding_complete === false) {
+    return <Onboarding user={user} onComplete={() => { api.updateOnboarding(); completeOnboarding() }} />
+  }
 
   return (
     <div className={styles.shell}>

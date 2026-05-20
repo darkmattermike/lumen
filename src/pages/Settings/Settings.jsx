@@ -424,6 +424,129 @@ function AccountInfoSection({ data, onLogout }) {
   )
 }
 
+// ── Reports section ──────────────────────────────────────────
+function ReportsSection() {
+  const today = new Date()
+  const [year,  setYear]   = useState(today.getFullYear())
+  const [month, setMonth]  = useState(today.getMonth())  // 0-indexed
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+  function openReport() {
+    const url = api.monthlyReportUrl(year, month)
+    window.open(url + `&token=${localStorage.getItem('lumen_token')}`, '_blank')
+  }
+
+  return (
+    <Section title="Monthly Reports" subtitle="Print or save a PDF report for any month.">
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <select
+          value={month}
+          onChange={e => setMonth(Number(e.target.value))}
+          style={{ fontSize: 13, padding: '6px 10px', borderRadius: 8, background: 'var(--surface-1)', border: '1px solid var(--border)', color: 'var(--ink-0)' }}
+        >
+          {MONTHS.map((m,i) => <option key={i} value={i}>{m}</option>)}
+        </select>
+        <select
+          value={year}
+          onChange={e => setYear(Number(e.target.value))}
+          style={{ fontSize: 13, padding: '6px 10px', borderRadius: 8, background: 'var(--surface-1)', border: '1px solid var(--border)', color: 'var(--ink-0)' }}
+        >
+          {[today.getFullYear(), today.getFullYear()-1, today.getFullYear()-2].map(y => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+        <button
+          onClick={openReport}
+          style={{ fontSize: 13, padding: '7px 18px', borderRadius: 8, background: 'var(--calm)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+        >
+          Generate Report →
+        </button>
+      </div>
+      <p style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 8 }}>
+        Opens a print-ready report. Use your browser's Print → Save as PDF to download.
+      </p>
+    </Section>
+  )
+}
+
+// ── Push Notifications section ────────────────────────────────
+function PushSection() {
+  const [status, setStatus]   = useState('idle') // 'idle' | 'enabled' | 'denied' | 'error'
+  const [testing, setTesting] = useState(false)
+
+  useEffect(() => {
+    if (!('Notification' in window)) { setStatus('unsupported'); return }
+    if (Notification.permission === 'granted') setStatus('enabled')
+    else if (Notification.permission === 'denied') setStatus('denied')
+  }, [])
+
+  async function enable() {
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') { setStatus('denied'); return }
+      const { publicKey } = await api.vapidKey()
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      })
+      const json = sub.toJSON()
+      await api.pushSubscribe({ endpoint: json.endpoint, keys: json.keys })
+      setStatus('enabled')
+    } catch { setStatus('error') }
+  }
+
+  async function sendTest() {
+    setTesting(true)
+    await api.pushTest().catch(() => {})
+    setTimeout(() => setTesting(false), 2000)
+  }
+
+  return (
+    <Section title="Push Notifications" subtitle="Get tapped when something needs attention.">
+      {status === 'unsupported' && (
+        <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Push notifications aren't supported in this browser.</p>
+      )}
+      {status === 'denied' && (
+        <p style={{ fontSize: 12, color: 'var(--debt)' }}>Notifications blocked. Enable them in your browser settings then reload.</p>
+      )}
+      {status === 'idle' && (
+        <button
+          onClick={enable}
+          style={{ fontSize: 13, padding: '8px 18px', borderRadius: 8, background: 'var(--calm)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+        >
+          Enable Push Notifications
+        </button>
+      )}
+      {status === 'enabled' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 12, color: 'var(--safe)', fontWeight: 600 }}>✓ Enabled on this device</span>
+          <button
+            onClick={sendTest}
+            disabled={testing}
+            style={{ fontSize: 12, padding: '5px 14px', borderRadius: 7, background: 'var(--surface-1)', border: '1px solid var(--border)', color: 'var(--ink-2)', cursor: 'pointer' }}
+          >
+            {testing ? 'Sent!' : 'Send test'}
+          </button>
+        </div>
+      )}
+      {status === 'error' && (
+        <p style={{ fontSize: 12, color: 'var(--debt)' }}>Something went wrong. Try again or check browser permissions.</p>
+      )}
+      <p style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 8 }}>
+        Only high-priority alerts: cash crunches, duplicate charges, big wins. Lumen learns to suppress the types you don't open.
+      </p>
+    </Section>
+  )
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = atob(base64)
+  return new Uint8Array([...rawData].map(c => c.charCodeAt(0)))
+}
+
 // ── Main Settings page ────────────────────────────────────────
 export default function Settings() {
   const { logout } = useAuth()
@@ -457,6 +580,8 @@ export default function Settings() {
         <div className={styles.right}>
           <ApiKeysSection  data={data} onRefresh={refresh} />
           <GmailSection    data={data} onRefresh={refresh} />
+          <ReportsSection />
+          <PushSection />
           <AccountInfoSection data={data} onLogout={logout} />
         </div>
       </div>
