@@ -137,3 +137,9 @@
   .summary { grid-template-columns: repeat(2, 1fr); }
   .header  { flex-wrap: wrap; gap: 8px; }
 }
+
+/* Dot fade-in after line draws */
+@keyframes cf-dot-in {
+  from { opacity: 0; transform: scale(0); }
+  to   { opacity: 0.85; transform: scale(1); }
+}

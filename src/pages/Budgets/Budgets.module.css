@@ -521,3 +521,23 @@
   font-family: var(--font-mono); font-size: 9px;
   color: var(--ink-3);
 }
+
+/* ── Animated progress bar ── */
+.barFill {
+  width: 0;
+  animation: bar-grow 0.7s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes bar-grow {
+  from { width: 0; }
+  to   { width: var(--bar-target, 0%); }
+}
+
+/* Pulse for over-budget bars */
+.barPulse {
+  animation: bar-grow 0.7s cubic-bezier(.4,0,.2,1) forwards,
+             bar-pulse 1.8s ease-in-out 0.7s infinite;
+}
+@keyframes bar-pulse {
+  0%,100% { opacity: .6; }
+  50%      { opacity: 1; box-shadow: 0 0 8px var(--debt); }
+}

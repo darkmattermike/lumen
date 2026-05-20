@@ -169,7 +169,7 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
       {/* ── Progress bar ── */}
       {!isDone && (
         <div className={styles.barTrack}>
-          <div className={styles.barFill} style={{width:`${pct}%`, background: isOver ? 'var(--debt)' : color, opacity:.6}} />
+          <div className={`${styles.barFill} ${isOver && cat.pct > 90 ? styles.barPulse : ''}`} style={{'--bar-target': `${pct}%`, background: isOver ? 'var(--debt)' : color, opacity:.6}} />
         </div>
       )}
       {isDone && (

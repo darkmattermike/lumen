@@ -150,9 +150,19 @@ function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion }) {
         date:     form.date,
         note:     form.note || null,
         tx_type:  form.tx_type,
+        // Pass original category so backend can record a correction for AI learning
+        _original_category: tx.category,
       })
       setOpen(false)
       onSaved(tx.id, saved)
+
+      // Show brief learning confirmation if category changed
+      if (form.category && form.category !== tx.category) {
+        setError('') // clear errors
+        // Brief flash — reuse error state but style it green via a flag
+        setLearnedMsg('✓ Lumen learned this correction')
+        setTimeout(() => setLearnedMsg(''), 2500)
+      }
 
       // ── Suggest creating a rule for each changed field ──────
       const originalType = tx.tx_type || (Number(tx.amount) > 0 ? 'income' : 'expense')
