@@ -142,7 +142,12 @@ export default function NotificationBell({ mobileDrawer = false }) {
     return (
       <div className={styles.drawerWrap} ref={wrapRef}>
         <button className={styles.drawerTrigger} onClick={handleOpen}>
-          <LumenDot size={18} rings={open} />
+          <LumenDot
+            size={18}
+            rings={open}
+            mood={open ? 'excited' : data.unread_count > 0 ? 'unread' : 'idle'}
+            unread={data.unread_count}
+          />
           <span className={styles.drawerTriggerLabel}>
             Lumen
             {data.unread_count > 0 && (
@@ -194,7 +199,7 @@ export default function NotificationBell({ mobileDrawer = false }) {
           <div className={styles.tail} />
           <div className={styles.bubbleHeader}>
             <div className={styles.lumenLabel}>
-              <LumenDot size={14} />
+              <LumenDot size={14} mood="idle" />
               <span>Lumen</span>
             </div>
             {data.notifications.length > 0 && (

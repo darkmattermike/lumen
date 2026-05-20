@@ -240,7 +240,12 @@ export default function LumenChat() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <LumenDot size={32} />
+            <LumenDot
+              size={32}
+              mood={loading ? 'thinking' : 'idle'}
+              rings={!loading}
+              tooltip={loading ? null : "Ask me anything about your money"}
+            />
             <div>
               <div className={styles.headerTitle}>Lumen</div>
               <div className={styles.headerSub}>Ask anything about your money</div>
@@ -295,7 +300,9 @@ export default function LumenChat() {
           {loading && streamText && (
             <div className={`${styles.msg} ${styles.assistant}`}>
               <div className={styles.msgMeta}>
-                <span className={styles.msgMode} style={{ color: 'var(--calm)' }}>✦ Lumen</span>
+                <span className={styles.msgMode} style={{ color: 'var(--calm)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <LumenDot size={8} mood="speaking" />✦ Lumen
+              </span>
               </div>
               <div className={styles.msgBubble}>
                 <p className={styles.chatText}>{streamText}<span className={styles.cursor}>▌</span></p>
@@ -307,7 +314,7 @@ export default function LumenChat() {
             <div className={`${styles.msg} ${styles.assistant}`}>
               <div className={styles.msgBubble}>
                 <div className={styles.thinking}>
-                  <span /><span /><span />
+                  <LumenDot size={14} mood="thinking" rings />
                 </div>
               </div>
             </div>

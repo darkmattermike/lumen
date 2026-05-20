@@ -60,7 +60,12 @@ export default function Dashboard() {
       {/* ── Hero ── */}
       <div className={styles.hero}>
         <div className={styles.dotCol}>
-          <LumenDot size={56} rings />
+          <LumenDot
+              size={56}
+              rings
+              mood={pressureLabel === 'CRITICAL' ? 'alert' : pressureLabel === 'TIGHT' ? 'thinking' : pressureLabel === 'SAFE' ? 'happy' : 'idle'}
+              tooltip={pressureLabel === 'CRITICAL' ? 'This is tight. Look at me.' : pressureLabel === 'SAFE' ? "Looking good 👀" : null}
+            />
           <div className={styles.dotMeta}>
             <div className={styles.dotLabel}>Lumen</div>
             <div className={styles.dotStatus}>
