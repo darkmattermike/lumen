@@ -505,3 +505,11 @@ select option {
 @keyframes dot-loading {
   to { transform: rotate(360deg); }
 }
+
+/* ── Prevent iOS auto-zoom on input focus ── */
+/* iOS zooms in when input font-size < 16px — this stops it */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}

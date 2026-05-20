@@ -38,8 +38,15 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem('lumen_token')
     if (!token) {
-      // No token — try refresh cookie anyway (handles page reload after session)
-      silentRefresh().finally(() => setLoading(false))
+      // No token in localStorage — try refresh cookie silently.
+      // A 401 here is expected for first-time visitors — not an error.
+      api.refresh()
+        .then(data => {
+          localStorage.setItem('lumen_token', data.token)
+          setUser(data.user)
+        })
+        .catch(() => { setUser(null) })
+        .finally(() => setLoading(false))
       return
     }
     api.me()
