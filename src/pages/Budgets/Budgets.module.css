@@ -541,3 +541,74 @@
   0%,100% { opacity: .6; }
   50%      { opacity: 1; box-shadow: 0 0 8px var(--debt); }
 }
+
+/* ── Mobile bottom sheet ── */
+.sheetOverlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: flex-end;
+  animation: fadeIn .2s ease;
+}
+.sheet {
+  width: 100%; background: var(--bg-2);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--ink-4);
+  max-height: 88dvh; overflow-y: auto;
+  animation: slideUp .25s cubic-bezier(.34,1.1,.64,1) both;
+}
+.sheetHandle {
+  width: 36px; height: 4px; background: var(--ink-4);
+  border-radius: 2px; margin: 12px auto 4px;
+}
+.sheetHeader {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 10px 20px 14px; border-bottom: 1px solid var(--ink-5);
+  position: relative;
+}
+.sheetTitle { font-family: var(--font-serif); font-size: 22px; font-weight: 300; color: var(--ink-0); }
+.sheetSub   { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); margin-top: 4px; }
+.sheetClose {
+  position: absolute; top: 12px; right: 16px;
+  background: none; border: none; color: var(--ink-3);
+  font-size: 16px; cursor: pointer; padding: 4px;
+}
+
+.sheetStats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid var(--ink-5);
+}
+.sheetStat { padding: 14px 16px; border-right: 1px solid var(--ink-5); }
+.sheetStat:last-child { border-right: none; }
+.sheetStatVal   { font-family: var(--font-serif); font-size: 20px; font-weight: 300; color: var(--ink-0); }
+.sheetStatLabel { font-family: var(--font-mono); font-size: 8px; color: var(--ink-3); letter-spacing: .8px; text-transform: uppercase; margin-top: 3px; }
+
+.sheetBarRow { padding: 12px 20px; border-bottom: 1px solid var(--ink-5); }
+.sheetBarLabel { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-2); margin-bottom: 8px; }
+.sheetBarTrack { height: 6px; background: var(--ink-5); border-radius: 3px; overflow: hidden; }
+.sheetBarFill  { height: 100%; border-radius: 3px; transition: width .4s ease; }
+
+.sheetTabs { display: flex; border-bottom: 1px solid var(--ink-5); }
+.sheetTab {
+  flex: 1; padding: 11px; font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase; text-align: center;
+  color: var(--ink-3); background: none; border: none;
+  border-bottom: 2px solid transparent; cursor: pointer; margin-bottom: -1px;
+  transition: all .15s;
+}
+.sheetTabOn { color: var(--safe) !important; border-bottom-color: var(--safe) !important; }
+
+.sheetTxList { padding: 4px 0 16px; }
+.sheetTxEmpty { padding: 20px; font-size: 12px; color: var(--ink-3); text-align: center; }
+.sheetTx {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.sheetTx:last-child { border-bottom: none; }
+.sheetTxDate { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); width: 40px; flex-shrink: 0; }
+.sheetTxName { flex: 1; font-size: 12px; color: var(--ink-1); }
+.sheetTxAmt  { font-family: var(--font-mono); font-size: 12px; color: var(--debt); flex-shrink: 0; }
+
+.sheetEditForm { padding: 16px 20px 20px; }
+
+@keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }

@@ -469,3 +469,51 @@
   .belowList { padding: 12px 8px 32px; }
   .eventRow { padding: 6px 4px; }
 }
+
+/* ── Agenda timeline ── */
+.agenda { padding: 0 32px 60px; }
+
+.agendaEmpty {
+  padding: 40px 0; font-size: 13px; color: var(--ink-3); line-height: 1.65;
+}
+.agendaEmpty strong { color: var(--safe); }
+
+.agendaDayHeader {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 0 8px;
+  position: sticky; top: 0;
+  background: var(--bg-0); z-index: 5;
+}
+.agendaDayLabel {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase;
+  white-space: nowrap;
+}
+.agendaDayAway { color: var(--warn); }
+.agendaDayPast  { color: var(--ink-4); }
+.agendaDayLine  { flex: 1; height: 1px; background: var(--ink-5); }
+
+/* Today marker */
+.todayMarker {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 0 10px;
+  position: sticky; top: 0;
+  background: var(--bg-0); z-index: 6;
+}
+.todayDot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--safe); flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(93,202,165,.5);
+}
+.todayLabel {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--safe); letter-spacing: 1.5px; text-transform: uppercase;
+  white-space: nowrap;
+}
+.todayLine { flex: 1; height: 1px; background: rgba(93,202,165,.25); }
+
+@media (max-width: 768px) {
+  .agenda { padding: 0 14px 80px; }
+  .agendaDayHeader { padding: 14px 0 6px; }
+  .todayMarker     { padding: 14px 0 8px; }
+}

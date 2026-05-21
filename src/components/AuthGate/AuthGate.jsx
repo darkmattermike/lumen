@@ -8,6 +8,7 @@ export default function AuthGate() {
   const [mode, setMode]     = useState('login') // 'login' | 'register'
   const [form, setForm]     = useState({ name: '', email: '', password: '' })
   const [termsAgreed, setTermsAgreed] = useState(false)
+  const [rememberMe, setRememberMe]   = useState(true)
   const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -22,7 +23,7 @@ export default function AuthGate() {
     setError('')
     try {
       if (mode === 'login') {
-        await login(form.email, form.password)
+        await login(form.email, form.password, rememberMe)
       } else {
         if (!termsAgreed) {
           setError('You must agree to the Terms of Service and Privacy Policy')
@@ -113,6 +114,20 @@ export default function AuthGate() {
               required
             />
           </div>
+
+          {mode === 'login' && (
+            <div className={styles.rememberRow}>
+              <label className={styles.rememberLabel}>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className={styles.rememberCheck}
+                />
+                <span>Remember me for 7 days</span>
+              </label>
+            </div>
+          )}
 
           {error && <div className={styles.error}>{error}</div>}
 

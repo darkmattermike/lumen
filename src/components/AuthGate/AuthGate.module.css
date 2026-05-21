@@ -193,3 +193,26 @@
   text-decoration: none;
 }
 .termsCheck a:hover { text-decoration: underline; }
+
+/* ── Remember Me ── */
+.rememberRow {
+  margin-top: -4px;
+  margin-bottom: 4px;
+}
+.rememberLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-3);
+  transition: color var(--t-fast);
+}
+.rememberLabel:hover { color: var(--ink-1); }
+.rememberCheck {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--safe);
+  cursor: pointer;
+  flex-shrink: 0;
+}

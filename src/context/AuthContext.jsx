@@ -63,9 +63,15 @@ export function AuthProvider({ children }) {
       })
   }, [])
 
-  async function login(email, password) {
-    const data = await api.login({ email, password })
+  async function login(email, password, rememberMe = true) {
+    const data = await api.login({ email, password, rememberMe })
     localStorage.setItem('lumen_token', data.token)
+    // Store remember preference so silent refresh knows the user's intent
+    if (rememberMe) {
+      localStorage.setItem('lumen_remember', 'true')
+    } else {
+      localStorage.removeItem('lumen_remember')
+    }
     setUser(data.user)
     return data.user
   }
@@ -80,6 +86,7 @@ export function AuthProvider({ children }) {
   async function logout() {
     try { await api.logout() } catch {}
     localStorage.removeItem('lumen_token')
+    localStorage.removeItem('lumen_remember')
     setUser(null)
   }
 

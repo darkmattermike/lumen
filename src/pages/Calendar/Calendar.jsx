@@ -737,35 +737,80 @@ export default function Calendar() {
           </div>
         </div>
 
-        {/* ── Full recurring list below calendar ── */}
-        <div className={styles.belowList}>
-          <div className={styles.belowHead}>
-            {isCurrentMonth ? 'This Month' : `Events in ${monthLabel}`}
-          </div>
+        {/* ── Agenda timeline ── */}
+        <div className={styles.agenda}>
           {allSorted.length === 0 ? (
-            <div className={styles.belowEmpty}>
+            <div className={styles.agendaEmpty}>
               No recurring items yet. Click <strong>+ Add Recurring</strong> to get started.
             </div>
-          ) : allSorted.map((ev, idx) => {
-            const isPast = isCurrentMonth && ev.day_of_month < todayDay
-            const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
-            const daysUntil = upcomingEntry?.daysUntil
-            const freqLabel = ev.frequency === 'biweekly' ? 'biweekly' : ev.type
-            return (
-              <RecurringRow
-                key={`${ev.id}-${ev.day_of_month}-${idx}`}
-                ev={ev}
-                isPast={isPast}
-                daysUntil={daysUntil}
-                typeColor={typeColor}
-                freqLabel={freqLabel}
-                isCurrentMonth={isCurrentMonth}
-                accounts={acctData?.accounts || []}
-                onDeleted={handleDelete}
-                onUpdated={handleUpdated}
-              />
-            )
-          })}
+          ) : (() => {
+            // Group by day
+            const byDay = {}
+            allSorted.forEach(ev => {
+              const d = ev.day_of_month
+              if (!byDay[d]) byDay[d] = []
+              byDay[d].push(ev)
+            })
+            const days = Object.keys(byDay).map(Number).sort((a,b) => a-b)
+            let todayInserted = false
+
+            return days.map(day => {
+              const evs = byDay[day]
+              const isPast = isCurrentMonth && day < todayDay
+              const isToday = isCurrentMonth && day === todayDay
+              const date = new Date(viewDate.year, viewDate.month, day)
+              const dayLabel = date.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' })
+              const daysAway = isCurrentMonth ? day - todayDay : null
+
+              // Insert today marker before first upcoming day
+              let showTodayMarker = false
+              if (isCurrentMonth && !todayInserted && day >= todayDay) {
+                todayInserted = true
+                showTodayMarker = true
+              }
+
+              return (
+                <div key={day}>
+                  {showTodayMarker && (
+                    <div className={styles.todayMarker}>
+                      <div className={styles.todayDot} />
+                      <div className={styles.todayLabel}>Today · {new Date(viewDate.year, viewDate.month, todayDay).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+                      <div className={styles.todayLine} />
+                    </div>
+                  )}
+                  {!isToday && (
+                    <div className={styles.agendaDayHeader}>
+                      <div className={styles.agendaDayLabel}>
+                        {dayLabel}
+                        {daysAway !== null && daysAway > 0 && <span className={styles.agendaDayAway}> · {daysAway === 1 ? 'Tomorrow' : `${daysAway} days`}</span>}
+                        {isPast && <span className={styles.agendaDayPast}> · passed</span>}
+                      </div>
+                      <div className={styles.agendaDayLine} />
+                    </div>
+                  )}
+                  {evs.map((ev, i) => {
+                    const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
+                    const baseItem = recurring.find(r => r.id === ev.id) || ev
+                    return (
+                      <RecurringRow
+                        key={`${ev.id}-${ev.day_of_month}-${i}`}
+                        ev={ev}
+                        isPast={isPast}
+                        daysUntil={upcomingEntry?.daysUntil}
+                        typeColor={typeColor}
+                        freqLabel={ev.frequency === 'biweekly' ? 'biweekly' : ev.type}
+                        isCurrentMonth={isCurrentMonth}
+                        accounts={acctData?.accounts || []}
+                        onDeleted={handleDelete}
+                        onUpdated={handleUpdated}
+                        agendaStyle
+                      />
+                    )
+                  })}
+                </div>
+              )
+            })
+          })()}
         </div>
         <RecurringSuggestions onAccepted={refresh} />
       </ScreenWrap>

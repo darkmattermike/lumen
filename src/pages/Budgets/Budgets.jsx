@@ -38,12 +38,14 @@ const monthName   = today.toLocaleString('en-US',{month:'long'})
 // ── Category card ─────────────────────────────────────────────
 function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
   const [open, setOpen]       = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [txs, setTxs]         = useState(null)
   const [loadingTx, setLoadingTx] = useState(false)
   const [toggling, setToggling]   = useState(false)
   const [saving, setSaving]       = useState(false)
   const [editForm, setEditForm]   = useState({ name: cat.name, cap: cat.cap, icon: cat.icon || '📦', color: cat.color || 'safe' })
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
 
   const color  = COLOR_MAP[cat.color] || 'var(--safe)'
   const pct    = Math.min(cat.pct, 100)
@@ -52,17 +54,24 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
 
   function setEF(k, v) { setEditForm(f => ({ ...f, [k]: v })) }
 
+  async function loadTxs() {
+    if (txs !== null) return
+    setLoadingTx(true)
+    try {
+      const data = await api.budgetTransactions(cat.id)
+      setTxs(data.transactions || [])
+    } catch { setTxs([]) }
+    finally { setLoadingTx(false) }
+  }
+
   async function toggle() {
-    if (!open && txs === null) {
-      setLoadingTx(true)
-      try {
-        const data = await api.budgetTransactions(cat.id)
-        setTxs(data.transactions || [])
-      } catch { setTxs([]) }
-      finally { setLoadingTx(false) }
+    await loadTxs()
+    if (window.innerWidth <= 768) {
+      setSheetOpen(true)
+    } else {
+      setEditing(false)
+      setOpen(o => !o)
     }
-    setEditing(false)
-    setOpen(o => !o)
   }
 
   async function handleComplete() {
@@ -188,7 +197,7 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
         </div>
       )}
 
-      {/* ── Transaction drawer ── */}
+      {/* ── Desktop: Transaction drawer ── */}
       {open && (
         <div className={styles.txDrawer}>
           <div className={styles.txDrawerHead}>
@@ -208,6 +217,103 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
               <div className={styles.txAmt}>−${fmt(Math.abs(tx.amount))}</div>
             </div>
           )) : null}
+        </div>
+      )}
+
+      {/* ── Mobile: Bottom sheet ── */}
+      {sheetOpen && (
+        <div className={styles.sheetOverlay} onClick={e => { if (e.target === e.currentTarget) setSheetOpen(false) }}>
+          <div className={styles.sheet}>
+            <div className={styles.sheetHandle} />
+            <div className={styles.sheetHeader}>
+              <div className={styles.sheetTitle}>{cat.icon} {cat.name}</div>
+              <div className={styles.sheetSub}>{monthName.toUpperCase()} {today.getFullYear()}</div>
+              <button className={styles.sheetClose} onClick={() => setSheetOpen(false)}>✕</button>
+            </div>
+
+            <div className={styles.sheetStats}>
+              <div className={styles.sheetStat}>
+                <div className={styles.sheetStatVal} style={{color: isOver ? 'var(--debt)' : color}}>${fmt(cat.spent)}</div>
+                <div className={styles.sheetStatLabel}>Spent</div>
+              </div>
+              <div className={styles.sheetStat}>
+                <div className={styles.sheetStatVal}>${fmtK(cat.cap)}</div>
+                <div className={styles.sheetStatLabel}>Cap</div>
+              </div>
+              <div className={styles.sheetStat}>
+                <div className={styles.sheetStatVal} style={{color: isOver ? 'var(--debt)' : 'var(--ink-0)'}}>
+                  {isOver ? `$${fmt(cat.spent - cat.cap)}` : `$${fmt(cat.cap - cat.spent)}`}
+                </div>
+                <div className={styles.sheetStatLabel}>{isOver ? 'Over' : 'Left'}</div>
+              </div>
+            </div>
+
+            <div className={styles.sheetBarRow}>
+              <div className={styles.sheetBarLabel}>
+                <span>{cat.pct}% used</span>
+                <span>{daysLeft} days remaining</span>
+              </div>
+              <div className={styles.sheetBarTrack}>
+                <div className={styles.sheetBarFill} style={{width: `${pct}%`, background: color}} />
+              </div>
+            </div>
+
+            <div className={styles.sheetTabs}>
+              <button
+                className={`${styles.sheetTab} ${!editing ? styles.sheetTabOn : ''}`}
+                onClick={() => setEditing(false)}
+              >Transactions</button>
+              <button
+                className={`${styles.sheetTab} ${editing ? styles.sheetTabOn : ''}`}
+                onClick={() => setEditing(true)}
+              >Edit</button>
+            </div>
+
+            {!editing ? (
+              <div className={styles.sheetTxList}>
+                {loadingTx && <div className={styles.sheetTxEmpty}>Loading...</div>}
+                {!loadingTx && txs?.length === 0 && <div className={styles.sheetTxEmpty}>No transactions this month.</div>}
+                {txs?.map(tx => (
+                  <div key={tx.id} className={styles.sheetTx}>
+                    <div className={styles.sheetTxDate}>
+                      {new Date(tx.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+                    </div>
+                    <div className={styles.sheetTxName}>{tx.name}</div>
+                    <div className={styles.sheetTxAmt}>−${fmt(Math.abs(tx.amount))}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.sheetEditForm}>
+                <div className={styles.catEditGrid}>
+                  <div className={styles.catEditField}>
+                    <div className={styles.catEditLabel}>Name</div>
+                    <input className={styles.catEditInput} value={editForm.name} onChange={e => setEF('name', e.target.value)} />
+                  </div>
+                  <div className={styles.catEditField}>
+                    <div className={styles.catEditLabel}>Cap ($)</div>
+                    <input className={styles.catEditInput} type="number" value={editForm.cap} onChange={e => setEF('cap', e.target.value)} />
+                  </div>
+                  <div className={styles.catEditField}>
+                    <div className={styles.catEditLabel}>Icon</div>
+                    <select className={styles.catEditInput} value={editForm.icon} onChange={e => setEF('icon', e.target.value)} style={{colorScheme:'dark'}}>
+                      {ICON_OPTS.map(ic => <option key={ic} value={ic}>{ic}</option>)}
+                    </select>
+                  </div>
+                  <div className={styles.catEditField}>
+                    <div className={styles.catEditLabel}>Color</div>
+                    <select className={styles.catEditInput} value={editForm.color} onChange={e => setEF('color', e.target.value)} style={{colorScheme:'dark'}}>
+                      {COLOR_OPTS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className={styles.catEditFooter}>
+                  <button className={styles.catEditCancel} onClick={() => setEditing(false)}>Cancel</button>
+                  <button className={styles.catEditSave} onClick={handleSaveEdit} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
