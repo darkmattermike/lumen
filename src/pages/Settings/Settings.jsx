@@ -455,10 +455,96 @@ function DataSection() {
   )
 }
 
+// ── Admin section (owner only) ────────────────────────────────
+function AdminSection() {
+  const [users,   setUsers]   = useState([])
+  const [loading, setLoading] = useState(true)
+  const [acting,  setActing]  = useState(null)
+  const [msg,     setMsg]     = useState('')
+
+  useEffect(() => {
+    api.adminUsers()
+      .then(d => { setUsers(d.users || []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  async function setRole(id, role) {
+    setActing(id)
+    try {
+      const updated = await api.adminSetRole(id, role)
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, role: updated.role } : u))
+      setMsg('Role updated')
+    } catch (err) { setMsg(err.message || 'Failed') }
+    setActing(null)
+    setTimeout(() => setMsg(''), 3000)
+  }
+
+  async function revokeUser(id, email) {
+    if (!confirm(`Revoke all sessions for ${email}? They'll be logged out immediately.`)) return
+    setActing(id)
+    try {
+      await api.adminRevokeUser(id)
+      setMsg(`Sessions revoked for ${email}`)
+    } catch (err) { setMsg(err.message || 'Failed') }
+    setActing(null)
+    setTimeout(() => setMsg(''), 4000)
+  }
+
+  const ROLES = ['owner', 'admin', 'user']
+  const ROLE_COLOR = { owner: 'var(--warn)', admin: 'var(--calm)', user: 'var(--ink-2)' }
+
+  return (
+    <Section title="User Management" subtitle="All registered accounts. Only visible to the owner.">
+      {msg && <div className={styles.adminMsg}>{msg}</div>}
+      {loading ? (
+        <div className={styles.adminLoading}>Loading users…</div>
+      ) : (
+        <div className={styles.adminTable}>
+          {users.map(u => (
+            <div key={u.id} className={styles.adminRow}>
+              <div className={styles.adminUserInfo}>
+                <div className={styles.adminEmail}>{u.email}</div>
+                <div className={styles.adminMeta}>
+                  {u.name && <span>{u.name}</span>}
+                  <span>·</span>
+                  <span>Joined {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  {u.tx_count > 0 && <><span>·</span><span>{u.tx_count} txns</span></>}
+                  {u.last_active && <><span>·</span><span>Active recently</span></>}
+                </div>
+              </div>
+
+              <div className={styles.adminActions}>
+                <select
+                  className={styles.roleSelect}
+                  value={u.role || 'user'}
+                  style={{ color: ROLE_COLOR[u.role || 'user'] }}
+                  onChange={e => setRole(u.id, e.target.value)}
+                  disabled={acting === u.id}
+                >
+                  {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <button
+                  className={styles.revokeBtn}
+                  onClick={() => revokeUser(u.id, u.email)}
+                  disabled={acting === u.id}
+                  title="Revoke all sessions"
+                >
+                  Revoke
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Section>
+  )
+}
+
 // ── Main Settings page ────────────────────────────────────────
 export default function Settings() {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const { data, loading, error, refresh } = useApi(api.getSettings)
+  const isOwner = user?.role === 'owner'
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
@@ -485,6 +571,7 @@ export default function Settings() {
           <ProfileSection  data={data} onRefresh={refresh} />
           <PasswordSection />
           <LegalSection    data={data} />
+          {isOwner && <AdminSection />}
         </div>
         <div className={styles.right}>
           <ApiKeysSection  data={data} onRefresh={refresh} />

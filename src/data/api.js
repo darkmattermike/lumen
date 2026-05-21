@@ -258,4 +258,13 @@ export const api = {
   getDuplicates:       ()      => request('/api/duplicates'),
   confirmDuplicate:    (notifId) => request(`/api/duplicates/${notifId}/confirm`, { method: 'POST' }),
   dismissDuplicate:    (notifId) => request(`/api/duplicates/${notifId}/dismiss`, { method: 'POST' }),
+
+  // Dani page (owner only)
+  dani:        ()     => request('/api/dani'),
+  saveDani:    (body) => request('/api/dani', { method: 'PATCH', body: JSON.stringify(body) }),
+
+  // Admin — user management (owner only)
+  adminUsers:      ()           => request('/api/admin/users'),
+  adminSetRole:    (id, role)   => request(`/api/admin/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
+  adminRevokeUser: (id)         => request(`/api/admin/users/${id}`, { method: 'DELETE' }),
 }

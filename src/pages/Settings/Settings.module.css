@@ -270,3 +270,39 @@
 @media (max-width: 600px) {
   .exportGrid { grid-template-columns: 1fr; }
 }
+
+/* Admin section */
+.adminMsg {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--safe); background: rgba(93,202,165,.08);
+  border: 1px solid rgba(93,202,165,.2); border-radius: 7px;
+  padding: 7px 12px; margin-bottom: 12px;
+}
+.adminLoading { font-size: 12px; color: var(--ink-3); padding: 8px 0; }
+.adminTable { display: flex; flex-direction: column; gap: 0; }
+.adminRow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 11px 0;
+  border-bottom: 1px solid var(--ink-5);
+}
+.adminRow:last-child { border-bottom: none; }
+.adminUserInfo { flex: 1; min-width: 0; }
+.adminEmail { font-size: 13px; font-weight: 500; color: var(--ink-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adminMeta  { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--ink-3); margin-top: 2px; flex-wrap: wrap; }
+.adminActions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.roleSelect {
+  background: rgba(255,255,255,.04); border: 1px solid var(--ink-4);
+  border-radius: 7px; padding: 5px 10px;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; outline: none; color-scheme: dark;
+}
+.roleSelect option { background: #0d1117; color: #f4f4f1; }
+.revokeBtn {
+  padding: 4px 10px;
+  background: rgba(232,115,99,.07); border: 1px solid rgba(232,115,99,.2);
+  border-radius: 6px; font-family: var(--font-mono); font-size: 8px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--debt);
+  cursor: pointer; transition: all var(--t-fast);
+}
+.revokeBtn:hover:not(:disabled) { background: rgba(232,115,99,.15); }
+.revokeBtn:disabled { opacity: .5; cursor: not-allowed; }

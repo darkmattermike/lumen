@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import styles from './Rail.module.css'
 import NotificationBell from '../NotificationBell/NotificationBell'
 
@@ -21,6 +22,7 @@ const ICONS = {
   goals:    'M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 0v10l4 2',
   settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8.19-2A8.01 8.01 0 0 0 20 12a8 8 0 0 0-.81-3.19l2.22-1.28a1 1 0 0 0 .37-1.37l-2-3.46a1 1 0 0 0-1.37-.37l-2.23 1.29A7.95 7.95 0 0 0 13 3.05V.5a1 1 0 0 0-2 0v2.55a7.95 7.95 0 0 0-3.18 1.57L5.59 3.33a1 1 0 0 0-1.37.37l-2 3.46a1 1 0 0 0 .37 1.37l2.22 1.28A8.01 8.01 0 0 0 4 12c0 1.09.2 2.13.59 3.09L2.37 16.37a1 1 0 0 0-.37 1.37l2 3.46a1 1 0 0 0 1.37.37l2.23-1.29A7.95 7.95 0 0 0 11 20.95v2.55a1 1 0 0 0 2 0v-2.55a7.95 7.95 0 0 0 3.18-1.57l2.23 1.29a1 1 0 0 0 1.37-.37l2-3.46a1 1 0 0 0-.37-1.37l-2.22-1.28z',
   more:     'M5 12h.01M12 12h.01M19 12h.01',
+  dani:     'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
   chat:     'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
   debt:     'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z',
   insights: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
@@ -66,6 +68,8 @@ const MOBILE_MORE = [
 export default function Rail() {
   const navigate          = useNavigate()
   const { pathname }      = useLocation()
+  const { user }          = useAuth()
+  const isOwner           = user?.role === 'owner'
   const [moreOpen, setMoreOpen] = useState(false)
   const drawerRef         = useRef(null)
 
@@ -111,6 +115,17 @@ export default function Rail() {
         <div style={{ padding: '0 8px 4px' }}>
           <NotificationBell />
         </div>
+        {isOwner && (
+          <button
+            className={`${styles.rb} ${pathname === '/dani' ? styles.on : ''}`}
+            onClick={() => navigate('/dani')}
+            aria-label="Dani"
+            style={pathname === '/dani' ? { color: 'var(--warn)' } : {}}
+          >
+            <Icon d={ICONS.dani} size={17} />
+            <span className={styles.tip}>DANI</span>
+          </button>
+        )}
         <button
           className={`${styles.rb} ${styles.bottom} ${pathname === '/settings' ? styles.on : ''}`}
           onClick={() => navigate('/settings')}
@@ -176,6 +191,16 @@ export default function Rail() {
                   <span className={styles.moreItemLabel}>{label}</span>
                 </button>
               ))}
+              {isOwner && (
+                <button
+                  className={`${styles.moreItem} ${pathname === '/dani' ? styles.moreItemOn : ''}`}
+                  onClick={() => go('/dani')}
+                  style={pathname === '/dani' ? { background: 'rgba(240,176,76,.08)', borderColor: 'rgba(240,176,76,.25)', color: 'var(--warn)' } : {}}
+                >
+                  <span className={styles.moreItemIcon}><Icon d={ICONS.dani} size={22} /></span>
+                  <span className={styles.moreItemLabel}>Dani</span>
+                </button>
+              )}
             </div>
           </div>
         </>

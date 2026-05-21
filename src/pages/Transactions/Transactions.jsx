@@ -4,6 +4,7 @@ import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import CsvImportModal from '../../components/CsvImportModal/CsvImportModal'
 import DocumentUpload from '../../components/DocumentUpload/DocumentUpload'
 import MergeReview from '../../components/MergeReview/MergeReview'
+import SpendingPaceCard from '../../components/SpendingPaceCard/SpendingPaceCard'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -560,7 +561,7 @@ export default function Transactions() {
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
 
-  const { totals = {} } = data || {}
+  const { totals = {}, dailyCumulative = [], lastMonthSpend = 0 } = data || {}
 
   // Fall back to data directly if the effect hasn't synced yet (first render after fetch)
   const effectiveTxs = loadedTxs ?? [
@@ -700,19 +701,12 @@ export default function Transactions() {
             </div>
           </div>
           <div className={styles.headerRight}>
-            <div className={styles.pace}>
-              <div className={styles.paceLabel}>Monthly Spend Rate</div>
-              <div className={styles.paceTrack}>
-                <div className={styles.paceFill} style={{'--pace-w':`${Math.min(spendPct,100)}%`}}/>
-              </div>
-              <div className={styles.paceMeta}>
-                <span>$0</span>
-                <span style={{color:spendPct>80?'var(--debt)':spendPct>60?'var(--warn)':'var(--safe)'}}>{spendPct}%</span>
-                <span>${fmtK(income)}</span>
-              </div>
-              <div className={styles.paceReading}>{spendPct>80?'Over Pace':spendPct>60?'Watch':'On Pace'}</div>
-              <div className={styles.paceSub}>{daysLeft} days remaining</div>
-            </div>
+            <SpendingPaceCard
+              spending={spending}
+              income={income}
+              dailyCumulative={dailyCumulative}
+              lastMonthSpend={lastMonthSpend}
+            />
           </div>
         </div>
 
