@@ -249,6 +249,25 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
     document.body.style.overflow = ''
   }
 
+  // Swipe-to-close: track touch on the drag handle
+  function onHandleTouchStart(e) {
+    const startY = e.touches[0].clientY
+    const sheet  = e.currentTarget.closest('[data-sheet]')
+    function onMove(e2) {
+      const dy = e2.touches[0].clientY - startY
+      if (dy > 0) sheet.style.transform = `translateY(${dy}px)`
+    }
+    function onEnd(e2) {
+      const dy = e2.changedTouches[0].clientY - startY
+      sheet.style.transform = ''
+      if (dy > 80) closeSheet()
+      document.removeEventListener('touchmove', onMove)
+      document.removeEventListener('touchend', onEnd)
+    }
+    document.addEventListener('touchmove', onMove, { passive: true })
+    document.addEventListener('touchend', onEnd)
+  }
+
   async function handleComplete() {
     setToggling(true)
     try { await api.completeBudget(cat.id, !isDone); onRefresh() }
@@ -303,7 +322,7 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
       {sheetOpen && (
         <div className={styles.sheetOverlay} onClick={e => { if (e.target === e.currentTarget) closeSheet() }}>
           <div className={styles.sheet}>
-            <div className={styles.sheetHandle}/>
+            <div className={styles.sheetHandle} onTouchStart={onHandleTouchStart} style={{cursor:"grab"}}/>
             <div className={styles.sheetHeader}>
               <div>
                 <div className={styles.sheetTitle}>{cat.icon} {cat.name}</div>

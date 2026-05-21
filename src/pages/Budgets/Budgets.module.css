@@ -652,10 +652,10 @@
   display: grid; grid-template-columns: repeat(4, 1fr);
   border-bottom: 1px solid var(--ink-5);
 }
-.statKpi { padding: 12px 14px; border-right: 1px solid var(--ink-5); }
+.statKpi { padding: 12px 10px; border-right: 1px solid var(--ink-5); min-width: 0; }
 .statKpi:last-child { border-right: none; }
-.statKpiVal   { font-family: var(--font-serif); font-size: 16px; font-weight: 300; color: var(--ink-0); margin-bottom: 3px; }
-.statKpiLabel { font-family: var(--font-mono); font-size: 8px; color: var(--ink-3); letter-spacing: .8px; text-transform: uppercase; }
+.statKpiVal   { font-family: var(--font-serif); font-size: 15px; font-weight: 300; color: var(--ink-0); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.statKpiLabel { font-family: var(--font-mono); font-size: 7px; color: var(--ink-3); letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Sparkline */
 .sparkSection { padding: 14px 16px; border-bottom: 1px solid var(--ink-5); }
