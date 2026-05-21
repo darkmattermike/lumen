@@ -113,7 +113,7 @@ export default function NotificationBell({ mobileDrawer = false }) {
         <div
           key={n.id}
           className={`${styles.item} ${!n.read ? styles.unread : ''}`}
-          style={{ '--accent': TYPE_COLOR[n.type] || 'var(--calm)', animationDelay: `${i * 40}ms` }}
+          style={{ '--accent': TYPE_COLOR[n.type] || 'var(--calm)', '--item-delay': `${i * 40}ms` }}
         >
           <div className={styles.itemTop}>
             <span className={styles.itemIcon}>{n.icon}</span>

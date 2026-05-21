@@ -19,7 +19,7 @@ function PayoffBar({ label, months, totalInterest, payoffDate, color, payoffOrde
         <span className={styles.stratDate}>{payoffDate}</span>
       </div>
       <div className={styles.stratBar}>
-        <div className={styles.stratBarFill} style={{ width: `${pct}%`, background: color }} />
+        <div className={styles.stratBarFill} style={{ '--bar-w': `${pct}%`, background: color }} />
       </div>
       <div className={styles.stratStats}>
         <div className={styles.stratStat}>
@@ -47,7 +47,7 @@ function PayoffBar({ label, months, totalInterest, payoffDate, color, payoffOrde
 }
 
 // ── Single debt row with minimum payment editor ───────────────────────────────
-function DebtRow({ debt, onMinPaymentSave }) {
+function DebtRow({ debt, index = 0, onMinPaymentSave }) {
   const [editing, setEditing] = useState(false)
   const [min, setMin]         = useState(debt.minPayment || '')
   const [saving, setSaving]   = useState(false)
@@ -63,7 +63,7 @@ function DebtRow({ debt, onMinPaymentSave }) {
   const utilPct = debt.limit > 0 ? Math.round((debt.balance / debt.limit) * 100) : null
 
   return (
-    <div className={styles.debtRow}>
+    <div className={styles.debtRow} style={{ '--row-delay': `${index * 50}ms` }}>
       <div className={styles.debtLeft}>
         <div className={styles.debtName}>{debt.icon || '💳'} {debt.name}</div>
         <div className={styles.debtMeta}>
@@ -328,8 +328,8 @@ export default function Debt() {
               <div className={styles.rightCol}>
                 <div className={styles.sectionLabel}>Your Debts</div>
                 <div className={styles.debtList}>
-                  {debts.map(d => (
-                    <DebtRow key={d.id} debt={d} onMinPaymentSave={refresh} />
+                  {debts.map((d, i) => (
+                    <DebtRow key={d.id} debt={d} index={i} onMinPaymentSave={refresh} />
                   ))}
                 </div>
                 <div className={styles.minNote}>

@@ -33,7 +33,7 @@ const EXAMPLES = [
 ]
 
 // ── Individual rule row ───────────────────────────────────────
-function RuleRow({ rule, budgets, onDelete, onToggle, onSaved }) {
+function RuleRow({ rule, index = 0, budgets, onDelete, onToggle, onSaved }) {
   const [toggling, setToggling] = useState(false)
   const [editing, setEditing]   = useState(false)
   const [form, setForm]         = useState({
@@ -93,7 +93,7 @@ function RuleRow({ rule, budgets, onDelete, onToggle, onSaved }) {
   }
 
   return (
-    <div className={`${styles.ruleRow} ${!rule.active ? styles.ruleRowOff : ''} ${editing ? styles.ruleRowEditing : ''}`}>
+    <div className={`${styles.ruleRow} ${!rule.active ? styles.ruleRowOff : ''} ${editing ? styles.ruleRowEditing : ''}`} style={{ '--row-delay': `${index * 50}ms` }}>
       {editing ? (
         <div className={styles.ruleEditBody}>
           <div className={styles.ruleBuilder}>
@@ -446,10 +446,11 @@ export default function Rules() {
                 <div className={styles.sectionLabel}>Active</div>
                 <div className={styles.sectionCount}>{active.length}</div>
               </div>
-              {active.map(rule => (
+              {active.map((rule, i) => (
                 <RuleRow
                   key={rule.id}
                   rule={rule}
+                  index={i}
                   budgets={budgets}
                   onDelete={handleDelete}
                   onToggle={handleToggle}

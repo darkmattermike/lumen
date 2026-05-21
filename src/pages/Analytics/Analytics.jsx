@@ -101,8 +101,13 @@ export default function Analytics() {
       </div>
 
       <div className={styles.body}>
+        {/* Cash flow forecast chart (spending pace) */}
+        <div className={`${styles.chartCard} ${styles.full}`} style={{ '--card-delay': '0.2s' }}>
+          <CashFlowChart />
+        </div>
+
         {/* Cash flow chart */}
-        <div className={`${styles.chartCard} ${styles.full}`}>
+        <div className={`${styles.chartCard} ${styles.full}`} style={{ '--card-delay': '0.3s' }}>
           <div className={styles.chartHeader}>
             <div>
               <div className={styles.chartTitle}>Monthly Cash Flow · 6 Months</div>
@@ -126,8 +131,8 @@ export default function Analytics() {
                 return (
                   <div key={m.month} className={styles.barGroup}>
                     <div className={styles.barPair}>
-                      <div className={styles.bar} style={{ height: `${iH}%`, background: isCurrent ? 'rgba(93,202,165,.65)' : 'rgba(93,202,165,.3)' }} />
-                      <div className={`${styles.bar} ${isCurrent ? styles.barDashed : ''}`} style={{ height: `${sH}%`, background: isCurrent ? 'rgba(232,115,99,.65)' : 'rgba(232,115,99,.3)' }} />
+                      <div className={styles.bar} style={{ height: `${iH}%`, background: isCurrent ? 'rgba(93,202,165,.65)' : 'rgba(93,202,165,.3)', '--bar-delay': `${cashFlow.indexOf(m) * 60}ms` }} />
+                      <div className={`${styles.bar} ${isCurrent ? styles.barDashed : ''}`} style={{ height: `${sH}%`, background: isCurrent ? 'rgba(232,115,99,.65)' : 'rgba(232,115,99,.3)', '--bar-delay': `${cashFlow.indexOf(m) * 60 + 30}ms` }} />
                     </div>
                     <div className={styles.barLabel} style={isCurrent ? { color: 'var(--safe)' } : {}}>{m.month}{isCurrent ? ' ←' : ''}</div>
                   </div>

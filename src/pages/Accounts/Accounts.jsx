@@ -28,7 +28,7 @@ function typeIcon(acct) {
 }
 
 // ── Single account row inside an institution block ────────────────────────────
-function AccountRow({ acct, onToggleDashboard, onToggleDebt, isNew }) {
+function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, isNew }) {
   const [toggling, setToggling]     = useState(false)
   const [togglingDebt, setTogglingDebt] = useState(false)
   const [expanded, setExpanded]     = useState(false)
@@ -61,6 +61,7 @@ function AccountRow({ acct, onToggleDashboard, onToggleDebt, isNew }) {
         role="button"
         tabIndex={0}
         onKeyDown={e => e.key === 'Enter' && setExpanded(v => !v)}
+        style={{ '--row-delay': `${index * 40}ms` }}
       >
         {/* Color dot */}
         <div className={styles.typeDot} style={{ background: color }} />
@@ -135,7 +136,7 @@ function AccountRow({ acct, onToggleDashboard, onToggleDebt, isNew }) {
                   <div
                     className={styles.utilizFill}
                     style={{
-                      width: `${Math.min(100, (Number(acct.balance)/Number(acct.limit_amt))*100)}%`,
+                      '--util-w':  `${Math.min(100, (Number(acct.balance)/Number(acct.limit_amt))*100)}%`,
                       background: (Number(acct.balance)/Number(acct.limit_amt)) > 0.7 ? 'var(--debt)' : (Number(acct.balance)/Number(acct.limit_amt)) > 0.3 ? 'var(--warn)' : 'var(--safe)',
                     }}
                   />
@@ -204,10 +205,11 @@ function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDe
 
       {/* Account rows */}
       <div className={styles.acctRows}>
-        {accounts.map(a => (
+        {accounts.map((a, i) => (
           <AccountRow
             key={a.id}
             acct={a}
+            index={i}
             onToggleDashboard={onToggleDashboard}
             onToggleDebt={onToggleDebt}
             isNew={newAccountIds.has(a.id)}
@@ -264,8 +266,9 @@ function NetWorthStrip({ accounts, netWorth }) {
   const totalPos    = liquid + savings + investments
   const totalAll    = totalPos + debt
 
-  const seg = (val, color) => ({
-    width: totalAll > 0 ? `${Math.max(2, (val/totalAll)*100)}%` : '0%',
+  const seg = (val, color, delay = 0) => ({
+    '--seg-w':    totalAll > 0 ? `${Math.max(2, (val/totalAll)*100)}%` : '0%',
+    '--seg-delay': `${delay}ms`,
     background: color,
   })
 
@@ -309,10 +312,10 @@ function NetWorthStrip({ accounts, netWorth }) {
       </div>
       {/* Proportional bar */}
       <div className={styles.nwBar}>
-        {liquid > 0      && <div className={styles.nwBarSeg} style={seg(liquid, 'var(--safe)')} />}
-        {savings > 0     && <div className={styles.nwBarSeg} style={seg(savings, 'var(--calm)')} />}
-        {investments > 0 && <div className={styles.nwBarSeg} style={seg(investments, 'var(--warn)')} />}
-        {debt > 0        && <div className={styles.nwBarSeg} style={seg(debt, 'rgba(232,115,99,.45)')} />}
+        {liquid > 0      && <div className={styles.nwBarSeg} style={seg(liquid, 'var(--safe)', 100)} />}
+        {savings > 0     && <div className={styles.nwBarSeg} style={seg(savings, 'var(--calm)', 200)} />}
+        {investments > 0 && <div className={styles.nwBarSeg} style={seg(investments, 'var(--warn)', 300)} />}
+        {debt > 0        && <div className={styles.nwBarSeg} style={seg(debt, 'rgba(232,115,99,.45)', 400)} />}
       </div>
     </div>
   )

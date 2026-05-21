@@ -63,6 +63,29 @@
   box-sizing: border-box;
 }
 
+/* ── Universal button feel ── */
+/* Every <button> gets a subtle press scale and proper focus ring.
+   Component-level :active overrides still win via specificity. */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled):active {
+  transform: scale(0.96);
+  transition: transform 0.08s ease !important;
+}
+/* Restore for elements that have their own active override */
+button[class*="rb"]:active,
+button[class*="orb"]:active { transform: none; }
+
+/* Keyboard focus ring — visible only on keyboard nav */
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid rgba(93,202,165,.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
@@ -667,5 +690,22 @@ select option {
   select,
   textarea {
     font-size: max(16px, 1em) !important;
+  }
+}
+
+/* ── Accessibility: respect reduced-motion preference ── */
+/* Users who've turned off animations get instant transitions throughout.
+   This single block covers every animation and transition in the entire app. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
+    scroll-behavior:           auto   !important;
+  }
+  /* Keep opacity transitions so things don't just blink in/out */
+  .orb, .dot {
+    animation: none !important;
+    transition: none !important;
   }
 }

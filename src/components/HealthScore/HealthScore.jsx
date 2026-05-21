@@ -97,13 +97,17 @@ export default function HealthScore() {
 
         {/* Component bars */}
         <div className={styles.barsCol}>
-          {Object.entries(components).slice(0, 4).map(([key, c]) => (
+        {Object.entries(components).slice(0, 4).map(([key, c], i) => (
             <div key={key} className={styles.barRow}>
               <span className={styles.barIcon}>{COMPONENT_ICONS[key]}</span>
               <div className={styles.barTrack}>
                 <div
                   className={styles.barFill}
-                  style={{ width: `${(c.score / c.max) * 100}%`, background: c.score / c.max >= 0.7 ? 'var(--safe)' : c.score / c.max >= 0.4 ? 'var(--warn)' : 'var(--debt)' }}
+                  style={{
+                    '--bar-w':    `${(c.score / c.max) * 100}%`,
+                    '--bar-delay': `${i * 80 + 100}ms`,
+                    background: c.score / c.max >= 0.7 ? 'var(--safe)' : c.score / c.max >= 0.4 ? 'var(--warn)' : 'var(--debt)'
+                  }}
                 />
               </div>
               <span className={styles.barPts}>{c.score}/{c.max}</span>

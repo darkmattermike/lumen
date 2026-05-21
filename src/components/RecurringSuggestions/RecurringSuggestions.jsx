@@ -90,11 +90,11 @@ export default function RecurringSuggestions({ onAccepted }) {
 
       {open && (
         <div className={styles.list}>
-          {suggestions.map(s => {
+          {suggestions.map((s, i) => {
             const color = TYPE_COLOR[s.type] || 'var(--calm)'
             const isActing = acting === s.id
             return (
-              <div key={s.id} className={styles.card}>
+              <div key={s.id} className={styles.card} style={{ '--card-delay': `${i * 45}ms` }}>
                 <div className={styles.cardLeft}>
                   <span className={styles.icon}>{s.icon}</span>
                   <div>

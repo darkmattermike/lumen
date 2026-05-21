@@ -191,10 +191,8 @@ export default function LumenDot({
           key={i}
           className={styles.ring}
           style={{
-            width:          size + 24,
-            height:         size + 24,
-            animationDelay: `${delay}s`,
-            opacity:        0.9 - i * 0.18,
+            '--orb-size':       `${size}px`,
+            animationDelay:     `${delay}s`,
           }}
         />
       ))}

@@ -178,7 +178,7 @@ export default function Dashboard() {
         <div className={styles.aside}>
           <div className={styles.asideLabel}>Bill Schedule</div>
           {billRows.length > 0
-            ? billRows.map(b => <BillRow key={b.id} {...b} />)
+            ? billRows.map((b, i) => <BillRow key={b.id} {...b} style={{ '--row-delay': `${i * 40}ms` }} />)
             : <div style={{ fontSize: 12, color: 'var(--ink-3)', padding: '8px 0' }}>No upcoming bills found. Add recurring bills in the Calendar.</div>
           }
 

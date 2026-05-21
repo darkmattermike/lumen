@@ -8,9 +8,9 @@ import { api } from '../../data/api'
 import styles from './Settings.module.css'
 
 // ── Reusable section card ─────────────────────────────────────
-function Section({ title, subtitle, children }) {
+function Section({ title, subtitle, children, delay = 0 }) {
   return (
-    <div className={styles.section}>
+    <div className={styles.section} style={{ '--section-delay': `${delay}ms` }}>
       <div className={styles.sectionHead}>
         <div className={styles.sectionTitle}>{title}</div>
         {subtitle && <div className={styles.sectionSub}>{subtitle}</div>}

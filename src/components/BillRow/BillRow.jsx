@@ -8,7 +8,7 @@ import styles from './BillRow.module.css'
  * @param {'debt'|'warn'|'safe'} variant
  * @param {boolean} highlight — green background (income row)
  */
-export default function BillRow({ name, when, amount, variant = 'warn', highlight = false }) {
+export default function BillRow({ name, when, amount, variant = 'warn', highlight = false, style }) {
   const colorMap = {
     debt: 'var(--debt)',
     warn: 'var(--warn)',
@@ -17,7 +17,7 @@ export default function BillRow({ name, when, amount, variant = 'warn', highligh
   const color = colorMap[variant] || colorMap.warn
 
   return (
-    <div className={`${styles.row} ${highlight ? styles.highlight : ''}`}>
+    <div className={`${styles.row} ${highlight ? styles.highlight : ''}`} style={style}>
       <div className={styles.bar} style={{ background: color }} />
       <div className={styles.info}>
         <div className={styles.name} style={highlight ? { color: 'rgba(93,202,165,0.8)' } : {}}>

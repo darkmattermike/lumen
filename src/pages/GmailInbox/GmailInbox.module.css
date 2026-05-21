@@ -73,14 +73,28 @@
 
 /* ── Card list ── */
 .cardList { display: flex; flex-direction: column; gap: 8px; max-width: 720px; }
+.cardList > *:nth-child(1)  { --card-delay:  30ms; }
+.cardList > *:nth-child(2)  { --card-delay:  75ms; }
+.cardList > *:nth-child(3)  { --card-delay: 120ms; }
+.cardList > *:nth-child(4)  { --card-delay: 165ms; }
+.cardList > *:nth-child(5)  { --card-delay: 210ms; }
+.cardList > *:nth-child(6)  { --card-delay: 255ms; }
+.cardList > *:nth-child(7)  { --card-delay: 300ms; }
+.cardList > *:nth-child(n+8){ --card-delay: 320ms; }
 
 .card {
   display: flex; align-items: center; gap: 14px;
   background: rgba(255,255,255,.02); border: 1px solid var(--ink-5);
   border-radius: 12px; padding: 14px 16px;
-  transition: border-color var(--t-fast);
+  transition: border-color var(--t-fast), transform 0.18s ease, box-shadow 0.18s ease;
+  animation: gmail-card-in 0.4s cubic-bezier(0.34,1.1,0.64,1) both;
+  animation-delay: var(--card-delay, 0ms);
 }
-.card:hover { border-color: var(--ink-3); }
+@keyframes gmail-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card:hover { border-color: var(--ink-3); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
 .cardUrgent { border-color: rgba(240,178,58,.25) !important; background: rgba(240,178,58,.04) !important; }
 
 .cardIcon { font-size: 22px; flex-shrink: 0; width: 36px; text-align: center; }

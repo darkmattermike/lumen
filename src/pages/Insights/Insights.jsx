@@ -203,8 +203,8 @@ function DecisionsTab() {
         <div className={styles.emptyInline}>No decisions logged yet. Use this to track significant financial choices — paying off a debt, changing a budget, taking a new job.</div>
       ) : (
         <div className={styles.decisionList}>
-          {data.decisions.map(d => (
-            <div key={d.id} className={`${styles.decisionCard} ${!d.followed_up && d.follow_up_at && new Date(d.follow_up_at) <= new Date() ? styles.decisionFollowUp : ''}`}>
+          {data.decisions.map((d, i) => (
+            <div key={d.id} className={`${styles.decisionCard} ${!d.followed_up && d.follow_up_at && new Date(d.follow_up_at) <= new Date() ? styles.decisionFollowUp : ''}`} style={{ '--decision-delay': `${i * 50}ms` }}>
               <div className={styles.decisionHeader}>
                 <span className={styles.decisionIcon}>{ICONS[d.category] || '📝'}</span>
                 <div className={styles.decisionMeta}>
@@ -303,7 +303,7 @@ function NetWorthTab() {
         <div className={styles.milestones}>
           <div className={styles.sectionLabel}>Upcoming Milestones</div>
           {projection.milestones.map((m, i) => (
-            <div key={i} className={styles.milestoneRow}>
+            <div key={i} className={styles.milestoneRow} style={{ '--ms-delay': `${i * 60}ms` }}>
               <span className={styles.milestoneAmt}>${m.amount === 0 ? 'Zero' : fmt(m.amount)}</span>
               <div className={styles.milestoneLine} />
               <span className={styles.milestoneDate}>{m.label}</span>
@@ -459,7 +459,7 @@ function LifetimeTab() {
             <div key={i} className={styles.lifetimeRow}>
               <span className={styles.lifeName}>{c.name}</span>
               <div className={styles.lifeBar}>
-                <div className={styles.lifeBarFill} style={{ width: `${pct}%` }} />
+                <div className={styles.lifeBarFill} style={{ '--bar-w': `${pct}%`, '--bar-delay': `${i * 50}ms` }} />
               </div>
               <span className={styles.lifeAmt}>${fmt(c.total)}</span>
             </div>
@@ -528,7 +528,7 @@ function NotifsTab() {
               <div key={s.notification_type} className={styles.statsRow}>
                 <div className={styles.statsType}>{s.notification_type.replace(/_/g, ' ')}</div>
                 <div className={styles.statsBar}>
-                  <div className={styles.statsBarFill} style={{ width: `${openRate}%`, background: openRate >= 50 ? 'var(--safe)' : openRate >= 25 ? 'var(--warn)' : 'var(--debt)' }} />
+                  <div className={styles.statsBarFill} style={{ '--bar-w': `${openRate}%`, background: openRate >= 50 ? 'var(--safe)' : openRate >= 25 ? 'var(--warn)' : 'var(--debt)' }} />
                 </div>
                 <div className={styles.statsPct}>{openRate}% engaged</div>
                 <div className={styles.statsCount}>{s.total} sent</div>

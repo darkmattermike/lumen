@@ -25,11 +25,24 @@
 .body { padding:14px 24px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start; }
 .left  { display:flex;flex-direction:column;gap:20px; }
 .right { display:flex;flex-direction:column;gap:20px; }
+.left  > *:nth-child(1) { --section-delay:  50ms; }
+.left  > *:nth-child(2) { --section-delay: 110ms; }
+.left  > *:nth-child(3) { --section-delay: 170ms; }
+.right > *:nth-child(1) { --section-delay:  80ms; }
+.right > *:nth-child(2) { --section-delay: 140ms; }
+.right > *:nth-child(3) { --section-delay: 200ms; }
+.right > *:nth-child(4) { --section-delay: 260ms; }
 
 /* Section */
 .section {
   background:rgba(255,255,255,.02);border:1px solid var(--ink-5);
   border-radius:16px;overflow:hidden;
+  animation: section-in 0.45s cubic-bezier(0.34,1.05,0.64,1) both;
+  animation-delay: var(--section-delay, 0ms);
+}
+@keyframes section-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .sectionHead {
   padding:20px 24px 16px;

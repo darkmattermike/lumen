@@ -46,7 +46,13 @@
 }
 .barFill {
   height: 100%; border-radius: 2px;
-  transition: width 0.5s ease;
+  width: 0;
+  animation: hs-bar-grow 0.7s cubic-bezier(0.4,0,0.2,1) both;
+  animation-delay: var(--bar-delay, 0.1s);
+}
+@keyframes hs-bar-grow {
+  from { width: 0; }
+  to   { width: var(--bar-w, 0%); }
 }
 .barPts { font-size: 9px; color: var(--ink-3); font-family: var(--font-mono); flex-shrink: 0; width: 28px; text-align: right; }
 

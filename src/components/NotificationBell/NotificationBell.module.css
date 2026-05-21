@@ -204,7 +204,8 @@
   padding: 11px 14px;
   border-bottom: 1px solid var(--ink-5);
   position: relative;
-  animation: item-in .2s ease both;
+  animation: item-in .28s cubic-bezier(0.34,1.1,0.64,1) both;
+  animation-delay: var(--item-delay, 0ms);
   transition: background var(--t-fast);
 }
 .item:last-child { border-bottom: none; }

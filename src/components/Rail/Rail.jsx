@@ -95,12 +95,13 @@ export default function Rail() {
     <>
       {/* ── Desktop side rail ── */}
       <nav className={styles.rail}>
-        {NAV_ITEMS.map(({ path, icon, label }) => (
+        {NAV_ITEMS.map(({ path, icon, label }, i) => (
           <button
             key={path}
             className={`${styles.rb} ${pathname === path ? styles.on : ''}`}
             onClick={() => navigate(path)}
             aria-label={label}
+            style={{ '--rb-delay': `${i * 35 + 50}ms` }}
           >
             <Icon d={ICONS[icon]} size={17} />
             <span className={styles.tip}>{label.toUpperCase()}</span>

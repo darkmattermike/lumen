@@ -100,7 +100,7 @@ function CategoryStats({ cat, color, isOver, txs, loadingTx, history, loadingHis
           </span>
         </div>
         <div className={styles.statBarTrack}>
-          <div className={styles.statBarFill} style={{width:`${pct}%`, background: color}}/>
+          <div className={styles.statBarFill} style={{'--bar-w':`${pct}%`, background: color}}/>
           {/* Ideal pace marker */}
           <div className={styles.paceMark} style={{left:`${Math.min((daysPassed/daysInMo)*100,100)}%`}}/>
         </div>
@@ -201,7 +201,7 @@ function CategoryStats({ cat, color, isOver, txs, loadingTx, history, loadingHis
 }
 
 // ── Category card ─────────────────────────────────────────────
-function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
+function CategoryCard({ cat, index = 0, onDelete, onToggleComplete, onRefresh }) {
   const [open, setOpen]           = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing]     = useState(false)
@@ -313,7 +313,7 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
     <>
       <div
         className={[styles.catRow, open ? styles.catRowOpen : '', isDone ? styles.catRowDone : ''].join(' ')}
-        style={{ borderLeftColor: accentColor, background: rowBg }}
+        style={{ borderLeftColor: accentColor, background: rowBg, animationDelay: `${index * 45}ms` }}
       >
         <div className={styles.catRowInner} onClick={toggle}>
           <div className={styles.catRowLeft}>
@@ -328,7 +328,7 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
 
           <div className={styles.catRowBar}>
             <div className={styles.catBarTrack}>
-              <div className={styles.catBarFill} style={{ width: `${Math.min(cat.pct, 100)}%`, background: barColor }} />
+              <div className={styles.catBarFill} style={{ '--bar-w': `${Math.min(cat.pct, 100)}%`, '--bar-delay': `${index * 45 + 120}ms`, background: barColor }} />
             </div>
           </div>
 
@@ -670,8 +670,8 @@ export default function Budgets() {
     return (
       <>
         <SectionHead label={label} count={cats.length} color={color} />
-        {cats.map(cat => (
-          <CategoryCard key={cat.id} cat={cat} onDelete={handleDelete} onRefresh={refresh} />
+        {cats.map((cat, i) => (
+          <CategoryCard key={cat.id} cat={cat} index={i} onDelete={handleDelete} onRefresh={refresh} />
         ))}
       </>
     )
@@ -882,16 +882,16 @@ function ForecastPanel() {
                         <div className={styles.forecastPaceBar}>
                           <div
                             className={styles.forecastPaceBarFill}
-                            style={{width: `${currPct}%`, background: barColor, opacity: 0.9}}
+                            style={{'--bar-w': `${currPct}%`, background: barColor, opacity: 0.9}}
                           />
                           {/* Projected extension (ghost bar) */}
                           {b.projectedPct > b.pct && (
                             <div
                               className={styles.forecastPaceBarGhost}
                               style={{
-                                left:  `${currPct}%`,
-                                width: `${Math.min(projPct - currPct, 100 - currPct)}%`,
-                                background: barColor,
+                                left:       `${currPct}%`,
+                                '--ghost-w': `${Math.min(projPct - currPct, 100 - currPct)}%`,
+                                background:  barColor,
                               }}
                             />
                           )}

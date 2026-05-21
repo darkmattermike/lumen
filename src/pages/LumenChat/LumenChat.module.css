@@ -46,7 +46,7 @@
 .messages::-webkit-scrollbar-thumb { background: var(--ink-5); border-radius: 2px; }
 
 /* ── Individual message ── */
-.msg { display: flex; gap: 10px; align-items: flex-start; }
+.msg { display: flex; gap: 10px; align-items: flex-start; animation: msg-in 0.3s cubic-bezier(0.34,1.2,0.64,1) both; }
 
 /* User message */
 .userText {
@@ -58,6 +58,15 @@
   padding: 10px 14px;
   font-size: 13px; color: var(--ink-0); line-height: 1.6;
   margin-left: auto;
+  animation: user-msg-in 0.28s cubic-bezier(0.34,1.2,0.64,1) both;
+}
+@keyframes user-msg-in {
+  from { opacity: 0; transform: translateX(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Assistant message */

@@ -141,12 +141,13 @@ export default function WhatIfTheater({ balance, balanceAfterBills, activePlans 
 
       {/* Quick chips */}
       <div className={styles.chips}>
-        {QUICK_CHIPS.map(c => (
+        {QUICK_CHIPS.map((c, i) => (
           <button
             key={c.label}
             className={`${styles.chip} ${activeChip === c.label ? styles.chipOn : ''}`}
             onClick={() => handleChip(c)}
             disabled={streaming}
+            style={{ '--chip-delay': `${i * 45 + 200}ms` }}
           >
             {c.emoji} {c.label}
           </button>
@@ -261,8 +262,8 @@ export default function WhatIfTheater({ balance, balanceAfterBills, activePlans 
       {plans.length > 0 && (
         <div className={styles.plansWrap}>
           <div className={styles.plansHead}>📌 Active Plans</div>
-          {plans.map(p => (
-            <div key={p.id} className={styles.planCard}>
+          {plans.map((p, i) => (
+            <div key={p.id} className={styles.planCard} style={{ '--plan-delay': `${i * 60}ms` }}>
               <div className={styles.planQuestion}>{p.question}</div>
               <div className={styles.planResponse}>{p.response}</div>
               <div className={styles.planFooter}>

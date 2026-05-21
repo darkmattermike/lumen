@@ -83,7 +83,8 @@
 .stratLabel  { font-size:12px;color:var(--ink-1);font-family:var(--font-sans); }
 .stratDate   { font-family:var(--font-mono);font-size:10px;color:var(--ink-3); }
 .stratBar    { height:3px;background:var(--ink-5);border-radius:2px;overflow:hidden;margin-bottom:12px; }
-.stratBarFill { height:100%;border-radius:2px;transition:width .5s ease; }
+.stratBarFill { height:100%;border-radius:2px;width:0;animation:strat-bar-grow .8s cubic-bezier(.4,0,.2,1) .15s both; }
+@keyframes strat-bar-grow { from{width:0} to{width:var(--bar-w,0%)} }
 .stratStats  { display:flex;gap:24px; }
 .stratStat   { display:flex;flex-direction:column;gap:3px; }
 .stratStatVal   { font-family:var(--font-serif);font-size:20px;font-weight:300;color:var(--ink-0); }
@@ -145,6 +146,12 @@
   display:flex;justify-content:space-between;align-items:center;
   padding:12px 0;border-bottom:1px solid var(--ink-5);
   transition:background var(--t-fast);
+  animation: debt-row-in 0.4s cubic-bezier(0.34,1.1,0.64,1) both;
+  animation-delay: var(--row-delay, 0ms);
+}
+@keyframes debt-row-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 .debtRow:last-child { border-bottom:none; }
 .debtLeft  { min-width:0; }
@@ -167,8 +174,10 @@
   width:64px;background:rgba(255,255,255,.04);border:1px solid rgba(93,202,165,.4);
   border-radius:6px;padding:3px 7px;font-size:11px;color:var(--ink-0);outline:none;
 }
-.debtMinSave   { background:var(--safe);color:#040608;border:none;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:11px; }
-.debtMinCancel { background:transparent;color:var(--ink-3);border:1px solid var(--ink-5);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:11px; }
+.debtMinSave   { background:var(--safe);color:#040608;border:none;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:11px;transition:filter var(--t-fast); }
+.debtMinSave:hover { filter: brightness(1.1); }
+.debtMinCancel { background:transparent;color:var(--ink-3);border:1px solid var(--ink-5);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:11px;transition:all var(--t-fast); }
+.debtMinCancel:hover { border-color:var(--ink-2);color:var(--ink-1); }
 .minNote { font-family:var(--font-mono);font-size:9px;color:var(--ink-4);margin-top:12px;line-height:1.6; }
 
 @media (max-width:768px) {

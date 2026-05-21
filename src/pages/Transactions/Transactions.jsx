@@ -114,7 +114,7 @@ function RuleToast({ suggestion, onAccept, onDismiss }) {
 }
 
 // ── Expandable transaction row ────────────────────────────────
-function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion, onLearned }) {
+function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLearned }) {
   const [open, setOpen]     = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -189,7 +189,7 @@ function TxRow({ tx, budgets, rules, onSaved, onRuleSuggestion, onLearned }) {
   const sortedBudgets = budgets
 
   return (
-    <div className={`${styles.txWrap} ${open ? styles.txWrapOpen : ''}`}>
+    <div className={`${styles.txWrap} ${open ? styles.txWrapOpen : ''}`} style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
       {/* ── Main row ── */}
       <div className={styles.txRow} onClick={() => setOpen(o => !o)}>
         <div className={styles.txIcon}>{tx.icon || (isIncome ? '💰' : '💳')}</div>
@@ -703,7 +703,7 @@ export default function Transactions() {
             <div className={styles.pace}>
               <div className={styles.paceLabel}>Monthly Spend Rate</div>
               <div className={styles.paceTrack}>
-                <div className={styles.paceFill} style={{width:`${Math.min(spendPct,100)}%`}}/>
+                <div className={styles.paceFill} style={{'--pace-w':`${Math.min(spendPct,100)}%`}}/>
               </div>
               <div className={styles.paceMeta}>
                 <span>$0</span>
@@ -757,8 +757,8 @@ export default function Transactions() {
             ) : Object.entries(filteredGrouped).map(([date, txs]) => (
               <div key={date}>
                 <div className={styles.dayHead}>{date}</div>
-                {txs.map(tx => (
-                  <TxRow key={tx.id} tx={tx} budgets={budgets} rules={rules} onSaved={handleTxSaved} onRuleSuggestion={setRuleSuggestion}
+                {txs.map((tx, i) => (
+                  <TxRow key={tx.id} tx={tx} index={i} budgets={budgets} rules={rules} onSaved={handleTxSaved} onRuleSuggestion={setRuleSuggestion}
                     onLearned={msg => { setLearnedToast(msg); setTimeout(() => setLearnedToast(null), 3500) }}
                   />
                 ))}
@@ -786,7 +786,7 @@ export default function Transactions() {
               <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0',lineHeight:1.65}}>
                 Edit transactions and assign categories to see spending here.
               </div>
-            ) : budgetRows.map(b => {
+            ) : budgetRows.map((b, i) => {
               const color = {debt:'var(--debt)',warn:'var(--warn)',safe:'var(--safe)',calm:'var(--calm)',goal:'var(--goal)',pink:'#e87fa3',orange:'#f07a3a',sky:'#5bc4e8',lime:'#8ecf4a',gold:'#d4a017'}[b.color] || 'var(--safe)'
               const pct    = Math.round((b.spent / maxSpent) * 100)
               const capPct = Number(b.cap) > 0 ? Math.round((b.spent / Number(b.cap)) * 100) : null
@@ -799,7 +799,7 @@ export default function Transactions() {
                     </span>
                   </div>
                   <div className={styles.catTrack}>
-                    <div className={styles.catFill} style={{width:`${pct}%`,background:color,opacity:.55}}/>
+                    <div className={styles.catFill} style={{'--cat-w':`${pct}%`,'--cat-delay':`${i*50}ms`,background:color,opacity:.55}}/>
                   </div>
                 </div>
               )

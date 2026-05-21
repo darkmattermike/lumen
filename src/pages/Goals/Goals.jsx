@@ -22,7 +22,7 @@ const TYPE_META = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Goal card
 // ─────────────────────────────────────────────────────────────────────────────
-function GoalCard({ goal, onEdit, onContribute, onDelete }) {
+function GoalCard({ goal, index = 0, onEdit, onContribute, onDelete }) {
   const meta    = TYPE_META[goal.type] || { icon: '🎯', accentVar: '--calm' }
   const pct     = Math.min(100, parseFloat(goal.progress_pct || 0))
   const current = parseFloat(goal.current_amount || 0)
@@ -31,7 +31,7 @@ function GoalCard({ goal, onEdit, onContribute, onDelete }) {
   const typeLabel = GOAL_TYPES.find(t => t.value === goal.type)?.label || goal.type
 
   return (
-    <div className={styles.goalCard}>
+    <div className={styles.goalCard} style={{ animationDelay: `${index * 60}ms` }}>
       <div className={styles.cardHead}>
         <span className={styles.cardIcon}>{goal.icon || meta.icon}</span>
         <div className={styles.cardMeta}>
@@ -336,10 +336,11 @@ export default function Goals() {
           </div>
         ) : (
           <div className={styles.grid}>
-            {goals.map(g => (
+            {goals.map((g, i) => (
               <GoalCard
                 key={g.id}
                 goal={g}
+                index={i}
                 onEdit={g => { setEditGoal(g); setShowForm(true) }}
                 onContribute={g => setContGoal(g)}
                 onDelete={handleDelete}
