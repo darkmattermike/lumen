@@ -4,63 +4,67 @@ function easeOutExpo(t) {
   return t === 1 ? 1 : 1 - Math.pow(2, -10 * t)
 }
 
-function easeOut(t) {
+function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3)
 }
 
 export function useCountUp(target, {
-  duration  = 800,
-  decimals  = 0,
-  prefix    = '',
-  suffix    = '',
-  easing    = 'ease-out',
-  countFromZero = true,   // always count up from 0 on first mount
+  duration = 900,
+  decimals = 0,
+  prefix   = '',
+  suffix   = '',
+  easing   = 'expo',
 } = {}) {
-  const [current, setCurrent]       = useState(countFromZero ? 0 : target)
-  const [isAnimating, setAnimating] = useState(countFromZero)
-  const prevTarget  = useRef(countFromZero ? 0 : target)
-  const rafRef      = useRef(null)
-  const startTime   = useRef(null)
-  const mounted     = useRef(false)
+  const [current, setCurrent] = useState(0)
+  const rafRef     = useRef(null)
+  const startRef   = useRef(null)
+  const fromRef    = useRef(0)       // what we're animating FROM
+  const targetRef  = useRef(target)  // latest target (for cleanup)
 
   useEffect(() => {
-    const from = prevTarget.current
-    prevTarget.current = target
+    // Always animate from current displayed value → new target
+    const from   = fromRef.current
+    const to     = target
+    targetRef.current = to
+    fromRef.current   = to  // next animation starts from here
 
-    // Skip if no change and not the initial mount animation
-    if (from === target && mounted.current) return
-    mounted.current = true
+    // Cancel any in-progress animation
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    startRef.current = null
 
-    cancelAnimationFrame(rafRef.current)
-    startTime.current = null
-    setAnimating(true)
-
-    const easeFn = easing === 'expo' ? easeOutExpo : easeOut
+    const easeFn = easing === 'expo' ? easeOutExpo : easeOutCubic
 
     function tick(ts) {
-      if (!startTime.current) startTime.current = ts
-      const elapsed  = ts - startTime.current
+      if (!startRef.current) startRef.current = ts
+      const elapsed  = ts - startRef.current
       const progress = Math.min(elapsed / duration, 1)
       const eased    = easeFn(progress)
-      setCurrent(from + (target - from) * eased)
+      const val      = from + (to - from) * eased
+      setCurrent(val)
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(tick)
       } else {
-        setCurrent(target)
-        setAnimating(false)
+        setCurrent(to)
+        rafRef.current = null
       }
     }
 
     rafRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [target, duration, easing])
+
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+    }
+  }, [target, duration, easing]) // eslint-disable-line
 
   const formatted = `${prefix}${current.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   })}${suffix}`
 
-  return { display: formatted, isAnimating, value: current }
+  return { display: formatted, isAnimating: rafRef.current !== null, value: current }
 }
 
 // Re-export AnimatedNumber for convenience

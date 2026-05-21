@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
 
   // ── Silent refresh ────────────────────────────────────────────
   const silentRefresh = useCallback(async () => {
-    // Deduplicate concurrent refresh calls
+    // Deduplicate concurrent refresh calls — return the same in-flight promise
     if (refreshPromise.current) return refreshPromise.current
 
     refreshPromise.current = api.refresh()
@@ -36,12 +36,23 @@ export function AuthProvider({ children }) {
         scheduleProactiveRefresh(data.token)
         return data.token
       })
-      .catch(() => {
-        // Refresh token is gone/expired — user must log in again
-        localStorage.removeItem('lumen_token')
-        tokenExpiryRef.current = null
-        setUser(null)
-        clearProactiveRefresh()
+      .catch(err => {
+        // Only clear the session on definitive auth failures (401).
+        // Network errors, 5xx, timeouts should NOT log the user out —
+        // the token may still be valid; we just couldn't reach the server.
+        const isAuthFailure = err?.status === 401 || err?.status === 403
+        if (isAuthFailure) {
+          localStorage.removeItem('lumen_token')
+          tokenExpiryRef.current = null
+          setUser(null)
+          clearProactiveRefresh()
+        } else {
+          // Transient failure — reschedule a retry in 30s using the existing token
+          const token = localStorage.getItem('lumen_token')
+          if (token) {
+            setTimeout(() => { silentRefresh() }, 30 * 1000)
+          }
+        }
         return null
       })
       .finally(() => { refreshPromise.current = null })
@@ -81,7 +92,7 @@ export function AuthProvider({ children }) {
       const token  = localStorage.getItem('lumen_token')
       const expiry = token ? getTokenExpiry(token) : null
       if (!token || !expiry) {
-        // No token at all — try refresh cookie
+        // No token or can't decode it — try refresh cookie
         silentRefresh()
         return
       }
@@ -89,6 +100,9 @@ export function AuthProvider({ children }) {
       if (msLeft < 2 * 60 * 1000) {
         // Token expires in under 2 minutes (or already expired) — refresh now
         silentRefresh()
+      } else if (!refreshTimerRef.current) {
+        // Timer got lost (e.g. the tab was asleep for a long time) — reschedule
+        scheduleProactiveRefresh(token)
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
@@ -149,8 +163,9 @@ export function AuthProvider({ children }) {
     } else {
       localStorage.removeItem('lumen_remember')
     }
+    tokenExpiryRef.current = getTokenExpiry(data.token)
     setUser(data.user)
-    scheduleProactiveRefresh()
+    scheduleProactiveRefresh(data.token)
     return data.user
   }
 
@@ -158,8 +173,9 @@ export function AuthProvider({ children }) {
   async function register(email, password, name, terms_agreed = false) {
     const data = await api.register({ email, password, name, terms_agreed })
     localStorage.setItem('lumen_token', data.token)
+    tokenExpiryRef.current = getTokenExpiry(data.token)
     setUser(data.user)
-    scheduleProactiveRefresh()
+    scheduleProactiveRefresh(data.token)
     return data.user
   }
 

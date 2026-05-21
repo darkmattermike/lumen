@@ -31,8 +31,8 @@ async function request(path, options = {}, _retry = true) {
             // Got a new token — retry the original request with it
             return request(path, options, false)
           }
-          // __lumenRefresh returned null = refresh token expired, user logged out
-          // Don't throw — AuthContext already set user to null
+          // __lumenRefresh returned null — could be a network error or real expiry.
+          // AuthContext already handled the session state. Just surface a clean error.
           const logoutErr = new Error('Session expired. Please sign in again.')
           logoutErr.status  = 401
           logoutErr.expired = true
@@ -40,11 +40,12 @@ async function request(path, options = {}, _retry = true) {
         } catch (refreshErr) {
           // If it's our own formatted error, re-throw it
           if (refreshErr.expired) throw refreshErr
-          // Otherwise refresh itself threw — fall through to original error
+          // Refresh itself threw (network error etc.) — fall through to original error below
+          // Do NOT log the user out; they might just be offline temporarily
         }
       }
     }
-    const err = new Error(data.error || 'Request failed')
+    const err = new Error(data.error || data.message || 'Request failed')
     err.status  = res.status
     err.expired = data?.expired
     throw err
