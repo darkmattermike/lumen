@@ -51,7 +51,7 @@ function SparkLine({ history, cap, color, id }) {
   const gradId = `sg-${id}`
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className={styles.sparkSvg} preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${W} ${H}`} className={styles.sparkSvg} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.25"/>
