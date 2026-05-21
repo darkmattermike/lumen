@@ -32,11 +32,10 @@ export default function AuthGate() {
     const authError   = params.get('auth_error')
 
     if (googleToken) {
-      // Store the access token and trigger a silent refresh to get user info
+      // Store token first, clean URL, then refresh — order matters
       localStorage.setItem('lumen_token', googleToken)
-      // Clean the URL
       window.history.replaceState({}, '', window.location.pathname)
-      // Trigger auth context to pick up the new token
+      // silentRefresh reads the token from localStorage and sets user in context
       silentRefresh()
     }
 
@@ -44,7 +43,7 @@ export default function AuthGate() {
       setError(decodeURIComponent(authError))
       window.history.replaceState({}, '', window.location.pathname)
     }
-  }, [])
+  }, [silentRefresh])
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))

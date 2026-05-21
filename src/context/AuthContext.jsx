@@ -122,6 +122,16 @@ export function AuthProvider({ children }) {
 
   // ── On mount — verify token or refresh ───────────────────────
   useEffect(() => {
+    // Handle Google OAuth redirect — token arrives as ?google_token= query param.
+    // Must be handled FIRST, before any other auth check.
+    const params = new URLSearchParams(window.location.search)
+    const googleToken = params.get('google_token')
+    if (googleToken) {
+      localStorage.setItem('lumen_token', googleToken)
+      localStorage.setItem('lumen_remember', 'true')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+
     const token = localStorage.getItem('lumen_token')
 
     if (!token) {
@@ -172,7 +182,7 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
-  // ── Google Login ─────────────────────────────────────────────
+  // ── Google Login (called by AuthGate after redirect)
   async function googleLogin(credential) {
     const data = await api.googleLogin({ credential })
     localStorage.setItem('lumen_token', data.token)
