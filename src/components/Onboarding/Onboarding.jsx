@@ -24,7 +24,6 @@ export default function Onboarding({ user, onComplete }) {
   async function next() {
     setSaving(true)
     try {
-      // Save this step's data
       if (step === 1 && account.balance) {
         await api.createAccount({
           name:    account.name,
@@ -34,13 +33,11 @@ export default function Onboarding({ user, onComplete }) {
         }).catch(() => {})
       }
       if (step === 2 && income.amount) {
-        const day = 1
-        const freq = income.frequency
-        const name = 'Salary / Income'
         await api.createRecurring?.({
-          name, amount: Number(income.amount),
-          day_of_month: day,
-          frequency: freq,
+          name: 'Salary / Income',
+          amount: Number(income.amount),
+          day_of_month: 1,
+          frequency: income.frequency,
           type: 'income',
           icon: '💰',
         }).catch(() => {})
@@ -52,24 +49,27 @@ export default function Onboarding({ user, onComplete }) {
           icon: '📊',
         }).catch(() => {})
       }
-      if (step === STEPS.length - 1) {
-        // Mark onboarding complete
-        await api.updateOnboarding?.({ complete: true }).catch(() => {})
-        onComplete()
-        return
-      }
     } catch { /* non-fatal */ }
-    setSaving(false)
-    setStep(s => s + 1)
+    finally { setSaving(false) }
+
+    if (step === STEPS.length - 1) {
+      finish()
+    } else {
+      setStep(s => s + 1)
+    }
   }
 
   function skip() {
     if (step === STEPS.length - 1) {
-      api.updateOnboarding?.({ complete: true }).catch(() => {})
-      onComplete()
+      finish()
     } else {
       setStep(s => s + 1)
     }
+  }
+
+  function finish() {
+    api.updateOnboarding().catch(() => {})
+    onComplete()
   }
 
   async function enablePush() {
