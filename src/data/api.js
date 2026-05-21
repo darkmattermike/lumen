@@ -65,6 +65,7 @@ async function request(path, options = {}, _retry = true) {
 export const api = {
   // Auth
   register:      (body) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+  googleLogin:   (body) => request('/api/auth/google',    { method: 'POST', body: JSON.stringify(body) }),
   login:         (body) => request('/api/auth/login',    { method: 'POST', body: JSON.stringify(body) }),
   me:            ()     => request('/api/auth/me'),
   refresh:       ()     => request('/api/auth/refresh',    { method: 'POST' }),

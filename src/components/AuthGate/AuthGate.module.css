@@ -226,3 +226,22 @@
   cursor: pointer;
   flex-shrink: 0;
 }
+
+/* ── Google sign-in ── */
+.orDivider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 16px 0 12px;
+}
+.orLine { flex: 1; height: 1px; background: var(--ink-5); }
+.orText {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase;
+}
+.googleBtnWrap {
+  display: flex; justify-content: center; margin-bottom: 4px;
+  min-height: 44px;
+}
+.googleLoading {
+  text-align: center; font-family: var(--font-mono); font-size: 10px;
+  color: var(--ink-3); padding: 8px 0;
+}

@@ -172,6 +172,17 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  // ── Google Login ─────────────────────────────────────────────
+  async function googleLogin(credential) {
+    const data = await api.googleLogin({ credential })
+    localStorage.setItem('lumen_token', data.token)
+    localStorage.setItem('lumen_remember', 'true')
+    tokenExpiryRef.current = getTokenExpiry(data.token)
+    setUser(data.user)
+    scheduleProactiveRefresh(data.token)
+    return data.user
+  }
+
   // ── Register ─────────────────────────────────────────────────
   async function register(email, password, name, terms_agreed = false) {
     const data = await api.register({ email, password, name, terms_agreed })
@@ -200,7 +211,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, logoutAll, silentRefresh }}>
+    <AuthContext.Provider value={{ user, loading, login, googleLogin, register, logout, logoutAll, silentRefresh }}>
       {children}
     </AuthContext.Provider>
   )

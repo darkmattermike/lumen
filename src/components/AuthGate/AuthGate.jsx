@@ -1,16 +1,55 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import LumenDot from '../LumenDot/LumenDot'
 import styles from './AuthGate.module.css'
 
 export default function AuthGate() {
-  const { login, register } = useAuth()
+  const { login, googleLogin, register } = useAuth()
   const [mode, setMode]     = useState('login') // 'login' | 'register'
   const [form, setForm]     = useState({ name: '', email: '', password: '' })
   const [termsAgreed, setTermsAgreed] = useState(false)
   const [rememberMe, setRememberMe]   = useState(true)
   const [error, setError]   = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading]       = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+
+  // Load Google Identity Services script
+  useEffect(() => {
+    if (window.google) return
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
+  }, [])
+
+  async function handleGoogleResponse(response) {
+    setGoogleLoading(true)
+    setError('')
+    try {
+      await googleLogin(response.credential)
+    } catch (err) {
+      setError(err.message || 'Google sign-in failed')
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
+  function initGoogleButton(el) {
+    if (!el || !window.google) return
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback:  handleGoogleResponse,
+    })
+    window.google.accounts.id.renderButton(el, {
+      theme: 'filled_black',
+      size:  'large',
+      width: 320,
+      text:  'continue_with',
+      shape: 'rectangular',
+      logo_alignment: 'left',
+    })
+  }
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -154,6 +193,18 @@ export default function AuthGate() {
             }
           </button>
         </form>
+
+        {/* Google Sign-In */}
+        <div className={styles.orDivider}>
+          <div className={styles.orLine}/>
+          <div className={styles.orText}>or</div>
+          <div className={styles.orLine}/>
+        </div>
+        <div
+          ref={el => { if (el) setTimeout(() => initGoogleButton(el), 100) }}
+          className={styles.googleBtnWrap}
+        />
+        {googleLoading && <div className={styles.googleLoading}>Signing in with Google...</div>}
 
         {/* Four principles */}
         <div className={styles.principles}>
