@@ -36,7 +36,7 @@ const daysLeft    = daysInMonth - today.getDate()
 const monthName   = today.toLocaleString('en-US',{month:'long'})
 
 // ── Spending pace sparkline (SVG) ────────────────────────────
-function SparkLine({ history, cap, color }) {
+function SparkLine({ history, cap, color, id }) {
   if (!history || history.length < 2) return null
   const W = 280, H = 80, pad = 12
   const max    = Math.max(cap, ...history.map(h => h.spent)) * 1.1 || 1
@@ -48,6 +48,7 @@ function SparkLine({ history, cap, color }) {
   const capY   = H - pad - (cap / max) * (H - pad * 2)
   const path   = `M ${pts.join(' L ')}`
   const fill   = `M ${pts[0]} L ${pts.join(' L ')} L ${pts[pts.length-1].split(',')[0]},${H-pad} L ${pad},${H-pad} Z`
+  const gradId = `sg-${id}`
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className={styles.sparkSvg} preserveAspectRatio="none">
@@ -61,7 +62,7 @@ function SparkLine({ history, cap, color }) {
       <line x1={pad} y1={capY} x2={W-pad} y2={capY} stroke="rgba(255,255,255,.15)" strokeWidth="1" strokeDasharray="4,4"/>
       <text x={pad+2} y={capY-3} fill="rgba(255,255,255,.3)" fontSize="7" fontFamily="monospace">cap</text>
       {/* Fill */}
-      <path d={fill} fill={`url(#sg-${cat.id})`}/>
+      <path d={fill} fill={`url(#${gradId})`}/>
       {/* Line */}
       <path d={path} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       {/* Dots */}
@@ -138,7 +139,7 @@ function CategoryStats({ cat, color, isOver, txs, loadingTx, history, loadingHis
         {loadingHistory ? (
           <div className={styles.sparkLoading}>Loading...</div>
         ) : (
-          <SparkLine history={history} cap={cat.cap} color={color}/>
+          <SparkLine history={history} cap={cat.cap} color={color} id={cat.id}/>
         )}
         {history && history.length > 1 && (
           <div className={styles.sparkAvg}>
