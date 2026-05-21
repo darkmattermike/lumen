@@ -273,3 +273,20 @@
   cursor: pointer; transition: opacity var(--t-fast);
 }
 .actionBtnNeutral:hover { opacity: 0.75; }
+
+/* ── Mobile — panel drops down from top, full width ── */
+@media (max-width: 768px) {
+  .wrap {
+    position: static;
+  }
+  .bubble {
+    position: fixed;
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-height: 70dvh;
+    transform: none;
+    z-index: 400;
+  }
+}
