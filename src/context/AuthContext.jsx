@@ -13,6 +13,15 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const refreshPromise        = useRef(null)
   const refreshTimerRef       = useRef(null)
+  const tokenExpiryRef        = useRef(null) // timestamp when current token expires
+
+  // ── Decode JWT expiry without a library ──────────────────────
+  function getTokenExpiry(token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.exp ? payload.exp * 1000 : null // convert to ms
+    } catch { return null }
+  }
 
   // ── Silent refresh ────────────────────────────────────────────
   const silentRefresh = useCallback(async () => {
@@ -22,12 +31,15 @@ export function AuthProvider({ children }) {
     refreshPromise.current = api.refresh()
       .then(data => {
         localStorage.setItem('lumen_token', data.token)
+        tokenExpiryRef.current = getTokenExpiry(data.token)
         setUser(data.user)
-        scheduleProactiveRefresh()
+        scheduleProactiveRefresh(data.token)
         return data.token
       })
       .catch(() => {
+        // Refresh token is gone/expired — user must log in again
         localStorage.removeItem('lumen_token')
+        tokenExpiryRef.current = null
         setUser(null)
         clearProactiveRefresh()
         return null
@@ -38,11 +50,19 @@ export function AuthProvider({ children }) {
   }, []) // eslint-disable-line
 
   // ── Proactive refresh timer ───────────────────────────────────
-  function scheduleProactiveRefresh() {
+  // Schedules the next refresh 2 minutes before the token actually expires,
+  // using the real expiry from the JWT instead of a fixed offset.
+  function scheduleProactiveRefresh(token) {
     clearProactiveRefresh()
-    refreshTimerRef.current = setTimeout(() => {
+    const expiry = token ? getTokenExpiry(token) : tokenExpiryRef.current
+    if (!expiry) return
+    const msUntilRefresh = expiry - Date.now() - 2 * 60 * 1000 // 2 min buffer
+    if (msUntilRefresh <= 0) {
+      // Already expired or very close — refresh immediately
       silentRefresh()
-    }, PROACTIVE_MS)
+      return
+    }
+    refreshTimerRef.current = setTimeout(() => { silentRefresh() }, msUntilRefresh)
   }
 
   function clearProactiveRefresh() {
@@ -51,6 +71,29 @@ export function AuthProvider({ children }) {
       refreshTimerRef.current = null
     }
   }
+
+  // ── Visibility change handler ─────────────────────────────────
+  // When user comes back to a backgrounded tab, check if the token
+  // has expired while the tab was sleeping (timers get throttled).
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState !== 'visible') return
+      const token  = localStorage.getItem('lumen_token')
+      const expiry = token ? getTokenExpiry(token) : null
+      if (!token || !expiry) {
+        // No token at all — try refresh cookie
+        silentRefresh()
+        return
+      }
+      const msLeft = expiry - Date.now()
+      if (msLeft < 2 * 60 * 1000) {
+        // Token expires in under 2 minutes (or already expired) — refresh now
+        silentRefresh()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [silentRefresh])
 
   // Expose silentRefresh so api.js can call it on any 401
   useEffect(() => {
@@ -65,20 +108,29 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('lumen_token')
 
     if (!token) {
-      // No token — try the refresh cookie (handles page reload)
+      // No token at all — try the refresh cookie (handles page reload after expiry)
       silentRefresh().finally(() => setLoading(false))
       return
     }
 
-    // Token exists — verify it's still good
+    // Check if the stored token is already expired before even calling me()
+    const expiry = getTokenExpiry(token)
+    if (expiry && expiry - Date.now() < 30 * 1000) {
+      // Expires in under 30 seconds — skip me(), go straight to refresh
+      silentRefresh().finally(() => setLoading(false))
+      return
+    }
+
+    // Token looks valid — verify with the server
     api.me()
       .then(u => {
         setUser(u)
+        tokenExpiryRef.current = expiry
         setLoading(false)
-        scheduleProactiveRefresh()
+        scheduleProactiveRefresh(token)
       })
       .catch(async () => {
-        // me() failed for any reason — always try refresh before giving up
+        // me() failed (expired, revoked, server error) — always try refresh first
         const newToken = await silentRefresh()
         if (!newToken) {
           localStorage.removeItem('lumen_token')

@@ -20,14 +20,28 @@ async function request(path, options = {}, _retry = true) {
   try { data = await res.json() } catch { data = {} }
 
   if (!res.ok) {
-    // Attempt silent token refresh on any 401 (expired OR missing token)
-    // Skip retry for the refresh endpoint itself to avoid infinite loops
-    if (res.status === 401 && _retry && !path.includes('/auth/refresh') && window.__lumenRefresh) {
-      try {
-        const newToken = await window.__lumenRefresh()
-        if (newToken) return request(path, options, false)
-      } catch {
-        // Refresh failed — fall through to throw the original error
+    // On 401: attempt silent token refresh before failing.
+    // Skip if: this IS the refresh endpoint (avoids infinite loop),
+    // or we've already retried once (_retry = false).
+    if (res.status === 401 && _retry && !path.includes('/auth/refresh')) {
+      if (window.__lumenRefresh) {
+        try {
+          const newToken = await window.__lumenRefresh()
+          if (newToken) {
+            // Got a new token — retry the original request with it
+            return request(path, options, false)
+          }
+          // __lumenRefresh returned null = refresh token expired, user logged out
+          // Don't throw — AuthContext already set user to null
+          const logoutErr = new Error('Session expired. Please sign in again.')
+          logoutErr.status  = 401
+          logoutErr.expired = true
+          throw logoutErr
+        } catch (refreshErr) {
+          // If it's our own formatted error, re-throw it
+          if (refreshErr.expired) throw refreshErr
+          // Otherwise refresh itself threw — fall through to original error
+        }
       }
     }
     const err = new Error(data.error || 'Request failed')
