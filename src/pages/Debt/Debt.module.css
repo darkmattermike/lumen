@@ -2,16 +2,27 @@
 
 .page {}
 
-/* Header — matches other pages */
+/* Header — matches Rules/Goals exactly */
 .header {
   padding: 16px 24px 14px;
   border-bottom: 1px solid var(--ink-5);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: start;
   background: radial-gradient(ellipse at 10% 50%, rgba(232,115,99,.06) 0%, transparent 50%),
               linear-gradient(180deg, #060b0f 0%, var(--bg-1) 100%);
 }
+.headerLeft  { min-width: 0; }
+.headerRight { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; padding-top: 4px; }
 .pre   { font-family:var(--font-mono);font-size:9px;color:rgba(232,115,99,.5);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:10px; }
 .title { font-family:var(--font-serif);font-size:48px;font-weight:200;color:var(--ink-0);margin-bottom:10px;line-height:1; }
-.sub   { font-size:13px;color:var(--ink-2);line-height:1.65; }
+.sub   { font-size:13px;color:var(--ink-2);line-height:1.65;max-width:480px; }
+
+.stats { display:flex;gap:8px;margin-top:20px;flex-wrap:wrap; }
+.stat  { padding:10px 18px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--ink-5); }
+.statL { font-family:var(--font-mono);font-size:9px;color:var(--ink-3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px; }
+.statV { font-family:var(--font-serif);font-size:22px;font-weight:300;color:var(--ink-1); }
 
 /* Empty */
 .empty { text-align:center;padding:60px 20px; }

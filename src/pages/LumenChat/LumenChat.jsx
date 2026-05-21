@@ -235,22 +235,22 @@ export default function LumenChat() {
   const isEmpty = messages.length === 0 && !loading
 
   return (
-    <div className={styles.pageOuter}>
-      <div className={styles.page}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <LumenDot
-              size={32}
-              mood={loading ? 'thinking' : 'idle'}
-              rings={!loading}
-              tooltip={loading ? null : "Ask me anything about your money"}
-            />
-            <div>
-              <div className={styles.headerTitle}>Lumen</div>
-              <div className={styles.headerSub}>Ask anything about your money</div>
-            </div>
+    <ScreenWrap>
+      {/* Header — matches Rules/Goals/Insights */}
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <LumenDot
+            size={44}
+            mood={loading ? 'thinking' : 'idle'}
+            rings={!loading}
+          />
+          <div>
+            <div className={styles.pre}>AI Assistant</div>
+            <h1 className={styles.title}>Lumen</h1>
+            <p className={styles.sub}>Ask anything about your money — queries, purchase decisions, goals, what-ifs.</p>
           </div>
+        </div>
+        <div className={styles.headerRight}>
           <div className={styles.modeChips}>
             {Object.entries(MODE_LABELS).filter(([k]) => k !== 'chat').map(([key, cfg]) => (
               <div key={key} className={styles.modeChip} style={{ '--chip-color': cfg.color }}>
@@ -259,9 +259,10 @@ export default function LumenChat() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Message area */}
-        <div className={styles.messages}>
+      {/* Chat body */}
+      <div className={styles.chatBody}>
           {isEmpty && (
             <div className={styles.empty}>
               <div className={styles.emptyTitle}>What do you want to know?</div>
@@ -346,7 +347,6 @@ export default function LumenChat() {
             </svg>
           </button>
         </div>
-      </div>
-    </div>
+    </ScreenWrap>
   )
 }

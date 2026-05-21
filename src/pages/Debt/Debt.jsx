@@ -212,10 +212,23 @@ export default function Debt() {
       <div className={styles.page}>
         {/* Header */}
         <div className={styles.header}>
-          <div>
-            <div className={styles.title}>Debt Strategy</div>
-            <div className={styles.sub}>Model your fastest and cheapest path to debt-free</div>
+          <div className={styles.headerLeft}>
+            <div className={styles.pre}>Finance</div>
+            <h1 className={styles.title}>Debt Strategy</h1>
+            <p className={styles.sub}>Model your fastest and cheapest path to debt-free.</p>
           </div>
+          {hasDebts && (
+            <div className={styles.headerRight}>
+              <div className={styles.stat}>
+                <div className={styles.statL}>Total Debt</div>
+                <div className={styles.statV} style={{ color: 'var(--debt)' }}>${fmt(totalDebt)}</div>
+              </div>
+              <div className={styles.stat}>
+                <div className={styles.statL}>Monthly Payments</div>
+                <div className={styles.statV}>${fmt(totalMinPayment)}</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {!hasDebts ? (

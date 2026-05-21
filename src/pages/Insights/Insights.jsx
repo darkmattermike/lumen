@@ -554,10 +554,16 @@ export default function Insights() {
     <ScreenWrap>
       <div className={styles.page}>
         <div className={styles.header}>
-          <LumenDot size={28} mood="happy" />
-          <div>
-            <div className={styles.pageTitle}>{current.title}</div>
-            <div className={styles.pageSub}>Long-term financial intelligence</div>
+          <div className={styles.headerLeft}>
+            <div className={styles.pre}>Intelligence</div>
+            <h1 className={styles.title}>Insights</h1>
+            <p className={styles.sub}>Long-term financial intelligence — DNA, net worth, decisions, and behavioral patterns.</p>
+          </div>
+          <div className={styles.headerRight}>
+            <div className={styles.stat}>
+              <div className={styles.statL}>Current View</div>
+              <div className={styles.statV}>{current.title}</div>
+            </div>
           </div>
         </div>
 
