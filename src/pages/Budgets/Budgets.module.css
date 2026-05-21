@@ -1,5 +1,5 @@
 .header {
-  padding: 28px 32px 20px;
+  padding: 16px 24px 14px;
   border-bottom: 1px solid var(--ink-5);
   display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start;
   background: radial-gradient(ellipse at 90% 20%,rgba(167,139,255,.1) 0%,transparent 50%),linear-gradient(180deg,#0a0810 0%,var(--bg-1) 100%);
@@ -23,12 +23,12 @@
 .addBtn:hover { background:var(--safe);color:#040608; }
 
 /* 60/40 split */
-.body { padding:20px 32px;display:grid;grid-template-columns:7fr 3fr;gap:28px;align-items:start; }
+.body { padding:14px 24px;display:grid;grid-template-columns:7fr 3fr;gap:28px;align-items:start; }
 
 /* ── Category card ── */
 .catCard {
   background:rgba(255,255,255,.02);border:1px solid var(--ink-5);
-  border-radius:10px;padding:8px 12px;margin-bottom:6px;
+  border-radius:10px;padding:6px 10px;margin-bottom:4px;
   transition:border-color var(--t-fast);
 }
 .catCard:hover { border-color:var(--ink-3); }

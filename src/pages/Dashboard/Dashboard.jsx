@@ -6,7 +6,6 @@ import PressureGauge from '../../components/PressureGauge/PressureGauge'
 import BillRow from '../../components/BillRow/BillRow'
 import WhatIfTheater from '../../components/WhatIfTheater/WhatIfTheater'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
-import CashFlowChart from '../../components/CashFlowChart/CashFlowChart'
 import HealthScore from '../../components/HealthScore/HealthScore'
 import { AnimatedNumber } from '../../hooks/useCountUp'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
@@ -177,9 +176,6 @@ export default function Dashboard() {
         </div>
 
         <div className={styles.aside}>
-          {/* Phase D: Cash Flow Forecast Chart */}
-          <CashFlowChart />
-
           <div className={styles.asideLabel}>Bill Schedule</div>
           {billRows.length > 0
             ? billRows.map(b => <BillRow key={b.id} {...b} />)

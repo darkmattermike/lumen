@@ -5,6 +5,7 @@ import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useState } from 'react'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
+import CashFlowChart from '../../components/CashFlowChart/CashFlowChart'
 import styles from './Analytics.module.css'
 
 function fmtK(n) {

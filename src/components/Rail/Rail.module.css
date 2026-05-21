@@ -126,7 +126,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 52px;
+    max-width: 40px;
     line-height: 1;
   }
 }

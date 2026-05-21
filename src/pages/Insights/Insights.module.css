@@ -33,7 +33,7 @@
 .tabActive { color: var(--goal) !important; border-bottom-color: var(--goal) !important; }
 
 /* Content */
-.content { padding: 24px 32px; max-width: 760px; }
+.content { padding: 14px 24px; max-width: 760px; }
 .loading { font-family:var(--font-mono);font-size:10px;color:var(--ink-3);padding:24px 0; }
 
 /* Empty states */

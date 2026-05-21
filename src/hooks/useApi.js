@@ -1,25 +1,52 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 /**
- * useApi — fetch data from an API function on mount and on manual refresh
- * @param {Function} apiFn — async function that returns data
- * @param {Array} deps — extra dependencies to re-fetch on
+ * useApi — stale-while-revalidate data fetching.
+ * - Shows cached data immediately (no loading flash for repeat visits)
+ * - Silently refreshes in the background
+ * - Falls back to loading state only on first-ever fetch
  */
-export function useApi(apiFn, deps = []) {
-  const [data, setData]       = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
 
-  const fetch = useCallback(() => {
-    setLoading(true)
-    setError(null)
-    apiFn()
-      .then(setData)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
+const cache = new Map() // in-memory cache, lives for the browser session
+
+export function useApi(apiFn, deps = []) {
+  const cacheKey = apiFn.toString().slice(0, 120)
+
+  const [data, setData]       = useState(() => cache.get(cacheKey) ?? null)
+  const [loading, setLoading] = useState(() => !cache.has(cacheKey))
+  const [error, setError]     = useState(null)
+  const mounted = useRef(true)
+
+  const fetch = useCallback((opts = {}) => {
+    const { silent = false } = opts
+    if (!silent) setError(null)
+
+    return apiFn()
+      .then(result => {
+        if (!mounted.current) return
+        cache.set(cacheKey, result)
+        setData(result)
+        setLoading(false)
+      })
+      .catch(err => {
+        if (!mounted.current) return
+        setError(err.message)
+        setLoading(false)
+      })
   }, deps) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { fetch() }, [fetch])
+  useEffect(() => {
+    mounted.current = true
+    // If we have cached data, refresh silently in background
+    if (cache.has(cacheKey)) {
+      fetch({ silent: true })
+    } else {
+      fetch()
+    }
+    return () => { mounted.current = false }
+  }, [fetch])
 
-  return { data, loading, error, refresh: fetch }
+  const refresh = useCallback(() => fetch(), [fetch])
+
+  return { data, loading, error, refresh }
 }

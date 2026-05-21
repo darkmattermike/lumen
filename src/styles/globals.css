@@ -39,6 +39,7 @@
   --text-primary:   var(--ink-0);
   --text-secondary: var(--ink-2);
   --text-tertiary:  var(--ink-3);
+  --rail-w:      48px;
   --max-w:       1400px;
   --screen-r:    22px;
   --pad-x:       44px;
@@ -355,9 +356,7 @@ body {
   }
 
   /* Push page content above the bottom tab bar */
-  body {
-    padding-bottom: var(--tab-bar-h);
-  }
+  /* body padding removed — handled by .main in App.module.css */
 
   #root {
     height: auto;
@@ -507,9 +506,14 @@ select option {
 }
 
 /* ── Prevent iOS auto-zoom on input focus ── */
-/* iOS zooms in when input font-size < 16px — this stops it */
-@media (max-width: 768px) {
-  input, select, textarea {
-    font-size: 16px !important;
+/* iOS zooms when font-size < 16px. We set a CSS variable approach:
+   inputs use font-size: max(16px, inherit) so iOS never zooms,
+   but component-level styles still control visual appearance via em units.
+   The key is we only enforce this minimum on mobile touchscreens. */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em) !important;
   }
 }

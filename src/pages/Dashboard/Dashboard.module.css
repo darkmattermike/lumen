@@ -86,7 +86,7 @@
 }
 
 .zone {
-  padding: 28px 30px;
+  padding: 14px 18px;
   border-right: 1px solid rgba(93, 202, 165, 0.08);
   border-bottom: 1px solid rgba(93, 202, 165, 0.08);
 }
@@ -97,7 +97,7 @@
   font-size: 9px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 .now .zoneTag { color: rgba(93, 202, 165, 0.7); }
 .was .zoneTag { color: rgba(74, 81, 97, 0.9); }
@@ -106,10 +106,10 @@
 
 .zoneVal {
   font-family: var(--font-serif);
-  font-size: 44px;
+  font-size: 32px;
   font-weight: 200;
   line-height: 1;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .now .zoneVal { color: var(--safe); }
 .was .zoneVal { color: rgba(184, 191, 204, 0.65); }
@@ -154,7 +154,7 @@
 /* ── Body ── */
 .body {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 1fr 300px;
   border-top: 1px solid rgba(93, 202, 165, 0.06);
 }
 
@@ -162,7 +162,7 @@
 .aside {
   background: rgba(255, 255, 255, 0.02);
   border-left: 1px solid rgba(93, 202, 165, 0.1);
-  padding: 28px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -174,7 +174,7 @@
   color: rgba(74, 81, 97, 0.9);
   letter-spacing: 2px;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
 .insightBlue {
@@ -256,7 +256,7 @@
   .dotCol { display: none; }
   .rightCol { min-width: 0; }
   .amount {
-    font-size: 56px;
+    font-size: 44px;
     letter-spacing: -1px;
   }
   .prose { font-size: 15px; margin-top: 12px; }

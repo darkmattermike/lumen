@@ -4,7 +4,7 @@
 
 /* Header — matches other pages */
 .header {
-  padding: 28px 32px 24px;
+  padding: 16px 24px 14px;
   border-bottom: 1px solid var(--ink-5);
   background: radial-gradient(ellipse at 10% 50%, rgba(232,115,99,.06) 0%, transparent 50%),
               linear-gradient(180deg, #060b0f 0%, var(--bg-1) 100%);

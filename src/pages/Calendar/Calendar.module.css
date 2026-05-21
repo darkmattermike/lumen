@@ -1,4 +1,4 @@
-.header { padding: 28px 32px 20px; border-bottom: 1px solid var(--ink-5); display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start; background: radial-gradient(ellipse at 50% 0%,rgba(240,176,76,.08) 0%,transparent 50%),linear-gradient(180deg,#0d0b07 0%,var(--bg-1) 100%); }
+.header { padding: 16px 24px 14px; border-bottom: 1px solid var(--ink-5); display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start; background: radial-gradient(ellipse at 50% 0%,rgba(240,176,76,.08) 0%,transparent 50%),linear-gradient(180deg,#0d0b07 0%,var(--bg-1) 100%); }
 .pre { font-family: var(--font-mono); font-size: 9px; color: rgba(240,176,76,.5); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px; }
 .title { font-family: var(--font-serif); font-size: 48px; font-weight: 200; color: var(--ink-0); margin-bottom: 10px; line-height: 1; }
 .sub { font-size: 13px; color: var(--ink-2); line-height: 1.65; }
@@ -471,7 +471,7 @@
 }
 
 /* ── Agenda timeline ── */
-.agenda { padding: 0 32px 60px; }
+.agenda { padding: 0 24px 40px; }
 
 .agendaEmpty {
   padding: 40px 0; font-size: 13px; color: var(--ink-3); line-height: 1.65;
