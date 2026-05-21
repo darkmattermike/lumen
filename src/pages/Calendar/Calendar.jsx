@@ -535,15 +535,16 @@ export default function Calendar() {
                 const events    = cell.month === 'cur' ? (eventMap[cell.day] || []) : []
                 const isToday   = isCurrentMonth && cell.month === 'cur' && cell.day === today.getDate()
                 const isSelected = selectedDay === cell.day && cell.month === 'cur'
-                const visible   = events.slice(0, 2)
-                const overflow  = events.length - visible.length
+                const isPastCell = isCurrentMonth && cell.month === 'cur' && cell.day < today.getDate()
+                // Unique dot colors per event type (max 4 dots)
+                const dots = events.slice(0, 4)
                 return (
                   <div key={i}
                     className={[
                       styles.cell,
                       cell.month !== 'cur' ? styles.otherMonth : '',
                       isToday ? styles.today : '',
-                      events.length > 0 ? styles.hasEvent : '',
+                      isPastCell ? styles.pastCell : '',
                       isSelected ? styles.cellSelected : '',
                     ].join(' ')}
                     onClick={() => {
@@ -552,13 +553,12 @@ export default function Calendar() {
                     }}
                   >
                     <div className={styles.cellDate}>{cell.day}</div>
-                    {visible.map((ev, ei) => (
-                      <div key={ei} className={`${styles.calEvent} ${styles[ev.type] || ''}`}>
-                        {ev.icon} {ev.name}
+                    {dots.length > 0 && (
+                      <div className={styles.cellDots}>
+                        {dots.map((ev, ei) => (
+                          <div key={ei} className={`${styles.cellDot} ${styles[`dot_${ev.type}`] || styles.dot_bill}`} />
+                        ))}
                       </div>
-                    ))}
-                    {overflow > 0 && (
-                      <div className={styles.calEventMore}>+{overflow} more</div>
                     )}
                   </div>
                 )
@@ -737,14 +737,13 @@ export default function Calendar() {
           </div>
         </div>
 
-        {/* ── Agenda timeline ── */}
+        {/* ── Agenda — Concept 1: Left-rail timeline ── */}
         <div className={styles.agenda}>
           {allSorted.length === 0 ? (
             <div className={styles.agendaEmpty}>
               No recurring items yet. Click <strong>+ Add Recurring</strong> to get started.
             </div>
           ) : (() => {
-            // Group by day
             const byDay = {}
             allSorted.forEach(ev => {
               const d = ev.day_of_month
@@ -754,62 +753,76 @@ export default function Calendar() {
             const days = Object.keys(byDay).map(Number).sort((a,b) => a-b)
             let todayInserted = false
 
-            return days.map(day => {
-              const evs = byDay[day]
-              const isPast = isCurrentMonth && day < todayDay
-              const isToday = isCurrentMonth && day === todayDay
-              const date = new Date(viewDate.year, viewDate.month, day)
-              const dayLabel = date.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' })
-              const daysAway = isCurrentMonth ? day - todayDay : null
+            return (
+              <div className={styles.tlWrap}>
+                {days.map(day => {
+                  const evs = byDay[day]
+                  const isPast = isCurrentMonth && day < todayDay
+                  const date = new Date(viewDate.year, viewDate.month, day)
+                  const dateLabel = date.toLocaleDateString('en-US', { month:'short', day:'numeric' })
+                  const weekday  = date.toLocaleDateString('en-US', { weekday:'short' })
+                  const daysAway = isCurrentMonth ? day - todayDay : null
 
-              // Insert today marker before first upcoming day
-              let showTodayMarker = false
-              if (isCurrentMonth && !todayInserted && day >= todayDay) {
-                todayInserted = true
-                showTodayMarker = true
-              }
+                  let showTodayMarker = false
+                  if (isCurrentMonth && !todayInserted && day >= todayDay) {
+                    todayInserted = true
+                    showTodayMarker = true
+                  }
 
-              return (
-                <div key={day}>
-                  {showTodayMarker && (
-                    <div className={styles.todayMarker}>
-                      <div className={styles.todayDot} />
-                      <div className={styles.todayLabel}>Today · {new Date(viewDate.year, viewDate.month, todayDay).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
-                      <div className={styles.todayLine} />
+                  return (
+                    <div key={day}>
+                      {/* Today badge */}
+                      {showTodayMarker && (
+                        <div className={styles.tlTodayRow}>
+                          <div className={styles.tlTodayBadge}>
+                            ● Today · {new Date(viewDate.year, viewDate.month, todayDay).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+                          </div>
+                          <div className={styles.tlTodayLine} />
+                        </div>
+                      )}
+                      {/* Each event as a timeline item */}
+                      {evs.map((ev, i) => {
+                        const color = typeColor[ev.type] || 'var(--warn)'
+                        const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
+                        return (
+                          <div key={`${ev.id}-${i}`} className={`${styles.tlItem} ${isPast ? styles.tlItemPast : ''}`}>
+                            {/* Date column */}
+                            <div className={styles.tlDate}>
+                              <div className={styles.tlDateDay}>{weekday}</div>
+                              <div className={styles.tlDateNum}>{dateLabel}</div>
+                            </div>
+                            {/* Rail dot */}
+                            <div className={styles.tlDotWrap}>
+                              <div className={styles.tlDot} style={{borderColor: isPast ? 'var(--ink-4)' : color}} />
+                            </div>
+                            {/* Content */}
+                            <div className={styles.tlBody}>
+                              <div className={styles.tlName}>{ev.icon} {ev.name}</div>
+                              <div className={styles.tlMeta}>
+                                {ev.frequency === 'biweekly' ? 'biweekly' : ev.type}
+                                {isCurrentMonth && !isPast && daysAway !== null && daysAway > 0 && (
+                                  <span style={{color:'var(--warn)'}}> · {daysAway === 1 ? 'tomorrow' : `in ${daysAway} days`}</span>
+                                )}
+                                {isPast && <span> · passed</span>}
+                              </div>
+                            </div>
+                            {/* Amount */}
+                            <div className={styles.tlAmt} style={{color: isPast ? 'var(--ink-3)' : color}}>
+                              {ev.type === 'income' ? '+' : '−'}${fmt(ev.amount)}
+                            </div>
+                            {/* Actions */}
+                            <button className={styles.tlEdit}
+                              onClick={() => { setEditItem(recurring.find(r => r.id === ev.id) || ev); setShowModal(true) }}
+                              title="Edit">✎</button>
+                            <button className={styles.tlDelete} onClick={() => handleDelete(ev.id)} title="Delete">✕</button>
+                          </div>
+                        )
+                      })}
                     </div>
-                  )}
-                  {!isToday && (
-                    <div className={styles.agendaDayHeader}>
-                      <div className={styles.agendaDayLabel}>
-                        {dayLabel}
-                        {daysAway !== null && daysAway > 0 && <span className={styles.agendaDayAway}> · {daysAway === 1 ? 'Tomorrow' : `${daysAway} days`}</span>}
-                        {isPast && <span className={styles.agendaDayPast}> · passed</span>}
-                      </div>
-                      <div className={styles.agendaDayLine} />
-                    </div>
-                  )}
-                  {evs.map((ev, i) => {
-                    const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
-                    const baseItem = recurring.find(r => r.id === ev.id) || ev
-                    return (
-                      <RecurringRow
-                        key={`${ev.id}-${ev.day_of_month}-${i}`}
-                        ev={ev}
-                        isPast={isPast}
-                        daysUntil={upcomingEntry?.daysUntil}
-                        typeColor={typeColor}
-                        freqLabel={ev.frequency === 'biweekly' ? 'biweekly' : ev.type}
-                        isCurrentMonth={isCurrentMonth}
-                        accounts={acctData?.accounts || []}
-                        onDeleted={handleDelete}
-                        onUpdated={handleUpdated}
-                        agendaStyle
-                      />
-                    )
-                  })}
-                </div>
-              )
-            })
+                  )
+                })}
+              </div>
+            )
           })()}
         </div>
         <RecurringSuggestions onAccepted={refresh} />
