@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    {
+      "source": "/api/auth/google/callback",
+      "destination": "https://lumen-api-production-6f21.up.railway.app/api/auth/google/callback"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
