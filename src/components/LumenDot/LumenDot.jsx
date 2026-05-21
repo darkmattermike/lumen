@@ -2,16 +2,17 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import styles from './LumenDot.module.css'
 
 /**
- * LumenDot — the Lumen orb. Alive, reactive, opinionated about its own animations.
+ * LumenDot — the Lumen orb. A living financial spirit.
  *
  * Props:
  *   size     {number}  — diameter in px (default 44)
  *   rings    {boolean} — expanding ring pulses (default false)
- *   speed    {string}  — animation duration override e.g. '2.5s'
- *   mood     {string}  — 'idle' | 'thinking' | 'speaking' | 'excited' | 'happy' | 'alert' | 'loading'
- *   unread   {number}  — unread count, triggers wiggle + particle burst
- *   onClick  {fn}      — tap handler, triggers excited burst
- *   tooltip  {string}  — hover quip from Lumen
+ *   speed    {string}  — animation duration override
+ *   mood     {string}  — 'idle' | 'thinking' | 'speaking' | 'excited' | 'happy' | 'alert' | 'loading' | 'unread'
+ *   unread   {number}  — unread count → badge + wiggle
+ *   onClick  {fn}      — tap handler
+ *   tooltip  {string}  — hover quip
+ *   spirit   {boolean} — if true, orb occasionally does spontaneous micro-animations (default true on larger sizes)
  */
 export default function LumenDot({
   size     = 44,
@@ -21,59 +22,96 @@ export default function LumenDot({
   unread   = 0,
   onClick,
   tooltip,
+  spirit,
 }) {
-  const [particles,    setParticles]    = useState([])
-  const [currentMood,  setCurrentMood]  = useState(mood)
-  const [showTooltip,  setShowTooltip]  = useState(false)
-  const [tooltipText,  setTooltipText]  = useState(tooltip || '')
-  const prevUnread = useRef(unread)
-  const orbRef     = useRef(null)
+  const enableSpirit = spirit !== undefined ? spirit : size >= 28
+  const [particles,   setParticles]   = useState([])
+  const [currentMood, setCurrentMood] = useState(mood)
+  const [showTooltip, setShowTooltip] = useState(false)
+  const [hovered,     setHovered]     = useState(false)
+  const [spiritAnim,  setSpiritAnim]  = useState(null) // spontaneous micro-anim class
+  const prevUnread  = useRef(unread)
+  const prevMood    = useRef(mood)
   const tooltipTimer = useRef(null)
+  const spiritTimer  = useRef(null)
 
-  // Sync mood prop
-  useEffect(() => { setCurrentMood(mood) }, [mood])
+  // Sync mood prop — animate transition
+  useEffect(() => {
+    if (mood !== prevMood.current) {
+      prevMood.current = mood
+    }
+    setCurrentMood(mood)
+  }, [mood])
 
   // Particle burst when unread count increases
   useEffect(() => {
     if (unread > prevUnread.current && unread > 0) {
-      burstParticles(6)
-      setCurrentMood('alert')
+      burstParticles(7)
     }
     prevUnread.current = unread
   }, [unread])
 
-  // Wiggle mood if there are unreads
+  // Unread wiggle
   useEffect(() => {
     if (unread > 0 && mood === 'idle') setCurrentMood('unread')
     else if (unread === 0 && currentMood === 'unread') setCurrentMood('idle')
   }, [unread, mood])
 
+  // Spirit mode — occasional spontaneous expressions when idle
+  useEffect(() => {
+    if (!enableSpirit || currentMood !== 'idle') return
+    function scheduleSpirit() {
+      const delay = 6000 + Math.random() * 10000 // 6-16s between moments
+      spiritTimer.current = setTimeout(() => {
+        const anims = ['spirit-curiosity', 'spirit-nudge', 'spirit-shimmy', 'spirit-peek']
+        const pick  = anims[Math.floor(Math.random() * anims.length)]
+        setSpiritAnim(pick)
+        setTimeout(() => { setSpiritAnim(null); scheduleSpirit() }, 800)
+      }, delay)
+    }
+    scheduleSpirit()
+    return () => clearTimeout(spiritTimer.current)
+  }, [currentMood, enableSpirit])
+
   function burstParticles(count = 8) {
     const newParticles = Array.from({ length: count }, (_, i) => ({
       id:    Date.now() + i,
-      angle: (360 / count) * i + Math.random() * 30 - 15,
-      dist:  size * 0.6 + Math.random() * size * 0.4,
-      scale: 0.3 + Math.random() * 0.5,
-      dur:   400 + Math.random() * 300,
+      angle: (360 / count) * i + Math.random() * 28 - 14,
+      dist:  size * 0.65 + Math.random() * size * 0.45,
+      scale: 0.25 + Math.random() * 0.55,
+      dur:   380 + Math.random() * 320,
+      hue:   Math.random() > 0.7 ? 40 : 0, // some particles shift hue slightly
     }))
     setParticles(p => [...p, ...newParticles])
     setTimeout(() => {
       setParticles(p => p.filter(x => !newParticles.find(n => n.id === x.id)))
-    }, 800)
+    }, 900)
   }
 
   function handleClick(e) {
+    if (!onClick) return
     setCurrentMood('excited')
-    burstParticles(10)
-    setTimeout(() => setCurrentMood(mood === 'idle' && unread > 0 ? 'unread' : mood), 600)
-    onClick?.(e)
+    burstParticles(12)
+    setTimeout(() => {
+      setCurrentMood(unread > 0 ? 'unread' : mood)
+    }, 700)
+    onClick(e)
   }
 
   function handleMouseEnter() {
-    if (!tooltip && !tooltipText) return
-    tooltipTimer.current = setTimeout(() => setShowTooltip(true), 600)
+    setHovered(true)
+    if (tooltip) {
+      tooltipTimer.current = setTimeout(() => setShowTooltip(true), 500)
+    }
+    // Tiny curiosity bump on hover
+    if (currentMood === 'idle' && enableSpirit) {
+      setSpiritAnim('spirit-hover')
+      setTimeout(() => setSpiritAnim(null), 300)
+    }
   }
+
   function handleMouseLeave() {
+    setHovered(false)
     clearTimeout(tooltipTimer.current)
     setShowTooltip(false)
   }
@@ -96,10 +134,12 @@ export default function LumenDot({
     cursor: onClick ? 'pointer' : 'default',
   }
 
+  const spiritClass = spiritAnim ? styles[spiritAnim] : ''
+  const hovClass    = hovered && !spiritAnim ? styles.orbHovered : ''
+
   const dot = (
     <span
-      ref={orbRef}
-      className={`dot ${moodClass} ${styles.orb}`}
+      className={`dot ${moodClass} ${styles.orb} ${spiritClass} ${hovClass} ${styles.orbEnter}`}
       style={dotStyle}
       onClick={onClick ? handleClick : undefined}
       onMouseEnter={handleMouseEnter}
@@ -111,18 +151,19 @@ export default function LumenDot({
           key={p.id}
           className={styles.particle}
           style={{
-            '--angle':  `${p.angle}deg`,
-            '--dist':   `${p.dist}px`,
-            '--scale':  p.scale,
-            '--dur':    `${p.dur}ms`,
-            width:  Math.max(2, size * 0.1),
-            height: Math.max(2, size * 0.1),
+            '--angle': `${p.angle}deg`,
+            '--dist':  `${p.dist}px`,
+            '--scale': p.scale,
+            '--dur':   `${p.dur}ms`,
+            '--hue':   `${p.hue}deg`,
+            width:  Math.max(2, size * 0.11),
+            height: Math.max(2, size * 0.11),
           }}
         />
       ))}
 
       {/* Unread badge */}
-      {unread > 0 && size >= 16 && (
+      {unread > 0 && size >= 14 && (
         <span className={styles.badge} style={{ fontSize: Math.max(7, size * 0.22) }}>
           {unread > 9 ? '9+' : unread}
         </span>
@@ -130,14 +171,13 @@ export default function LumenDot({
     </span>
   )
 
-  // Tooltip quip
-  const tooltipEl = showTooltip && tooltipText ? (
-    <span className={styles.tooltip}>{tooltipText}</span>
+  const tooltipEl = showTooltip && tooltip ? (
+    <span className={styles.tooltip}>{tooltip}</span>
   ) : null
 
   if (!rings) {
     return (
-      <span className={styles.wrap} style={{ width: size, height: size }}>
+      <span className={styles.wrap} style={{ width: size, height: size, position: 'relative' }}>
         {dot}
         {tooltipEl}
       </span>
@@ -145,17 +185,16 @@ export default function LumenDot({
   }
 
   return (
-    <div className={styles.ringWrap} style={{ width: size + 20, height: size + 20 }}>
-      {/* Rings — more of them, staggered */}
-      {[0, 0.7, 1.4, 2.1].map((delay, i) => (
+    <div className={styles.ringWrap} style={{ width: size + 24, height: size + 24 }}>
+      {[0, 0.65, 1.3, 2.0].map((delay, i) => (
         <span
           key={i}
           className={styles.ring}
           style={{
-            width:          size + 20,
-            height:         size + 20,
+            width:          size + 24,
+            height:         size + 24,
             animationDelay: `${delay}s`,
-            opacity:        1 - i * 0.15,
+            opacity:        0.9 - i * 0.18,
           }}
         />
       ))}
