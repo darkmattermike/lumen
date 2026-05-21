@@ -1,13 +1,13 @@
 {
-  "name": "Lumen · Personal Finance",
+  "name": "Lumen",
   "short_name": "Lumen",
   "description": "Your financial picture, clearly.",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0e1117",
-  "theme_color": "#5dcaa5",
-  "orientation": "portrait-primary",
+  "background_color": "#040608",
+  "theme_color": "#040608",
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/lumen_icon_192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/lumen_icon_512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

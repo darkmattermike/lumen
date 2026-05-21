@@ -35,5 +35,7 @@
   .main {
     width: 100%;
     overflow-x: hidden;
+    /* Push content above the fixed bottom nav + iPhone home indicator */
+    padding-bottom: calc(var(--tab-bar-h, 60px) + env(safe-area-inset-bottom) + 8px);
   }
 }
