@@ -3,6 +3,8 @@ import { useAuth } from '../../context/AuthContext'
 import LumenDot from '../LumenDot/LumenDot'
 import styles from './AuthGate.module.css'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 function GoogleIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
@@ -15,69 +17,34 @@ function GoogleIcon() {
 }
 
 export default function AuthGate() {
-  const { login, googleLogin, register } = useAuth()
+  const { login, register, silentRefresh } = useAuth()
   const [mode, setMode]       = useState('login')
   const [form, setForm]       = useState({ name: '', email: '', password: '' })
   const [termsAgreed, setTermsAgreed]   = useState(false)
   const [rememberMe, setRememberMe]     = useState(true)
   const [error, setError]     = useState('')
   const [loading, setLoading] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
-  const [googleReady, setGoogleReady]     = useState(false)
 
-  // Load Google Identity Services
+  // Handle Google OAuth callback — token arrives in URL query param
   useEffect(() => {
-    if (window.google?.accounts) { setGoogleReady(true); return }
-    const script = document.createElement('script')
-    script.src = 'https://accounts.google.com/gsi/client'
-    script.async = true
-    script.defer = true
-    script.onload = () => {
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        callback:  handleGoogleCredential,
-      })
-      setGoogleReady(true)
+    const params = new URLSearchParams(window.location.search)
+    const googleToken = params.get('google_token')
+    const authError   = params.get('auth_error')
+
+    if (googleToken) {
+      // Store the access token and trigger a silent refresh to get user info
+      localStorage.setItem('lumen_token', googleToken)
+      // Clean the URL
+      window.history.replaceState({}, '', window.location.pathname)
+      // Trigger auth context to pick up the new token
+      silentRefresh()
     }
-    document.head.appendChild(script)
+
+    if (authError) {
+      setError(decodeURIComponent(authError))
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [])
-
-  async function handleGoogleCredential(response) {
-    setGoogleLoading(true)
-    setError('')
-    try {
-      await googleLogin(response.credential)
-    } catch (err) {
-      setError(err.message || 'Google sign-in failed. Please try again.')
-    } finally {
-      setGoogleLoading(false)
-    }
-  }
-
-  function triggerGoogle() {
-    if (!googleReady || !window.google?.accounts) {
-      setError('Google sign-in is loading. Please try again in a moment.')
-      return
-    }
-    // Re-initialize with latest callback (closure captures current state)
-    window.google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      callback:  handleGoogleCredential,
-    })
-    window.google.accounts.id.prompt(notification => {
-      // If One Tap is suppressed (e.g. user previously dismissed it),
-      // fall back to the popup flow
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        window.google.accounts.oauth2.initTokenClient({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          scope: 'email profile',
-          callback: () => {},
-        })
-        // Open a popup sign-in as fallback
-        window.google.accounts.id.prompt()
-      }
-    })
-  }
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -106,6 +73,11 @@ export default function AuthGate() {
     }
   }
 
+  function handleGoogle() {
+    // Simple redirect — no script loading, no timing issues, works everywhere
+    window.location.href = `${API_BASE}/api/auth/google/redirect`
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.glow} />
@@ -122,21 +94,20 @@ export default function AuthGate() {
 
         {/* Tabs */}
         <div className={styles.tabs}>
-          <button className={`${styles.tab} ${mode==='login' ? styles.tabOn : ''}`} onClick={() => { setMode('login'); setError('') }}>Sign In</button>
-          <button className={`${styles.tab} ${mode==='register' ? styles.tabOn : ''}`} onClick={() => { setMode('register'); setError('') }}>Create Account</button>
+          <button
+            className={`${styles.tab} ${mode==='login' ? styles.tabOn : ''}`}
+            onClick={() => { setMode('login'); setError('') }}
+          >Sign In</button>
+          <button
+            className={`${styles.tab} ${mode==='register' ? styles.tabOn : ''}`}
+            onClick={() => { setMode('register'); setError('') }}
+          >Create Account</button>
         </div>
 
-        {/* Google button — always visible */}
-        <button
-          className={styles.googleBtn}
-          onClick={triggerGoogle}
-          disabled={googleLoading}
-          type="button"
-        >
-          {googleLoading
-            ? <span className={styles.googleLoading}>Signing in...</span>
-            : <><GoogleIcon /><span>{mode === 'login' ? 'Continue with Google' : 'Sign up with Google'}</span></>
-          }
+        {/* Google button */}
+        <button className={styles.googleBtn} onClick={handleGoogle} type="button">
+          <GoogleIcon />
+          <span>{mode === 'login' ? 'Continue with Google' : 'Sign up with Google'}</span>
         </button>
 
         {/* Divider */}
@@ -151,22 +122,30 @@ export default function AuthGate() {
           {mode === 'register' && (
             <div className={styles.field}>
               <label className={styles.label} htmlFor="name">Name</label>
-              <input id="name" name="name" className={styles.input} value={form.name} onChange={handleChange} placeholder="Your name" autoComplete="name" />
+              <input id="name" name="name" className={styles.input} value={form.name}
+                onChange={handleChange} placeholder="Your name" autoComplete="name" />
             </div>
           )}
           <div className={styles.field}>
             <label className={styles.label} htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" className={styles.input} value={form.email} onChange={handleChange} placeholder="you@example.com" autoComplete="email" required />
+            <input id="email" name="email" type="email" className={styles.input}
+              value={form.email} onChange={handleChange}
+              placeholder="you@example.com" autoComplete="email" required />
           </div>
           <div className={styles.field}>
             <label className={styles.label} htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" className={styles.input} value={form.password} onChange={handleChange} placeholder={mode === 'register' ? '10+ chars, uppercase, number, symbol' : '••••••••'} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required />
+            <input id="password" name="password" type="password" className={styles.input}
+              value={form.password} onChange={handleChange}
+              placeholder={mode === 'register' ? '10+ chars, uppercase, number, symbol' : '••••••••'}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required />
           </div>
 
           {mode === 'login' && (
             <div className={styles.rememberRow}>
               <label className={styles.rememberLabel}>
-                <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} className={styles.rememberCheck} />
+                <input type="checkbox" checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className={styles.rememberCheck} />
                 <span>Remember me for 7 days</span>
               </label>
             </div>
@@ -174,10 +153,11 @@ export default function AuthGate() {
 
           {mode === 'register' && (
             <label className={styles.termsCheck}>
-              <input type="checkbox" checked={termsAgreed} onChange={e => setTermsAgreed(e.target.checked)} />
+              <input type="checkbox" checked={termsAgreed}
+                onChange={e => setTermsAgreed(e.target.checked)} />
               <span>
                 I agree to the{' '}
-                <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>,{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a>,{' '}
                 <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>, and{' '}
                 <a href="/data-usage" target="_blank" rel="noopener noreferrer">Data Usage Policy</a>
               </span>
