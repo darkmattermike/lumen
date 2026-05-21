@@ -10,7 +10,7 @@ import Accounts     from './pages/Accounts/Accounts'
 import Analytics    from './pages/Analytics/Analytics'
 import Calendar     from './pages/Calendar/Calendar'
 import Rules        from './pages/Rules/Rules'
-import GmailInbox  from './pages/GmailInbox/GmailInbox'
+import GmailInbox   from './pages/GmailInbox/GmailInbox'
 import Goals        from './pages/Goals/Goals'
 import Settings     from './pages/Settings/Settings'
 import LumenChat    from './pages/LumenChat/LumenChat'
@@ -28,7 +28,6 @@ function AppShell() {
   if (loading) return <LoadingShell />
   if (!user)   return <AuthGate />
 
-  // Show onboarding for new users who haven't completed it
   if (user && user.onboarding_complete === false) {
     return <Onboarding user={user} onComplete={() => { api.updateOnboarding(); completeOnboarding() }} />
   }
@@ -50,12 +49,13 @@ function AppShell() {
             <Route path="/gmail"        element={<GmailInbox />} />
             <Route path="/goals"        element={<Goals />} />
             <Route path="/settings"     element={<Settings />} />
-            <Route path="/chat"        element={<LumenChat />} />
-            <Route path="/debt"        element={<Debt />} />
-            <Route path="/insights"    element={<Insights />} />
-            <Route path="/terms"       element={<TermsOfService />} />
-            <Route path="/privacy"     element={<PrivacyPolicy />} />
-            <Route path="/data-usage"  element={<DataUsagePolicy />} />
+            <Route path="/chat"         element={<LumenChat />} />
+            <Route path="/debt"         element={<Debt />} />
+            <Route path="/insights"     element={<Insights />} />
+            {/* Also accessible when logged in so Settings can link to them */}
+            <Route path="/terms"        element={<TermsOfService />} />
+            <Route path="/privacy"      element={<PrivacyPolicy />} />
+            <Route path="/data-usage"   element={<DataUsagePolicy />} />
           </Routes>
         </main>
       </div>
@@ -67,7 +67,16 @@ function AppShell() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppShell />
+      {/*
+        Legal pages are public — rendered OUTSIDE AppShell so they never
+        hit the login gate. AppShell handles everything else via "/*".
+      */}
+      <Routes>
+        <Route path="/terms"      element={<TermsOfService />} />
+        <Route path="/privacy"    element={<PrivacyPolicy />} />
+        <Route path="/data-usage" element={<DataUsagePolicy />} />
+        <Route path="/*"          element={<AppShell />} />
+      </Routes>
     </AuthProvider>
   )
 }

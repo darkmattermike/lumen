@@ -285,44 +285,88 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
 
   const statsProps = { cat, color, isOver, txs, loadingTx, history, loadingHistory, editForm, setEF, editing, setEditing, saving, handleSaveEdit, onDelete, handleComplete, isDone, toggling }
 
+  const accentColor = isDone
+    ? 'rgba(93,202,165,.35)'
+    : isOver ? 'var(--debt)'
+    : cat.pct >= 80 ? 'var(--warn)'
+    : cat.pct === 0 ? 'var(--ink-5)'
+    : color
+
+  const barColor = isDone
+    ? 'rgba(93,202,165,.3)'
+    : isOver ? 'var(--debt)'
+    : cat.pct >= 80 ? 'var(--warn)'
+    : color
+
+  const rowBg = isOver
+    ? 'rgba(232,115,99,.04)'
+    : cat.pct >= 80 && !isDone ? 'rgba(240,176,76,.03)'
+    : 'transparent'
+
+  const spentColor = isDone ? 'var(--ink-3)'
+    : isOver ? 'var(--debt)'
+    : cat.pct >= 80 ? 'var(--warn)'
+    : cat.pct === 0 ? 'var(--ink-3)'
+    : color
+
   return (
-    <div className={[styles.catCard, open ? styles.catCardOpen : '', isDone ? styles.catCardDone : '', isOver ? styles.catCardOver : ''].join(' ')}>
-      {/* ── Header row ── */}
-      <div className={styles.catHeader} onClick={toggle}>
-        <div className={styles.catIcon} style={isDone ? {opacity:.5} : {}}>{cat.icon || '📦'}</div>
-        <div className={styles.catInfo}>
-          <div className={styles.catName} style={isDone ? {color:'var(--ink-3)',textDecoration:'line-through'} : {}}>{cat.name}</div>
-          <div className={styles.catPeriod}>{isDone ? '✓ Completed' : `${cat.period} · ${cat.pct}% used`}</div>
+    <>
+      <div
+        className={[styles.catRow, open ? styles.catRowOpen : '', isDone ? styles.catRowDone : ''].join(' ')}
+        style={{ borderLeftColor: accentColor, background: rowBg }}
+      >
+        <div className={styles.catRowInner} onClick={toggle}>
+          <div className={styles.catRowLeft}>
+            <span className={styles.catRowIcon} style={isDone ? { opacity: 0.4 } : {}}>{cat.icon || '📦'}</span>
+            <div>
+              <div className={styles.catRowName}>{cat.name}</div>
+              <div className={styles.catRowSub}>
+                {isDone ? '✓ Completed' : cat.pct === 0 ? `${cat.period} · nothing yet` : `${cat.period} · ${cat.pct}% used`}
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.catRowBar}>
+            <div className={styles.catBarTrack}>
+              <div className={styles.catBarFill} style={{ width: `${Math.min(cat.pct, 100)}%`, background: barColor }} />
+            </div>
+          </div>
+
+          <div className={styles.catRowRight}>
+            <div className={styles.catRowSpent} style={{ color: spentColor }}>${fmt(cat.spent)}</div>
+            <div className={styles.catRowCap}>of ${fmtK(cat.cap)}</div>
+          </div>
         </div>
-        <div className={styles.catNums}>
-          <div className={styles.catSpent} style={{color: isDone ? 'var(--ink-3)' : isOver ? 'var(--debt)' : color}}>${fmt(cat.spent)}</div>
-          <div className={styles.catCap}>of ${fmtK(cat.cap)}</div>
-        </div>
-        <div className={styles.catChevron} style={{transform: open ? 'rotate(180deg)' : 'rotate(0deg)'}}>›</div>
-        <div className={styles.catActions} onClick={e => e.stopPropagation()}>
+
+        <div className={styles.catRowActions} onClick={e => e.stopPropagation()}>
           <button className={`${styles.completeBtn} ${isDone ? styles.completeBtnOn : ''}`} onClick={handleComplete} disabled={toggling} title={isDone ? 'Mark incomplete' : 'Mark complete'}>✓</button>
           <button className={styles.deleteBtn} onClick={() => onDelete(cat.id)} title="Delete">✕</button>
         </div>
       </div>
 
-      {/* Progress bar */}
-      {!isDone && <AnimatedBar pct={pct} color={color} height={2}/>}
-      {isDone  && <div className={styles.doneBar}/>}
-      {!isDone && isOver && <div className={styles.catWarn}><span className="pdot" style={{background:'var(--debt)'}}/>Over budget by ${fmt(cat.spent - cat.cap)}</div>}
-      {!isDone && !isOver && cat.pct > 80 && <div className={styles.catWarn}><span className="pdot" style={{background:'var(--warn)'}}/>{cat.pct}% used — {daysLeft} days remain.</div>}
-
-      {/* Desktop: inline expansion */}
-      {open && (
-        <div className={styles.desktopDrawer}>
-          <CategoryStats {...statsProps}/>
+      {!isDone && isOver && (
+        <div className={styles.catWarn} style={{ marginLeft: 14 }}>
+          <span className="pdot" style={{ background: 'var(--debt)' }} />
+          Over budget by ${fmt(cat.spent - cat.cap)}
+        </div>
+      )}
+      {!isDone && !isOver && cat.pct > 80 && (
+        <div className={styles.catWarn} style={{ marginLeft: 14 }}>
+          <span className="pdot" style={{ background: 'var(--warn)' }} />
+          {cat.pct}% used — {daysLeft} days remain.
         </div>
       )}
 
-      {/* Mobile: bottom sheet */}
+      {open && (
+        <div className={styles.desktopDrawer}>
+          <CategoryStats {...statsProps} />
+        </div>
+      )}
+
       {sheetOpen && (
         <div className={styles.sheetOverlay} onClick={e => { if (e.target === e.currentTarget) closeSheet() }}>
-          <div className={styles.sheet}>
-            <div className={styles.sheetHandle} onTouchStart={onHandleTouchStart} style={{cursor:"grab"}}/>
+          <div className={styles.sheet} data-sheet>
+            <div className={styles.sheetHandle} onTouchStart={onHandleTouchStart} style={{ cursor: 'grab' }} />
             <div className={styles.sheetHeader}>
               <div>
                 <div className={styles.sheetTitle}>{cat.icon} {cat.name}</div>
@@ -330,11 +374,11 @@ function CategoryCard({ cat, onDelete, onToggleComplete, onRefresh }) {
               </div>
               <button className={styles.sheetClose} onClick={closeSheet}>✕</button>
             </div>
-            <CategoryStats {...statsProps}/>
+            <CategoryStats {...statsProps} />
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
