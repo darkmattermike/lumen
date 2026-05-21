@@ -545,15 +545,22 @@
 /* ── Mobile bottom sheet ── */
 .sheetOverlay {
   position: fixed; inset: 0; z-index: 500;
-  background: rgba(0,0,0,.6);
+  background: rgba(0,0,0,.65);
   display: flex; align-items: flex-end;
   animation: fadeIn .2s ease;
+  /* prevent touch scroll from passing through to page behind */
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 .sheet {
   width: 100%; background: var(--bg-2);
   border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--ink-4);
-  max-height: 88dvh; overflow-y: auto;
+  max-height: 91dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   animation: slideUp .25s cubic-bezier(.34,1.1,.64,1) both;
 }
 .sheetHandle {
@@ -612,3 +619,77 @@
 
 @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+/* ── Desktop drawer ── */
+.desktopDrawer {
+  border-top: 1px solid var(--ink-5);
+  background: rgba(255,255,255,.01);
+}
+
+/* ── Stats panel (shared) ── */
+.statsPanel { display: flex; flex-direction: column; }
+
+/* Progress bar with pace marker */
+.statBarRow  { padding: 14px 16px 10px; border-bottom: 1px solid var(--ink-5); }
+.statBarLabel {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--ink-2); margin-bottom: 8px;
+}
+.statBarTrack {
+  height: 6px; background: var(--ink-5); border-radius: 3px;
+  overflow: visible; position: relative;
+}
+.statBarFill  { height: 100%; border-radius: 3px; transition: width .4s ease; }
+.paceMark {
+  position: absolute; top: -4px; width: 2px; height: 14px;
+  background: rgba(255,255,255,.4); border-radius: 1px;
+  transform: translateX(-50%); pointer-events: none;
+}
+.statBarSub { font-size: 9px; color: rgba(255,255,255,.3); margin-top: 5px; text-align: right; }
+
+/* KPI row */
+.statKpis {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--ink-5);
+}
+.statKpi { padding: 12px 14px; border-right: 1px solid var(--ink-5); }
+.statKpi:last-child { border-right: none; }
+.statKpiVal   { font-family: var(--font-serif); font-size: 16px; font-weight: 300; color: var(--ink-0); margin-bottom: 3px; }
+.statKpiLabel { font-family: var(--font-mono); font-size: 8px; color: var(--ink-3); letter-spacing: .8px; text-transform: uppercase; }
+
+/* Sparkline */
+.sparkSection { padding: 14px 16px; border-bottom: 1px solid var(--ink-5); }
+.sparkLabel   { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+.sparkSvg     { width: 100%; height: 80px; display: block; }
+.sparkLoading { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); padding: 20px 0; }
+.sparkAvg     { font-size: 10px; color: var(--ink-3); margin-top: 6px; font-family: var(--font-mono); }
+
+/* Tabs */
+.statTabs { display: flex; border-bottom: 1px solid var(--ink-5); }
+.statTab  {
+  flex: 1; padding: 11px; font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase; text-align: center;
+  color: var(--ink-3); background: none; border: none;
+  border-bottom: 2px solid transparent; cursor: pointer; margin-bottom: -1px;
+  transition: all .15s;
+}
+.statTabOn { color: var(--safe) !important; border-bottom-color: var(--safe) !important; }
+
+/* Transaction list */
+.statTxList { padding: 4px 0 8px; }
+.statTxEmpty { padding: 20px 16px; font-size: 12px; color: var(--ink-3); }
+.statTxRow  {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 16px; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.statTxRow:last-child { border-bottom: none; }
+.statTxDate { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); width: 40px; flex-shrink: 0; }
+.statTxName { flex: 1; font-size: 12px; color: var(--ink-1); }
+.statTxAmt  { font-family: var(--font-mono); font-size: 12px; color: var(--debt); flex-shrink: 0; }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .statKpis { grid-template-columns: repeat(2, 1fr); }
+  .statKpi  { padding: 10px 12px; }
+  .statKpiVal { font-size: 15px; }
+}

@@ -65,6 +65,7 @@ export const api = {
   deleteBudget:         (id)         => request(`/api/budgets/${id}`, { method: 'DELETE' }),
   completeBudget:       (id, completed) => request(`/api/budgets/${id}/complete`, { method: 'PATCH', body: JSON.stringify({ completed }) }),
   budgetTransactions:   (id)         => request(`/api/budgets/${id}/transactions`),
+  budgetHistory:        (id)         => request(`/api/budgets/${id}/history`),
   budgetForecast:       ()           => request('/api/budgets/forecast'),
   budgetPaceCheck:      ()           => request('/api/budgets/pace-check',   { method: 'POST' }),
   budgetAutoComplete:   ()           => request('/api/budgets/auto-complete', { method: 'POST' }),
