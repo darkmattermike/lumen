@@ -20,6 +20,15 @@ async function request(path, options = {}, _retry = true) {
   try { data = await res.json() } catch { data = {} }
 
   if (!res.ok) {
+    // On 429 (rate limited): never log out — just surface a clean error.
+    // The user's session is still valid; the server is just throttling.
+    if (res.status === 429) {
+      const err = new Error('Too many requests. Please slow down.')
+      err.status = 429
+      err.rateLimited = true
+      throw err
+    }
+
     // On 401: attempt silent token refresh before failing.
     // Skip if: this IS the refresh endpoint (avoids infinite loop),
     // or we've already retried once (_retry = false).

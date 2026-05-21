@@ -37,20 +37,23 @@ export function AuthProvider({ children }) {
         return data.token
       })
       .catch(err => {
-        // Only clear the session on definitive auth failures (401).
-        // Network errors, 5xx, timeouts should NOT log the user out —
-        // the token may still be valid; we just couldn't reach the server.
+        // Only clear the session on definitive auth failures (401/403).
+        // 429 (rate limited), network errors, 5xx = transient — do NOT log out.
         const isAuthFailure = err?.status === 401 || err?.status === 403
+        const isRateLimited = err?.status === 429 || err?.rateLimited
+
         if (isAuthFailure) {
           localStorage.removeItem('lumen_token')
           tokenExpiryRef.current = null
           setUser(null)
           clearProactiveRefresh()
         } else {
-          // Transient failure — reschedule a retry in 30s using the existing token
+          // Transient failure — retry after a backoff.
+          // Rate limit: wait 60s. Network/server error: wait 30s.
+          const retryDelay = isRateLimited ? 60 * 1000 : 30 * 1000
           const token = localStorage.getItem('lumen_token')
           if (token) {
-            setTimeout(() => { silentRefresh() }, 30 * 1000)
+            setTimeout(() => silentRefresh(), retryDelay)
           }
         }
         return null
