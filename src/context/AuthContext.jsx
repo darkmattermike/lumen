@@ -203,7 +203,10 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
-  // ── Logout ───────────────────────────────────────────────────
+  // ── Complete onboarding ───────────────────────────────────────
+  function completeOnboarding() {
+    setUser(prev => prev ? { ...prev, onboarding_complete: true } : prev)
+  }
   async function logout() {
     clearProactiveRefresh()
     try { await api.logout() } catch {}
@@ -221,7 +224,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, googleLogin, register, logout, logoutAll, silentRefresh }}>
+    <AuthContext.Provider value={{ user, loading, login, googleLogin, register, logout, logoutAll, silentRefresh, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   )
