@@ -19,6 +19,11 @@ function fmt(n) {
 function fmtD(n) {
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
+function fmtDate(isoStr) {
+  if (!isoStr) return ''
+  const [y, m, d] = isoStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
 
 const LABEL_COLOR = { SAFE: 'var(--safe)', WATCH: 'var(--warn)', TIGHT: 'var(--warn)', CRITICAL: 'var(--debt)' }
 
@@ -37,14 +42,34 @@ export default function Dashboard() {
     monthSpent, monthIncome,
     upcomingBills, nextPaycheck, next3Bills = [],
     activePlans = [], plannedSpend = 0, plannedSavings = 0,
+    windows: payWindows = [],
   } = data
 
-  const today       = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()
-  const daysUntilPay  = nextPaycheck?.daysUntil ?? null
-  const netChange     = monthIncome - monthSpent
-  const hasPlans      = activePlans.length > 0
-  const heroBalance   = freeToSpend ?? (hasPlans ? (balanceAfterPlans ?? balanceAfterBills) : balanceAfterBills)
-  const heroColor     = heroBalance >= 0 ? 'var(--safe)' : 'var(--debt)'
+  const today     = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()
+  const netChange = monthIncome - monthSpent
+  const hasPlans  = activePlans.length > 0
+
+  // ── Pay-period windows ────────────────────────────────────
+  const w0 = payWindows[0] || null   // current window: today → next paycheck
+  const w1 = payWindows[1] || null   // next window: next paycheck → one after
+
+  // Hero number: balance + any paychecks that landed today - bills before next paycheck
+  const heroBalance = hasPlans ? balanceAfterPlans : freeToSpend
+  const heroColor   = heroBalance >= 0 ? 'var(--safe)' : 'var(--debt)'
+
+  const w0Bills        = w0?.billsTotal ?? Number(committedBills)
+  const w0NextPay      = w0?.nextPay ?? nextPaycheck
+  const daysUntilPay   = w0NextPay?.daysUntil ?? null
+  const todayPayTotal  = w0?.paycheckOnStartTotal ?? 0
+  const todayPaychecks = w0?.paychecksOnStart ?? []
+
+  // Window 1: is the next window going to be tight?
+  const w1Bills      = w1?.billsTotal ?? 0
+  const w1PayTotal   = (w1?.paycheckOnStartTotal ?? 0) + (w1?.paychecksInTotal ?? 0)
+  const w1Free       = w1PayTotal - w1Bills
+  const w1IsTight    = w1Bills > 0 && w1Free < 300
+  const w1Shortfall  = w1IsTight ? Math.max(0, w1Bills - w1PayTotal) : 0
+  const safeToSpend  = Math.max(0, heroBalance - w1Shortfall)
 
   // Build bill rows for aside
   const billRows = upcomingBills.map(b => ({
@@ -56,17 +81,93 @@ export default function Dashboard() {
     highlight: b.type === 'income',
   }))
 
+  // ── Narrative builder ─────────────────────────────────────
+  function buildNarrative() {
+    const parts = []
+
+    // 1. Current window summary
+    if (todayPayTotal > 0) {
+      // Paycheck landed today
+      parts.push(
+        <span key="pay-today">
+          Your <strong style={{ color: 'var(--safe)' }}>${fmt(todayPayTotal)}</strong> paycheck landed today.{' '}
+        </span>
+      )
+    }
+
+    if (w0Bills > 0 && daysUntilPay !== null) {
+      parts.push(
+        <span key="w0-bills">
+          With only <strong style={{ color: 'var(--warn)' }}>${fmt(w0Bills)}</strong> in bills before your{' '}
+          {daysUntilPay === 0
+            ? 'paycheck today'
+            : <><strong style={{ color: 'var(--safe)' }}>${fmt(w0NextPay?.amount)}</strong> paycheck on <strong>{fmtDate(w0?.endDate)}</strong></>
+          }, you have <strong style={{ color: heroColor }}>${fmt(heroBalance)}</strong> free to spend.{' '}
+        </span>
+      )
+    } else if (w0Bills === 0 && daysUntilPay !== null) {
+      parts.push(
+        <span key="w0-nobills">
+          No bills before your paycheck on <strong>{fmtDate(w0?.endDate)}</strong> — you have <strong style={{ color: heroColor }}>${fmt(heroBalance)}</strong> free to spend.{' '}
+        </span>
+      )
+    } else {
+      // No upcoming paycheck on record
+      parts.push(
+        <span key="w0-nopay">
+          Your <strong style={{ color: heroColor }}>${fmt(heroBalance)}</strong> balance after <strong style={{ color: 'var(--warn)' }}>${fmt(w0Bills)}</strong> in upcoming bills.{' '}
+        </span>
+      )
+    }
+
+    // 2. Next-window warning if it's tight
+    if (w1 && w1Bills > 0) {
+      const w1PayDate  = fmtDate(w1?.endDate)
+      const w1StartDate = fmtDate(w1?.startDate)
+      if (w1IsTight) {
+        parts.push(
+          <span key="w1-warn">
+            <strong style={{ color: 'var(--warn)' }}>Heads up:</strong>{' '}
+            <strong style={{ color: 'var(--debt)' }}>${fmt(w1Bills)}</strong> in bills hit between {w1StartDate}–{w1PayDate || 'your next pay'}.
+            {w1Free < 0
+              ? <> You'll be <strong style={{ color: 'var(--debt)' }}>${fmt(Math.abs(w1Free))} short</strong> — move money before then.</>
+              : <> Only <strong style={{ color: 'var(--warn)' }}>${fmt(w1Free)}</strong> left after those bills, so keep spending under <strong>${fmt(safeToSpend)}</strong> until then.</>
+            }{' '}
+          </span>
+        )
+      } else {
+        parts.push(
+          <span key="w1-ok">
+            Next period ({w1StartDate}–{w1PayDate || 'next pay'}): <strong style={{ color: 'var(--warn)' }}>${fmt(w1Bills)}</strong> in bills, <strong style={{ color: 'var(--safe)' }}>${fmt(w1Free)}</strong> left over.{' '}
+          </span>
+        )
+      }
+    }
+
+    // 3. Verdict
+    const verdict =
+      heroBalance < 0           ? "You're underwater — move money now." :
+      pressureLabel === 'CRITICAL' ? 'This is tight. Watch closely.' :
+      pressureLabel === 'TIGHT'    ? 'A bit tight — keep an eye on spending.' :
+      w1IsTight                  ? `Pressure gauge reads ${pressureLabel}.` :
+      pressureLabel === 'WATCH'  ? 'Manageable, but stay aware.' :
+                                   "You're in good shape."
+
+    parts.push(<strong key="verdict" style={{ color: heroColor }}>{verdict}</strong>)
+    return parts
+  }
+
   return (
     <ScreenWrap>
       {/* ── Hero ── */}
       <div className={styles.hero}>
         <div className={styles.dotCol}>
           <LumenDot
-              size={56}
-              rings
-              mood={pressureLabel === 'CRITICAL' ? 'alert' : pressureLabel === 'TIGHT' ? 'thinking' : pressureLabel === 'SAFE' ? 'happy' : 'idle'}
-              tooltip={pressureLabel === 'CRITICAL' ? 'This is tight. Look at me.' : pressureLabel === 'SAFE' ? "Looking good 👀" : null}
-            />
+            size={56}
+            rings
+            mood={pressureLabel === 'CRITICAL' ? 'alert' : pressureLabel === 'TIGHT' ? 'thinking' : pressureLabel === 'SAFE' ? 'happy' : 'idle'}
+            tooltip={pressureLabel === 'CRITICAL' ? 'This is tight. Look at me.' : pressureLabel === 'SAFE' ? "Looking good 👀" : null}
+          />
           <div className={styles.dotMeta}>
             <div className={styles.dotLabel}>Lumen</div>
             <div className={styles.dotStatus}>
@@ -79,59 +180,13 @@ export default function Dashboard() {
         <div className={styles.balanceCol}>
           <div className={styles.pre}>◈ FREE TO SPEND · {today}</div>
           <AnimatedNumber value={heroBalance} prefix="$" className={styles.amount} style={{ color: heroColor }} duration={1000} />
-          <div className={styles.prose}>
-            {(() => {
-              // Build rolling-30-day narrative
-              const billTotal = Number(bills30Days || committedBills)
-              const incTotal  = Number(income30Days || upcomingPayTotal)
-              const nearBill  = next3Bills?.[0] || upcomingBills?.[0]
-              const nearBillDays = nearBill?.daysUntil ?? null
-              const parts = []
-
-              // Opening: what you have right now
-              parts.push(<span key="open">This is what you have <strong>free to spend today</strong> — your ${fmt(balance)} balance minus bills coming in the next 30 days. </span>)
-
-              // Bills context
-              if (billTotal > 0 && nearBill) {
-                if (nearBillDays === 0) {
-                  parts.push(<span key="bill0"><strong style={{color:'var(--warn)'}}>${fmt(nearBill.amount)}</strong> in bills hit today. </span>)
-                } else if (nearBillDays === 1) {
-                  parts.push(<span key="bill1">Your next bill, <strong>${fmt(nearBill.amount)}</strong> for {nearBill.name}, hits <strong style={{color:'var(--warn)'}}>tomorrow</strong>. </span>)
-                } else if (nearBillDays !== null && nearBillDays <= 7) {
-                  parts.push(<span key="billsoon"><strong style={{color:'var(--warn)'}}>${fmt(billTotal)}</strong> in bills over the next {nearBillDays} days. </span>)
-                } else {
-                  parts.push(<span key="bills30"><strong>${fmt(billTotal)}</strong> in bills over the next 30 days. </span>)
-                }
-              }
-
-              // Income context
-              if (incTotal > 0 && nextPaycheck) {
-                if (daysUntilPay === 0) {
-                  parts.push(<span key="pay0">Your <strong style={{color:'var(--safe)'}}>${fmt(nextPaycheck.amount)}</strong> paycheck lands <strong>today</strong>. </span>)
-                } else if (daysUntilPay === 1) {
-                  parts.push(<span key="pay1">A <strong style={{color:'var(--safe)'}}>${fmt(nextPaycheck.amount)}</strong> paycheck arrives <strong>tomorrow</strong>. </span>)
-                } else if (daysUntilPay !== null) {
-                  parts.push(<span key="payn">Your <strong style={{color:'var(--safe)'}}>${fmt(nextPaycheck.amount)}</strong> paycheck is coming in <strong>{daysUntilPay} days</strong>. </span>)
-                }
-              }
-
-              // Verdict
-              const verdict = heroBalance < 0 ? "You're underwater — move money now."
-                : pressureLabel === 'CRITICAL' ? 'This is tight. Watch closely.'
-                : pressureLabel === 'TIGHT'    ? 'A bit tight — keep an eye on spending.'
-                : pressureLabel === 'WATCH'    ? 'Manageable, but stay aware.'
-                : "You're in good shape."
-              parts.push(<strong key="verdict" style={{color: heroColor}}> {verdict}</strong>)
-
-              return parts
-            })()}
-          </div>
+          <div className={styles.prose}>{buildNarrative()}</div>
         </div>
 
         <div className={styles.rightCol}>
           <PressureGauge
             label={pressureLabel}
-            sub={daysUntilPay !== null ? `${daysUntilPay === 0 ? 'Paycheck today' : `Paycheck in ${daysUntilPay} days`}` : ''}
+            sub={daysUntilPay !== null ? (daysUntilPay === 0 ? 'Paycheck today' : `Paycheck in ${daysUntilPay} days`) : ''}
             score={pressureScore}
           />
           <div className={styles.statStack}>
@@ -140,12 +195,19 @@ export default function Dashboard() {
               <AnimatedNumber value={heroBalance} prefix="$" className={styles.statVal} style={{ color: heroBalance >= 0 ? 'var(--safe)' : 'var(--debt)' }} />
             </div>
             <div className={styles.stat}>
-              <span className={styles.statLabel}>Committed Bills</span>
-              <AnimatedNumber value={committedBills} prefix="$" className={styles.statVal} style={{ color: 'var(--warn)' }} />
+              <span className={styles.statLabel}>Bills this window</span>
+              <AnimatedNumber value={w0Bills} prefix="$" className={styles.statVal} style={{ color: 'var(--warn)' }} />
             </div>
+            {w1Bills > 0 && (
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>Next window bills</span>
+                <AnimatedNumber value={w1Bills} prefix="$" className={styles.statVal} style={{ color: w1IsTight ? 'var(--debt)' : 'var(--warn)' }} />
+              </div>
+            )}
           </div>
         </div>
       </div>
+
       {/* ── Phase I: Health Score ── */}
       <HealthScore />
 
@@ -156,14 +218,14 @@ export default function Dashboard() {
           <div className={styles.zoneTag}>✦ Where I Am</div>
           <AnimatedNumber value={heroBalance} prefix="$" className={styles.zoneVal} style={{ color: heroColor }} />
           <div className={styles.zoneProse}>
-            Free to spend after bills{data.upcomingPayTotal > 0 ? ' and pay' : ''} this cycle.
+            Free to spend this window{todayPayTotal > 0 ? ', including today\'s paycheck' : ''}.
           </div>
           <div className={styles.zoneRows}>
             <div className={styles.zoneRow}><span className={styles.zrn}>Balance</span><span className={styles.zrv} style={{ color: 'var(--safe)' }}>${fmt(balance)}</span></div>
-            <div className={styles.zoneRow}><span className={styles.zrn}>Bills remaining</span><span className={styles.zrv} style={{ color: 'var(--debt)' }}>−${fmt(committedBills)}</span></div>
-            {data.upcomingPayTotal > 0 && (
-              <div className={styles.zoneRow}><span className={styles.zrn}>Income coming</span><span className={styles.zrv} style={{ color: 'var(--safe)' }}>+${fmt(data.upcomingPayTotal)}</span></div>
+            {todayPayTotal > 0 && (
+              <div className={styles.zoneRow}><span className={styles.zrn}>Paycheck today</span><span className={styles.zrv} style={{ color: 'var(--safe)' }}>+${fmt(todayPayTotal)}</span></div>
             )}
+            <div className={styles.zoneRow}><span className={styles.zrn}>Bills this window</span><span className={styles.zrv} style={{ color: 'var(--debt)' }}>−${fmt(w0Bills)}</span></div>
             <div className={styles.zoneRow}><span className={styles.zrn}>Free to spend</span><span className={styles.zrv} style={{ color: heroColor }}>${fmt(heroBalance)}</span></div>
           </div>
         </div>
@@ -188,11 +250,12 @@ export default function Dashboard() {
         {/* WHAT'S COMING */}
         <div className={`${styles.zone} ${styles.nxt}`}>
           <div className={styles.zoneTag}>→ What's Coming</div>
-          <AnimatedNumber value={committedBills} prefix="$" className={styles.zoneVal} />
+          <AnimatedNumber value={w0Bills} prefix="$" className={styles.zoneVal} />
           <div className={styles.zoneProse}>
-            {upcomingBills.length > 0
-              ? <>Bills due this cycle. {nextPaycheck ? <>Paycheck in <strong>{nextPaycheck.daysUntil} days</strong>.</> : ''}</>
-              : 'No upcoming bills on record.'}
+            {w0Bills > 0
+              ? <>Bills this window. {w0NextPay ? <>Next paycheck <strong>{daysUntilPay === 0 ? 'today' : `in ${daysUntilPay} days`}</strong>.</> : ''}</>
+              : 'No bills before next paycheck.'}
+            {w1Bills > 0 && <> Then <strong style={{ color: w1IsTight ? 'var(--debt)' : 'var(--warn)' }}>${fmt(w1Bills)}</strong> after that.</>}
           </div>
           <div className={styles.zoneRows}>
             {upcomingBills.slice(0, 3).map(b => (
@@ -205,13 +268,12 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-
       </div>
 
       {/* ── Body: Theater + Aside ── */}
       <div className={styles.body}>
         <div ref={theaterRef}>
-        <WhatIfTheater balance={balance} balanceAfterBills={balanceAfterBills} activePlans={activePlans} plannedSpend={plannedSpend} />
+          <WhatIfTheater balance={balance} balanceAfterBills={balanceAfterBills} activePlans={activePlans} plannedSpend={plannedSpend} />
         </div>
 
         <div className={styles.aside}>
