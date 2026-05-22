@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import styles from './Rail.module.css'
 import NotificationBell from '../NotificationBell/NotificationBell'
+import LumenDot from '../LumenDot/LumenDot'
 import { api } from '../../data/api'
 
 const Icon = ({ d, size = 18 }) => (
