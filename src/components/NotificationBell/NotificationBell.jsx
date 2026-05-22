@@ -109,8 +109,11 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
   useEffect(() => {
     if (!open || !triggerRef.current) { setCloudPos(null); return }
     const rect = triggerRef.current.getBoundingClientRect()
+    const orbCenterY = rect.top + rect.height / 2
     setCloudPos({
-      top:  rect.top + rect.height / 2 - 60, // center cloud roughly on orb
+      // Center the cloud vertically on the orb.
+      // Cloud is ~180px tall — subtract half to center it.
+      top:  Math.max(8, orbCenterY - 90),
       left: rect.right + 14,
     })
   }, [open])

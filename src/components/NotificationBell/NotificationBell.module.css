@@ -49,7 +49,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 4px;
 }
 
 /* Trail sits below the cloud, bridging toward the orb */
@@ -57,8 +57,9 @@
   display: flex;
   flex-direction: column;   /* largest at top = closest to cloud */
   align-items: flex-start;
-  gap: 5px;
-  padding-left: 8px;
+  gap: 4px;
+  padding-left: 16px;       /* indent to feel connected to cloud body */
+  margin-top: -2px;         /* close gap to cloud */
 }
 .trailDot {
   border-radius: 50%;
