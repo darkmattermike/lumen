@@ -1,369 +1,284 @@
-/* ══════════════════════════════════════════════
-   NotificationBell — SMS / concept 10
-   ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════
+   NOTIFICATION BELL — THOUGHT CLOUD (Concept 10)
+   Orb pulses → 3 trail dots rise → cloud floats and breathes
+   ══════════════════════════════════════════════════════════ */
 
-/* ── Desktop trigger button ── */
+/* ── Desktop trigger button ─────────────────────────────── */
 .wrap {
   position: relative;
 }
 
 .trigger {
   position: relative;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer;
   border-radius: 9px;
-  cursor: pointer;
   transition: background var(--t-fast);
   padding: 0;
 }
-.trigger:hover  { background: rgba(255,255,255,.04); }
-.triggerOpen    { background: rgba(93,202,165,.08); }
+.trigger:hover { background: rgba(255,255,255,.04); }
+.triggerOpen   { background: rgba(93,202,165,.08);  }
 
-/* ── Desktop stack — position:fixed so it always sits
-      just to the right of the 48px rail, vertically
-      centered in the viewport ── */
-.stack {
+/* Unread badge */
+.badge {
+  position: absolute; top: -2px; right: -2px;
+  background: var(--debt); color: #fff;
+  font-family: var(--font-mono); font-size: 8px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; padding: 0 3px;
+}
+
+/* Orb pulses when "speaking" (has unread or is open) */
+.orbWrap { display: flex; align-items: center; justify-content: center; }
+.orbSpeaking {
+  animation: orb-speaking 0.8s ease-in-out infinite;
+}
+@keyframes orb-speaking {
+  0%,100% { transform: scale(1);    filter: drop-shadow(0 0 5px rgba(93,202,165,.3)); }
+  40%     { transform: scale(1.12); filter: drop-shadow(0 0 14px rgba(93,202,165,.8)); }
+  65%     { transform: scale(.96);  filter: drop-shadow(0 0 4px rgba(93,202,165,.25)); }
+}
+
+/* ── Desktop cloud wrapper ────────────────────────────────
+   Positions everything to the right of the 48px rail.
+   Trail + cloud are absolutely positioned children.      */
+.cloudWrap {
   position: fixed;
-  left: calc(var(--rail-w, 48px) + 12px);
-  top: 50%;
-  transform: translateY(-50%);
-  width: 300px;
-  max-height: 80vh;
+  left: calc(var(--rail-w, 48px) + 6px);
+  bottom: 60px;           /* aligns near the orb in the rail */
+  z-index: 400;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  z-index: 400;
-  background: var(--bg-1);
-  border: 1px solid var(--ink-5);
-  border-radius: 16px;
-  padding: 14px 14px 16px;
-  box-shadow: 0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(93,202,165,.06);
-  /* Soft entrance */
-  animation: stack-in .22s cubic-bezier(.34,1.2,.64,1) both;
-}
-@keyframes stack-in {
-  from { opacity: 0; transform: translateY(-50%) translateX(-8px); }
-  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
-}
-
-/* Stack header — Lumen label + clear all */
-.stackHeader {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  padding: 0 2px 10px;
-  border-bottom: 1px solid var(--ink-5);
-  margin-bottom: 12px;
+  pointer-events: none;   /* trail dots shouldn't intercept clicks */
+}
+.cloudWrap > * { pointer-events: auto; }
+
+/* ── Trail dots ───────────────────────────────────────────
+   3 dots, smallest→largest, rising from orb toward cloud  */
+.trail {
+  display: flex;
+  flex-direction: column-reverse; /* dot 1 = smallest = bottom */
+  align-items: flex-start;
+  gap: 5px;
+  padding-left: 11px;             /* align with orb center */
+  margin-bottom: 2px;
+}
+.trailDot {
+  border-radius: 50%;
+  background: rgba(93,202,165,.55);
+  animation: trail-pulse 1.2s ease-in-out infinite;
   flex-shrink: 0;
 }
-.stackHeaderOrb   { flex-shrink: 0; }
-.stackHeaderName  {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--safe);
-  flex: 1;
+.trailDot:nth-child(1) { width: 4px;  height: 4px;  animation-delay: 0s;   }
+.trailDot:nth-child(2) { width: 6px;  height: 6px;  animation-delay: .18s; }
+.trailDot:nth-child(3) { width: 9px;  height: 9px;  animation-delay: .35s; }
+@keyframes trail-pulse {
+  0%,100% { opacity: .3; transform: scale(.8);  }
+  50%     { opacity: .9; transform: scale(1.15); }
 }
-.clearAllBtn {
-  font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  background: transparent;
-  border: 1px solid var(--ink-5);
-  border-radius: 8px;
-  padding: 4px 9px;
-  cursor: pointer;
+
+/* ── The thought cloud ────────────────────────────────────
+   Floats gently, springs in from below on open            */
+.cloud {
+  background: var(--bg-2);
+  border: 1px solid rgba(93,202,165,.18);
+  border-radius: 20px;
+  padding: 16px 18px;
+  width: 268px;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,.55),
+    0 0 0 1px rgba(93,202,165,.05),
+    0 0 40px rgba(93,202,165,.06);
+  animation:
+    cloud-in 0.45s cubic-bezier(.34,1.3,.64,1) both,
+    cloud-float 3.2s ease-in-out infinite;
+  animation-delay: var(animationDelay, 0ms), 0.45s; /* float starts after entry */
+}
+@keyframes cloud-in {
+  from { opacity: 0; transform: scale(.75) translateY(14px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+@keyframes cloud-float {
+  0%,100% { transform: translateY(0);   }
+  50%     { transform: translateY(-5px); }
+}
+
+/* Empty cloud — slightly softer */
+.cloudEmpty {
+  border-color: rgba(93,202,165,.12);
+}
+.cloudEmptyHeader {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.cloudEmptyLumen {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--safe);
+}
+
+/* Type badge row */
+.cloudBadge {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 10px;
+}
+.cloudBadgeEmoji { font-size: 13px; }
+.cloudBadgeLabel {
+  font-family: var(--font-mono); font-size: 8px;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 5px;
+  background: var(--accent-bg, rgba(108,140,255,.1));
+  border: 1px solid var(--accent-border, rgba(108,140,255,.22));
+  color: var(--accent, var(--calm));
+}
+.cloudBadgeTime {
+  font-family: var(--font-mono); font-size: 8px;
+  color: var(--ink-4); margin-left: auto;
+}
+
+/* Message body */
+.cloudMsg {
+  font-size: 13px; color: var(--ink-0); line-height: 1.65;
+  margin: 0 0 14px;
+}
+
+/* Action buttons */
+.cloudActions { display: flex; gap: 7px; }
+.cloudBtn {
+  flex: 1; padding: 8px; border-radius: 10px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: .6px; text-transform: uppercase;
   transition: all var(--t-fast);
+}
+.cloudBtnPrimary {
+  background: rgba(93,202,165,.1); border: 1px solid rgba(93,202,165,.3); color: var(--safe);
+}
+.cloudBtnPrimary:hover { background: var(--safe); color: #040608; }
+.cloudBtnGhost {
+  background: transparent; border: 1px solid var(--ink-4); color: var(--ink-3);
+}
+.cloudBtnGhost:hover { border-color: var(--ink-2); color: var(--ink-1); }
+
+/* Dismiss all */
+.clearAllBtn {
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-3); background: transparent; border: 1px solid var(--ink-5);
+  border-radius: 8px; padding: 7px 14px; cursor: pointer; transition: all var(--t-fast);
+  align-self: flex-start;
 }
 .clearAllBtn:hover { color: var(--ink-1); border-color: var(--ink-3); }
 
-/* Scrollable notif area */
-.stackScroll {
+/* ══════════════════════════════════════════════════════════
+   MOBILE — orb panel (startOpen, above tab bar)
+   Rail's .mobileOrbPanel provides fixed positioning;
+   we just stack trail + clouds inside it.
+   ══════════════════════════════════════════════════════════ */
+.mobileCloudWrap {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
-  max-height: calc(80vh - 48px);
-  padding-right: 2px;
-}
-.stackScroll::-webkit-scrollbar { width: 2px; }
-.stackScroll::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 2px; }
-
-/* ══════════════════════════════════════════════
-   SMS notification group
-   ══════════════════════════════════════════════ */
-.smsNotif {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0 8px;
 }
 
-/* ── Individual bubble ── */
-.smsBubble {
-  border-radius: 18px 18px 18px 4px;
-  padding: 10px 14px;
-  width: fit-content;
-  max-width: 100%;
-  position: relative;
-  /* Stagger via CSS var set inline */
-  animation: sms-slide .28s cubic-bezier(.34,1.25,.64,1) both;
-  animation-delay: var(--anim-delay, 0ms);
+/* On mobile the cloud should feel contained — no float anim */
+.mobileCloudWrap .cloud {
+  width: 100%;
+  animation: cloud-in 0.4s cubic-bezier(.34,1.3,.64,1) both;
+  /* override the float — too jumpy in a fixed panel */
 }
+.mobileCloudWrap .cloud:nth-child(2) { animation-delay: .06s; }
+.mobileCloudWrap .cloud:nth-child(3) { animation-delay: .12s; }
 
-@keyframes sms-slide {
-  from { opacity: 0; transform: translateX(-10px) scale(.96); }
-  to   { opacity: 1; transform: none; }
-}
-
-/* Bubble 1 — opener, plain dark */
-.smsBubbleBase {
-  background: var(--bg-3);
-  border: 1px solid rgba(255,255,255,.05);
-  box-shadow: 0 2px 12px rgba(0,0,0,.35);
-}
-
-/* Bubble 2 variants — fact, accent tinted */
-.smsBubbleFact { max-width: 100%; }
-
-.smsBubbleDebt {
-  background: rgba(232,115,99,.09);
-  border: 1px solid rgba(232,115,99,.22);
-  box-shadow: 0 2px 12px rgba(232,115,99,.08);
-}
-.smsBubbleWin {
-  background: rgba(93,202,165,.09);
-  border: 1px solid rgba(93,202,165,.22);
-  box-shadow: 0 2px 12px rgba(93,202,165,.08);
-}
-.smsBubbleNeutral {
-  background: rgba(108,140,255,.08);
-  border: 1px solid rgba(108,140,255,.2);
-  box-shadow: 0 2px 12px rgba(0,0,0,.3);
-}
-
-/* Bubble 3 — CTA, no background, just replies */
-.smsBubbleCta {
-  background: transparent;
-  border: none;
-  padding: 2px 0 0;
-  border-radius: 0;
-}
-
-/* ── Text ── */
-.smsText {
-  font-size: 13px;
-  color: var(--ink-0);
-  line-height: 1.6;
-  display: block;
-}
-.smsTextCta {
-  font-size: 13px;
-  color: var(--ink-0);
-  line-height: 1.6;
-  display: block;
-  margin-bottom: 8px;
-}
-
-/* ── Meta row (time + read receipt) ── */
-.smsMeta {
-  display: flex;
+/* Trail on mobile — horizontal dots from left edge toward cloud */
+.mobileCloudWrap .trail {
+  flex-direction: row;         /* horizontal on mobile */
+  padding-left: 14px;
+  padding-bottom: 0;
+  margin-bottom: 0;
   align-items: center;
-  gap: 5px;
-  margin-top: 5px;
-}
-.smsTime {
-  font-family: var(--font-mono);
-  font-size: 8px;
-  color: var(--ink-4);
-  letter-spacing: .3px;
-}
-.smsRead {
-  font-size: 9px;
-  color: var(--calm);
-  opacity: .7;
 }
 
-/* ── Reply buttons ── */
-.smsReplies {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.smsReply {
-  padding: 7px 14px;
-  border-radius: 18px;
-  font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all var(--t-fast);
-  white-space: nowrap;
-}
-.smsReplyPrimary {
-  background: rgba(93,202,165,.1);
-  border: 1px solid rgba(93,202,165,.3);
-  color: var(--safe);
-}
-.smsReplyPrimary:hover {
-  background: var(--safe);
-  color: #040608;
-}
-.smsReplyDanger {
-  background: rgba(232,115,99,.1);
-  border: 1px solid rgba(232,115,99,.3);
-  color: var(--debt);
-}
-.smsReplyDanger:hover {
-  background: var(--debt);
-  color: #fff;
-}
-.smsReplyNeutral {
-  background: transparent;
-  border: 1px solid var(--ink-5);
-  color: var(--ink-3);
-}
-.smsReplyNeutral:hover {
-  border-color: var(--ink-3);
-  color: var(--ink-1);
-}
-
-/* ══════════════════════════════════════════════
-   MOBILE DRAWER VARIANT
-   ══════════════════════════════════════════════ */
-.drawerWrap { width: 100%; }
+/* ══════════════════════════════════════════════════════════
+   MOBILE — More menu drawer variant
+   ══════════════════════════════════════════════════════════ */
+.drawerWrap  { width: 100%; }
 
 .drawerTrigger {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   padding: 10px 14px;
   background: rgba(93,202,165,.06);
   border: 1px solid rgba(93,202,165,.18);
   border-radius: 10px;
-  cursor: pointer;
-  color: var(--safe);
+  cursor: pointer; color: var(--safe);
   transition: background var(--t-fast);
   -webkit-tap-highlight-color: transparent;
 }
 .drawerTrigger:active { background: rgba(93,202,165,.12); }
 
 .drawerTriggerLabel {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase;
   color: var(--safe);
-  text-align: left;
 }
-
 .drawerBadge {
-  background: var(--debt);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
+  background: var(--debt); color: #fff;
+  font-size: 9px; font-weight: 700;
+  min-width: 16px; height: 16px; padding: 0 4px;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
 }
-
 .drawerChevron {
   color: var(--safe);
   transition: transform var(--t-fast);
-  display: flex;
-  align-items: center;
+  display: flex; align-items: center;
 }
 
 .drawerPanel {
   margin-top: 8px;
   background: var(--bg-2);
-  border: 1px solid var(--ink-5);
-  border-radius: 12px;
+  border: 1px solid rgba(93,202,165,.15);
+  border-radius: 14px;
   overflow: hidden;
-  animation: drawer-in .18s ease both;
-  max-height: 380px;
-  display: flex;
-  flex-direction: column;
+  animation: drawer-in .2s cubic-bezier(.34,1.2,.64,1) both;
 }
 @keyframes drawer-in {
   from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: none; }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .drawerPanelHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   padding: 10px 14px 8px;
   border-bottom: 1px solid var(--ink-5);
-  flex-shrink: 0;
 }
 .drawerPanelLabel {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-3);
 }
 .clearBtn {
-  background: none;
-  border: none;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--ink-3);
-  letter-spacing: .5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  padding: 3px 7px;
-  border-radius: 5px;
+  background: none; border: none;
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3); letter-spacing: .5px; text-transform: uppercase;
+  cursor: pointer; padding: 3px 7px; border-radius: 5px;
   transition: all var(--t-fast);
 }
 .clearBtn:hover { color: var(--ink-1); background: rgba(255,255,255,.04); }
 
 .drawerScroll {
   padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  overflow-y: auto;
-  flex: 1;
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: 380px; overflow-y: auto;
 }
 .drawerScroll::-webkit-scrollbar { width: 2px; }
 .drawerScroll::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 2px; }
 
-/* ── Mobile responsive override ── */
-@media (max-width: 768px) {
-  .stack {
-    position: fixed;
-    left: 8px;
-    right: 8px;
-    top: auto;
-    bottom: calc(var(--tab-bar-h, 60px) + 8px);
-    transform: none;
-    width: auto;
-    max-width: 100%;
-    animation: stack-mobile-in .25s cubic-bezier(.34,1.2,.64,1) both;
-  }
-  @keyframes stack-mobile-in {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: none; }
-  }
+/* Clouds in the drawer don't float */
+.drawerScroll .cloud {
+  animation: cloud-in .25s cubic-bezier(.34,1.2,.64,1) both;
+  width: 100%;
 }
