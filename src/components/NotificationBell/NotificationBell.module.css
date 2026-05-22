@@ -38,6 +38,11 @@
   flex-direction: column;
   gap: 0;
   z-index: 400;
+  background: var(--bg-1);
+  border: 1px solid var(--ink-5);
+  border-radius: 16px;
+  padding: 14px 14px 16px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(93,202,165,.06);
   /* Soft entrance */
   animation: stack-in .22s cubic-bezier(.34,1.2,.64,1) both;
 }
@@ -52,6 +57,9 @@
   align-items: center;
   gap: 8px;
   padding: 0 2px 10px;
+  border-bottom: 1px solid var(--ink-5);
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 .stackHeaderOrb   { flex-shrink: 0; }
 .stackHeaderName  {
@@ -344,7 +352,6 @@
 /* ── Mobile responsive override ── */
 @media (max-width: 768px) {
   .stack {
-    /* On mobile, panel comes up from bottom of screen instead */
     position: fixed;
     left: 8px;
     right: 8px;
