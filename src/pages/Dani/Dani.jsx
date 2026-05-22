@@ -122,44 +122,47 @@ function DaniTab({ accounts, recurringItems, tabData, onTabSave, tabKey }) {
   const { freeToSpend, upcomingBills, nextPayday } = useMemo(() => {
     if (!account) return { freeToSpend: 0, upcomingBills: [], nextPayday: null }
     const todayDay = today.getDate()
-    let expenses = 0, income = 0
-    const bills = []
+    let expenses = 0, incomeNet = 0
+    const upcoming = []   // includes both bills AND income
 
     recurringItems.forEach(t => {
-      if (t.accountId && t.accountId !== account.id) return
+      // Coerce both to string for safe comparison — DB can return int or string
+      const acctMatch = !t.accountId || String(t.accountId) === String(account.id)
+      if (!acctMatch) return
+
       const days = getOccurrenceDaysThisMonth(t).filter(d => d > todayDay)
       if (!days.length) return
+
       days.forEach(d => {
-        if (t.amount < 0) { expenses += Math.abs(t.amount); bills.push({ ...t, _day: d }) }
-        else               income   += Math.max(0, t.amount - INCOME_DEDUCTION)
+        if (t.amount < 0) {
+          // Expense / bill
+          expenses += Math.abs(t.amount)
+          upcoming.push({ ...t, _day: d, _isIncome: false })
+        } else {
+          // Income — deduct $1,100 to get Dani's share
+          const net = Math.max(0, t.amount - INCOME_DEDUCTION)
+          incomeNet += net
+          upcoming.push({ ...t, _day: d, _isIncome: true, _net: net })
+        }
       })
     })
 
-    bills.sort((a, b) => a._day - b._day)
+    upcoming.sort((a, b) => a._day - b._day)
 
-    // Next payday
-    let np = null
-    for (let d = todayDay + 1; d <= new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(); d++) {
-      const found = recurringItems.find(t =>
-        t.amount > 0 &&
-        (!t.accountId || t.accountId === account.id) &&
-        getOccurrenceDaysThisMonth(t).includes(d)
-      )
-      if (found) {
-        np = {
-          day: d, daysAway: d - todayDay,
-          date: new Date(today.getFullYear(), today.getMonth(), d)
-            .toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          amount: found.amount,
-          net: Math.max(0, found.amount - INCOME_DEDUCTION),
-        }
-        break
-      }
-    }
+    // Next payday — first upcoming income item
+    const nextIncomeItem = upcoming.find(t => t._isIncome)
+    const np = nextIncomeItem ? {
+      day:      nextIncomeItem._day,
+      daysAway: nextIncomeItem._day - todayDay,
+      date:     new Date(today.getFullYear(), today.getMonth(), nextIncomeItem._day)
+                  .toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      amount:   nextIncomeItem.amount,
+      net:      nextIncomeItem._net,
+    } : null
 
     return {
-      freeToSpend: Math.max(0, (balance - 100) - expenses + income),
-      upcomingBills: bills,
+      freeToSpend: Math.max(0, (balance - 100) - expenses + incomeNet),
+      upcomingBills: upcoming,
       nextPayday: np,
     }
   }, [account, recurringItems, balance])
@@ -177,7 +180,8 @@ function DaniTab({ accounts, recurringItems, tabData, onTabSave, tabKey }) {
     for (let d = todayDay + 1; d <= daysInMo; d++) {
       let delta = 0
       recurringItems.forEach(t => {
-        if (t.accountId && t.accountId !== account.id) return
+        const acctMatch = !t.accountId || String(t.accountId) === String(account.id)
+        if (!acctMatch) return
         if (!getOccurrenceDaysThisMonth(t).includes(d)) return
         if (t.amount < 0) delta += t.amount
         else delta += Math.max(0, t.amount - INCOME_DEDUCTION)
@@ -380,16 +384,26 @@ function DaniTab({ accounts, recurringItems, tabData, onTabSave, tabKey }) {
                 {upcomingBills.map((t, i) => (
                   <div key={`${t.id}-${t._day}`} className={`${styles.billRow} ${i < upcomingBills.length - 1 ? styles.billRowBorder : ''}`}>
                     <div className={styles.billDay}>{t._day}</div>
-                    <div className={styles.billName}>{t.name}</div>
-                    <div className={styles.billAmt} style={{ color: t.amount < 0 ? 'var(--debt)' : 'var(--safe)' }}>
-                      {t.amount < 0 ? '−' : '+'}{fmt(Math.abs(t.amount))}
+                    <div className={styles.billName}>
+                      {t.name}
+                      {t._isIncome && t._net > 0 && (
+                        <span className={styles.billNetNote}> (net +{fmt(t._net)})</span>
+                      )}
+                    </div>
+                    <div className={styles.billAmt} style={{ color: t._isIncome ? 'var(--safe)' : 'var(--debt)' }}>
+                      {t._isIncome ? '+' : '−'}{fmt(Math.abs(t.amount))}
                     </div>
                   </div>
                 ))}
                 <div className={styles.listFooter}>
                   <span className={styles.billsTotal} style={{ color: 'var(--debt)' }}>
-                    −{fmt(upcomingBills.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0))} bills
+                    −{fmt(upcomingBills.filter(t => !t._isIncome).reduce((s, t) => s + Math.abs(t.amount), 0))} bills
                   </span>
+                  {upcomingBills.some(t => t._isIncome) && (
+                    <span style={{ color: 'var(--safe)' }}>
+                      +{fmt(upcomingBills.filter(t => t._isIncome).reduce((s, t) => s + (t._net || 0), 0))} income (net)
+                    </span>
+                  )}
                 </div>
               </>
             )}

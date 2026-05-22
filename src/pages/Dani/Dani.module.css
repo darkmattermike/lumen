@@ -243,3 +243,9 @@
   .addRow { grid-template-columns: 1fr; }
   .addInputCost { width: 100%; }
 }
+
+.billNetNote {
+  font-size: 10px;
+  color: var(--safe);
+  opacity: 0.7;
+}
