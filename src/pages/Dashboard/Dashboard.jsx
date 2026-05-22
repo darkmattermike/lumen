@@ -120,7 +120,7 @@ export default function Dashboard() {
                 : pressureLabel === 'CRITICAL' ? 'This is tight. Watch closely.'
                 : pressureLabel === 'TIGHT'    ? 'A bit tight — keep an eye on spending.'
                 : pressureLabel === 'WATCH'    ? 'Manageable, but stay aware.'
-                : 'You're in good shape.'
+                : "You're in good shape."
               parts.push(<strong key="verdict" style={{color: heroColor}}> {verdict}</strong>)
 
               return parts
