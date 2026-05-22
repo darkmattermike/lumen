@@ -5,7 +5,6 @@
   background: radial-gradient(ellipse at 85% 20%, rgba(93,202,165,.08) 0%, transparent 50%),
               linear-gradient(180deg, #060d0a 0%, var(--bg-1) 100%);
 }
-.headerLeft { min-width: 0; }
 .pre   { font-family:var(--font-mono);font-size:9px;color:rgba(93,202,165,.5);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:10px; }
 .title { font-family:var(--font-serif);font-size:48px;font-weight:200;color:var(--ink-0);margin-bottom:10px;line-height:1; }
 .sub   { font-size:13px;color:var(--ink-2);line-height:1.65; }
@@ -22,11 +21,11 @@
 .avatarName  { font-size:13px;color:var(--ink-1);font-weight:500; }
 .avatarEmail { font-size:11px;color:var(--ink-3);font-family:var(--font-mono); }
 
+/* Body */
 /* ── Tab bar ── */
 .tabBar {
   display: flex;
   align-items: center;
-  gap: 0;
   padding: 0 20px;
   border-bottom: 1px solid var(--ink-5);
   background: rgba(255,255,255,.01);
@@ -84,7 +83,7 @@
 .panelSingle { max-width: 900px; }
 .panelSingle > * { --section-delay: 40ms; }
 
-/* Legacy (kept for compat) */
+/* Legacy kept for compat */
 .body { padding:14px 24px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start; }
 .left  { display:flex;flex-direction:column;gap:20px; }
 .right { display:flex;flex-direction:column;gap:20px; }
@@ -467,10 +466,8 @@
 
 .settingLoading { font-size: 12px; color: var(--ink-3); padding: 8px 0; }
 
-/* ── Mobile responsive ── */
 @media (max-width: 768px) {
-  .header { grid-template-columns: 1fr; gap: 20px; padding: 16px; }
-  .avatarWrap { flex-direction: row; align-self: flex-start; }
+  .header { grid-template-columns: 1fr; gap: 20px; }
   .tabBtn { padding: 10px 12px 11px; font-size: 8px; gap: 5px; }
   .tabIcon { display: none; }
   .tabContent { padding: 16px 16px 32px; }
