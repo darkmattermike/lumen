@@ -534,6 +534,12 @@ function AutoCategorizeModal({ budgets, onClose, onDone }) {
 
 // ── Main page ─────────────────────────────────────────────────
 export default function Transactions() {
+  const { user } = useAuth()
+  // isFamilyPro: true when user is on a family plan and is the account owner.
+  // Enables per-transaction privacy toggles for shared family views.
+  // Defaults to false until family plan billing is implemented.
+  const isFamilyPro = user?.plan === 'family' || user?.is_owner === true || false
+
   const [activeFilter, setActiveFilter]   = useState('All')
   const [search, setSearch]               = useState('')
   const [showCatModal, setShowCatModal]   = useState(false)
