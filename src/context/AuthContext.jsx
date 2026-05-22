@@ -104,7 +104,13 @@ export function AuthProvider({ children }) {
   async function login(email, password, rememberMe = true) {
     const data = await api.login({ email, password, rememberMe })
     localStorage.setItem('lumen_token', data.token)
-    setUser(data.user)
+    // Fetch full user profile so role is included
+    try {
+      const fullUser = await api.me()
+      setUser(fullUser)
+    } catch {
+      setUser(data.user)
+    }
     scheduleNext(data.token)
     return data.user
   }
