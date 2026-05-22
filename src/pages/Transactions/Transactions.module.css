@@ -192,9 +192,13 @@
 .editorSelect { color-scheme: dark; }
 
 .editorFooter {
-  display: flex; align-items: center; justify-content: flex-end;
+  display: flex; align-items: center; justify-content: space-between;
   gap: 8px; padding-top: 10px;
   border-top: 1px solid var(--ink-5);
+}
+
+.editorFooterActions {
+  display: flex; align-items: center; gap: 8px;
 }
 
 .editorError {
@@ -778,16 +782,19 @@
   color: var(--ink-3);
 }
 .privacyBtn {
-  background: none; border: none; cursor: pointer;
-  font-size: 13px; padding: 2px 4px; opacity: .5;
-  transition: opacity var(--t-fast); flex-shrink: 0;
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--ink-5);
+  border-radius: 7px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: .5px; text-transform: uppercase;
+  color: var(--ink-2); cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
 }
-.privacyBtn:hover { opacity: 1; }
-
-@media (max-width: 768px) {
-  .privacyBtn {
-    opacity: 1;          /* always visible on mobile — no hover state */
-    font-size: 15px;     /* easier to tap */
-    padding: 4px 6px;   /* larger tap target */
-  }
+.privacyBtn:hover {
+  border-color: var(--ink-3);
+  color: var(--ink-0);
+  background: rgba(255,255,255,.06);
 }

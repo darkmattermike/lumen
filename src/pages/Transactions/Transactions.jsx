@@ -221,15 +221,6 @@ function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLea
           {isBlurred ? <span className={styles.blurredAmt}>$●●●</span> : <>{isTransfer ? '↔' : isIncome ? '+' : '−'}${fmt(Math.abs(amt))}</>}
         </div>
         <div className={styles.txChevron} style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}>›</div>
-        {(isOwnerView) && onTogglePrivacy && (
-          <button
-            className={styles.privacyBtn}
-            onClick={e => { e.stopPropagation(); onTogglePrivacy(tx.id, tx._visibility) }}
-            title={tx._visibility ? `Privacy: ${tx._visibility} — click to change` : 'Set private'}
-          >
-            {tx._visibility === 'hidden' ? '🙈' : tx._visibility === 'blurred' ? '🔒' : '🔓'}
-          </button>
-        )}
       </div>
 
       {/* ── Expanded editor ── */}
@@ -334,14 +325,25 @@ function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLea
           {error && <div className={styles.editorError}>{error}</div>}
 
           <div className={styles.editorFooter}>
-            <button className={styles.editorCancel} onClick={() => setOpen(false)}>Cancel</button>
-            <button
-              className={styles.editorSave}
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            {isOwnerView && onTogglePrivacy && (
+              <button
+                className={styles.privacyBtn}
+                onClick={() => onTogglePrivacy(tx.id, tx._visibility)}
+                title={tx._visibility ? `Privacy: ${tx._visibility} — click to change` : 'Set visibility'}
+              >
+                {tx._visibility === 'hidden' ? '🙈 Hidden' : tx._visibility === 'blurred' ? '🔒 Blurred' : '🔓 Visible'}
+              </button>
+            )}
+            <div className={styles.editorFooterActions}>
+              <button className={styles.editorCancel} onClick={() => setOpen(false)}>Cancel</button>
+              <button
+                className={styles.editorSave}
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
           </div>
         </div>
       )}
