@@ -105,16 +105,15 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
   const wrapRef                 = useRef(null)
   const triggerRef              = useRef(null)
 
-  // Measure trigger position on open so cloud aligns precisely with the orb
+  // Anchor to orb: dots sit at orb Y, cloud grows upward above them
+  const cloudRef = useRef(null)
+
   useEffect(() => {
     if (!open || !triggerRef.current) { setCloudPos(null); return }
     const rect = triggerRef.current.getBoundingClientRect()
-    const orbCenterY = rect.top + rect.height / 2
     setCloudPos({
-      // Center the cloud vertically on the orb.
-      // Cloud is ~180px tall — subtract half to center it.
-      top:  Math.max(8, orbCenterY - 90),
-      left: rect.right + 14,
+      orbCenterY: rect.top + rect.height / 2,
+      left:       rect.right + 14,
     })
   }, [open])
 
@@ -255,23 +254,31 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
       {open && cloudPos && (
         <div
           className={styles.cloudWrap}
-          style={{ top: cloudPos.top, left: cloudPos.left }}
+          style={{
+            // Trail (~30px) sits at orb center — so top = orbCenterY - 30px
+            top:  cloudPos.orbCenterY - 30,
+            left: cloudPos.left,
+            // Cloud max-height = space from top of screen to just above orb
+            '--cloud-max-h': `${Math.max(100, cloudPos.orbCenterY - 16 - 30 - 6)}px`,
+          }}
         >
-          {/* Cloud first — sits level with the orb */}
-          {!notifs.length ? (
-            <EmptyCloud onClose={() => setOpen(false)} />
-          ) : (
-            <>
-              {notifs.map((n, i) => (
-                <NotifCloud key={n.id} notif={n} animDelay={i * 60} onGotIt={handleGotIt} onDismiss={handleDismiss} />
-              ))}
-              {notifs.length > 1 && (
-                <button className={styles.clearAllBtn} onClick={clearAll}>Dismiss all</button>
-              )}
-            </>
-          )}
+          {/* Cloud — anchored to bottom of wrapper, grows upward */}
+          <div className={styles.cloudScroll} ref={cloudRef}>
+            {!notifs.length ? (
+              <EmptyCloud onClose={() => setOpen(false)} />
+            ) : (
+              <>
+                {notifs.map((n, i) => (
+                  <NotifCloud key={n.id} notif={n} animDelay={i * 60} onGotIt={handleGotIt} onDismiss={handleDismiss} />
+                ))}
+                {notifs.length > 1 && (
+                  <button className={styles.clearAllBtn} onClick={clearAll}>Dismiss all</button>
+                )}
+              </>
+            )}
+          </div>
 
-          {/* Trail dots below cloud, bridging down toward the orb */}
+          {/* Trail dots — sit between cloud bottom and orb */}
           <Trail />
         </div>
       )}

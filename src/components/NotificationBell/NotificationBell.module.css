@@ -43,24 +43,40 @@
 /* ── Desktop cloud wrapper ────────────────────────────────
    position: fixed with top/left set by JS to align exactly
    with the orb button's measured position.               */
+/* ── Desktop cloud wrapper ─────────────────────────────────
+   top = orbCenterY - trailHeight (~30px) so trail aligns with orb.
+   flex-direction: column-reverse — Trail DOM-first renders at bottom
+   (orb level), cloud stacks above it growing upward.              */
 .cloudWrap {
   position: fixed;
   z-index: 400;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: flex-start;
-  gap: 4px;
+  gap: 6px;
 }
 
-/* Trail sits below the cloud, bridging toward the orb */
+/* Trail — visually at bottom, level with orb */
 .trail {
   display: flex;
-  flex-direction: column;   /* largest at top = closest to cloud */
+  flex-direction: column;    /* large dot on top toward cloud */
   align-items: flex-start;
   gap: 4px;
-  padding-left: 16px;       /* indent to feel connected to cloud body */
-  margin-top: -2px;         /* close gap to cloud */
+  padding-left: 8px;
+  flex-shrink: 0;
 }
+
+/* Cloud scroll container — grows upward, capped at screen top */
+.cloudScroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: var(--cloud-max-h, 400px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.cloudScroll::-webkit-scrollbar { width: 3px; }
+.cloudScroll::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 3px; }
 .trailDot {
   border-radius: 50%;
   background: rgba(93,202,165,.55);
