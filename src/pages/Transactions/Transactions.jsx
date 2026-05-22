@@ -221,7 +221,7 @@ function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLea
           {isBlurred ? <span className={styles.blurredAmt}>$●●●</span> : <>{isTransfer ? '↔' : isIncome ? '+' : '−'}${fmt(Math.abs(amt))}</>}
         </div>
         <div className={styles.txChevron} style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}>›</div>
-        {(isOwnerView || isBlurred) && onTogglePrivacy && (
+        {(isOwnerView) && onTogglePrivacy && (
           <button
             className={styles.privacyBtn}
             onClick={e => { e.stopPropagation(); onTogglePrivacy(tx.id, tx._visibility) }}
@@ -534,10 +534,9 @@ function AutoCategorizeModal({ budgets, onClose, onDone }) {
 // ── Main page ─────────────────────────────────────────────────
 export default function Transactions() {
   const { user } = useAuth()
-  // isFamilyPro: true when user is on a family plan and is the account owner.
-  // Enables per-transaction privacy toggles for shared family views.
-  // Defaults to false until family plan billing is implemented.
-  const isFamilyPro = user?.plan === 'family' || user?.is_owner === true || false
+  // isOwner: owner role can set transaction visibility (blur/hide) for family members.
+  const isOwner    = user?.role === 'owner' || user?.is_owner === true
+  const isFamilyPro = isOwner
 
   const [activeFilter, setActiveFilter]   = useState('All')
   const [search, setSearch]               = useState('')
@@ -611,6 +610,25 @@ export default function Transactions() {
     setLoadedTxs(prev =>
       (prev ?? effectiveTxs).map(tx => tx.id === id ? { ...tx, ...saved } : tx)
     )
+  }
+
+  // Cycle visibility: visible → blurred → hidden → visible
+  async function handleTogglePrivacy(txId, currentVisibility) {
+    const next = !currentVisibility || currentVisibility === 'visible'
+      ? 'blurred'
+      : currentVisibility === 'blurred'
+        ? 'hidden'
+        : 'visible'
+    try {
+      await api.setTxVisibility({ transactionId: txId, visibility: next })
+      setLoadedTxs(prev =>
+        (prev ?? effectiveTxs).map(t =>
+          t.id === txId ? { ...t, _visibility: next === 'visible' ? null : next } : t
+        )
+      )
+    } catch (err) {
+      console.error('Visibility toggle failed:', err.message)
+    }
   }
 
   // Load the next page of historical transactions and append
