@@ -530,11 +530,12 @@
 .tlItem {
   display: flex; align-items: center; gap: 0;
   padding: 5px 0;
-  transition: background var(--t-fast);
+  transition: all var(--t-fast);
   border-radius: 8px;
-  cursor: default;
+  cursor: pointer;
 }
-.tlItem:hover { background: rgba(255,255,255,.02); }
+.tlItem:hover { background: rgba(255,255,255,.04); }
+.tlItem:hover .tlName { color: var(--ink-0); }
 .tlItemPast { opacity: .45; }
 
 /* Date column */
@@ -567,17 +568,12 @@
 .tlAmt { font-family: var(--font-mono); font-size: 11px; flex-shrink: 0; white-space: nowrap; }
 
 /* Action buttons */
-.tlEdit {
-  background: transparent; border: none; color: var(--ink-5);
-  font-size: 11px; cursor: pointer; padding: 3px 6px; border-radius: 4px;
-  transition: all var(--t-fast); flex-shrink: 0; opacity: 0;
-}
+.tlEdit { display: none; } /* row click opens edit now */
 .tlDelete {
   background: transparent; border: none; color: var(--ink-5);
   font-size: 10px; cursor: pointer; padding: 3px 6px; border-radius: 4px;
   transition: all var(--t-fast); flex-shrink: 0; opacity: 0; margin-right: 8px;
 }
-.tlItem:hover .tlEdit  { opacity: 1; color: var(--calm); }
 .tlItem:hover .tlDelete { opacity: 1; color: var(--debt); }
 
 @media (max-width: 768px) {

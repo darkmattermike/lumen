@@ -4,7 +4,6 @@ import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import CsvImportModal from '../../components/CsvImportModal/CsvImportModal'
 import DocumentUpload from '../../components/DocumentUpload/DocumentUpload'
 import MergeReview from '../../components/MergeReview/MergeReview'
-import SpendingPaceCard from '../../components/SpendingPaceCard/SpendingPaceCard'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -701,12 +700,6 @@ export default function Transactions() {
             </div>
           </div>
           <div className={styles.headerRight}>
-            <SpendingPaceCard
-              spending={spending}
-              income={income}
-              dailyCumulative={dailyCumulative}
-              lastMonthSpend={lastMonthSpend}
-            />
           </div>
         </div>
 

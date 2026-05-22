@@ -421,16 +421,17 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
     flex: 1;
     height: 100%;
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 8px 4px;
-    min-width: 44px;
+    padding: 6px 2px;
+    min-width: 0;
     transition: color var(--t-fast);
     color: var(--ink-3);
+    overflow: hidden;
   }
 
   .mobileNavBtn.mobileNavOn {
@@ -438,16 +439,20 @@ body {
   }
 
   .mobileNavIcon {
-    font-size: 18px;
+    font-size: 17px;
     line-height: 1;
+    display: flex; align-items: center; justify-content: center;
   }
 
   .mobileNavLabel {
     font-family: var(--font-mono);
-    font-size: 8px;
-    letter-spacing: 0.5px;
+    font-size: 7px;
+    letter-spacing: 0px;
     text-transform: uppercase;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 }
 

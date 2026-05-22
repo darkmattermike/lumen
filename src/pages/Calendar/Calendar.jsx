@@ -783,7 +783,11 @@ export default function Calendar() {
                         const color = typeColor[ev.type] || 'var(--warn)'
                         const upcomingEntry = upcoming.find(u => u.id === ev.id && u.day_of_month === ev.day_of_month)
                         return (
-                          <div key={`${ev.id}-${i}`} className={`${styles.tlItem} ${isPast ? styles.tlItemPast : ''}`}>
+                          <div key={`${ev.id}-${i}`}
+                            className={`${styles.tlItem} ${isPast ? styles.tlItemPast : ''}`}
+                            onClick={() => { setEditItem(recurring.find(r => r.id === ev.id) || ev); setShowModal(true) }}
+                            title="Click to edit"
+                          >
                             {/* Date column */}
                             <div className={styles.tlDate}>
                               <div className={styles.tlDateDay}>{weekday}</div>
@@ -808,11 +812,10 @@ export default function Calendar() {
                             <div className={styles.tlAmt} style={{color: isPast ? 'var(--ink-3)' : color}}>
                               {ev.type === 'income' ? '+' : '−'}${fmt(ev.amount)}
                             </div>
-                            {/* Actions */}
-                            <button className={styles.tlEdit}
-                              onClick={() => { setEditItem(recurring.find(r => r.id === ev.id) || ev); setShowModal(true) }}
-                              title="Edit">✎</button>
-                            <button className={styles.tlDelete} onClick={() => handleDelete(ev.id)} title="Delete">✕</button>
+                            {/* Delete only — row click opens edit */}
+                            <button className={styles.tlDelete}
+                              onClick={e => { e.stopPropagation(); handleDelete(ev.id) }}
+                              title="Delete">✕</button>
                           </div>
                         )
                       })}

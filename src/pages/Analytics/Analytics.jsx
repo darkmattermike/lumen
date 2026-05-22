@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
 import CashFlowChart from '../../components/CashFlowChart/CashFlowChart'
+import SpendingPaceCard from '../../components/SpendingPaceCard/SpendingPaceCard'
 import styles from './Analytics.module.css'
 
 function fmtK(n) {
@@ -27,7 +28,7 @@ export default function Analytics() {
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
 
-  const { cashFlow = [], byCategory = [], kpis = {} } = data
+  const { cashFlow = [], byCategory = [], kpis = {}, monthlySummary = {} } = data
   const { avgMonthlySpend = 0, savingsRate = 0, savingsBalance = 0 } = kpis
 
   // Normalize bar heights for chart
@@ -101,7 +102,15 @@ export default function Analytics() {
       </div>
 
       <div className={styles.body}>
-        {/* Cash flow forecast chart (spending pace) */}
+        {/* Spending Pace Card */}
+        <SpendingPaceCard
+          spending={Number(kpis.totalSpend || 0)}
+          income={Number(kpis.totalIncome || 0)}
+          dailyCumulative={monthlySummary?.dailyCumulative || []}
+          lastMonthSpend={Number(kpis.lastMonthSpend || 0)}
+        />
+
+        {/* Cash flow forecast chart */}
         <div className={`${styles.chartCard} ${styles.full}`} style={{ '--card-delay': '0.2s' }}>
           <CashFlowChart />
         </div>
