@@ -473,3 +473,23 @@
   .tabContent { padding: 16px 16px 32px; }
   .panelGrid { grid-template-columns: 1fr; gap: 16px; }
 }
+/* ── Email invite form ── */
+.emailInviteBlock { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--ink-5); }
+.emailInviteForm  { display: flex; flex-direction: column; gap: 8px; }
+.emailInviteInput {
+  background: rgba(255,255,255,.04); border: 1px solid var(--ink-4);
+  border-radius: 8px; padding: 9px 12px;
+  font-family: var(--font-sans); font-size: 13px; color: var(--ink-0);
+  outline: none; transition: border var(--t-fast);
+}
+.emailInviteInput:focus { border-color: rgba(167,139,255,.4); }
+.emailInviteInput::placeholder { color: var(--ink-4); }
+.emailInviteError { font-size: 11px; color: var(--debt); }
+.emailInviteBtn {
+  padding: 9px 16px; border-radius: 8px;
+  background: rgba(167,139,255,.1); border: 1px solid rgba(167,139,255,.3);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--goal); cursor: pointer; transition: all var(--t-base);
+}
+.emailInviteBtn:hover:not(:disabled) { background: var(--goal); color: #040608; }
+.emailInviteBtn:disabled { opacity: .6; cursor: not-allowed; }

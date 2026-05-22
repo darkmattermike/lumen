@@ -520,6 +520,54 @@ function PlanSection() {
   )
 }
 
+
+// ── Email invite form ─────────────────────────────────────────
+function EmailInviteForm() {
+  const [email, setEmail]   = useState('')
+  const [name, setName]     = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent]     = useState(false)
+  const [error, setError]   = useState('')
+
+  async function handleSend(e) {
+    e.preventDefault()
+    if (!email.trim()) return setError('Enter an email address')
+    setSending(true)
+    setError('')
+    try {
+      await api.familyInviteEmail({ email: email.trim(), name: name.trim() || undefined })
+      setSent(true)
+      setEmail('')
+      setName('')
+      setTimeout(() => setSent(false), 4000)
+    } catch (err) {
+      setError(err.message || 'Failed to send invite')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSend} className={styles.emailInviteForm}>
+      <input
+        className={styles.emailInviteInput}
+        type="email" placeholder="Email address" value={email}
+        onChange={e => { setEmail(e.target.value); setError('') }}
+        required
+      />
+      <input
+        className={styles.emailInviteInput}
+        type="text" placeholder="Their name (optional)" value={name}
+        onChange={e => setName(e.target.value)}
+      />
+      {error && <div className={styles.emailInviteError}>{error}</div>}
+      <button className={styles.emailInviteBtn} type="submit" disabled={sending}>
+        {sending ? 'Sending…' : sent ? '✓ Invite sent!' : 'Send Invite'}
+      </button>
+    </form>
+  )
+}
+
 // ── Family section ─────────────────────────────────────────────
 function FamilySection() {
   const { user } = useAuth()
@@ -616,6 +664,12 @@ function FamilySection() {
               Share this link with family members. They'll need a Lumen account.
               Slots: {status.members?.length || 0}/2 used.
             </div>
+          </div>
+
+          {/* Email invite form */}
+          <div className={styles.emailInviteBlock}>
+            <div className={styles.inviteLabel}>Invite by Email</div>
+            <EmailInviteForm />
           </div>
 
           {/* Members list */}

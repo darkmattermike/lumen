@@ -208,6 +208,7 @@ export const api = {
   familyJoin:         (code)     => request(`/api/family/join/${code}`,  { method: 'POST' }),
   familyRemove:       (userId)   => request(`/api/family/members/${userId}`, { method: 'DELETE' }),
   familyRegenInvite:  ()         => request('/api/family/regenerate-invite', { method: 'POST' }),
+  familyInviteEmail:  (body)     => request('/api/family/invite-email', { method: 'POST', body: JSON.stringify(body) }),
   setTxVisibility:    (body)     => request('/api/family/visibility/transaction', { method: 'POST', body: JSON.stringify(body) }),
   // Gmail
   gmailAuthUrl:    ()  => request('/api/gmail/auth-url'),
@@ -241,6 +242,7 @@ export const api = {
   familyJoin:         (code)     => request(`/api/family/join/${code}`,  { method: 'POST' }),
   familyRemove:       (userId)   => request(`/api/family/members/${userId}`, { method: 'DELETE' }),
   familyRegenInvite:  ()         => request('/api/family/regenerate-invite', { method: 'POST' }),
+  familyInviteEmail:  (body)     => request('/api/family/invite-email', { method: 'POST', body: JSON.stringify(body) }),
   setTxVisibility:    (body)     => request('/api/family/visibility/transaction', { method: 'POST', body: JSON.stringify(body) }),
   // Gmail Phase 5
   gmailPhase5Scan:      ()     => request('/api/gmail/scan/phase5',      { method: 'POST' }),
