@@ -1,6 +1,8 @@
 /* ══════════════════════════════════════════════
-   DESKTOP RAIL VARIANT
+   NotificationBell — SMS / concept 10
    ══════════════════════════════════════════════ */
+
+/* ── Desktop trigger button ── */
 .wrap {
   position: relative;
 }
@@ -12,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  background: transparent;
   border: none;
   border-radius: 9px;
   cursor: pointer;
@@ -22,69 +24,214 @@
 .trigger:hover  { background: rgba(255,255,255,.04); }
 .triggerOpen    { background: rgba(93,202,165,.08); }
 
-/* Badge now handled by LumenDot component */
-.badge { display: none; }
-
-/* Chat-bubble panel — opens to the RIGHT of the rail */
-.bubble {
-  position: absolute;
-  left: calc(100% + 14px);
+/* ── Desktop stack — position:fixed so it always sits
+      just to the right of the 48px rail, vertically
+      centered in the viewport ── */
+.stack {
+  position: fixed;
+  left: calc(var(--rail-w, 48px) + 12px);
   top: 50%;
   transform: translateY(-50%);
   width: 300px;
-  max-height: 440px;
-  background: var(--bg-3);
-  border: 1px solid var(--ink-4);
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(93,202,165,.06);
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  z-index: 300;
-  animation: bubble-in .18s cubic-bezier(.34,1.4,.64,1) both;
+  gap: 0;
+  z-index: 400;
+  /* Soft entrance */
+  animation: stack-in .22s cubic-bezier(.34,1.2,.64,1) both;
+}
+@keyframes stack-in {
+  from { opacity: 0; transform: translateY(-50%) translateX(-8px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
 }
 
-/* Tail pointing left toward the orb */
-.tail {
-  position: absolute;
-  left: -7px; top: 50%;
-  transform: translateY(-50%);
-  width: 0; height: 0;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  border-right: 7px solid var(--bg-3);
-  filter: drop-shadow(-1px 0 0 var(--ink-4));
-}
-
-@keyframes bubble-in {
-  from { opacity: 0; transform: translateY(-50%) translateX(-6px) scale(.96); }
-  to   { opacity: 1; transform: translateY(-50%) translateX(0)    scale(1);   }
-}
-
-.bubbleHeader {
+/* Stack header — Lumen label + clear all */
+.stackHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px 10px;
-  border-bottom: 1px solid var(--ink-5);
-  flex-shrink: 0;
+  gap: 8px;
+  padding: 0 2px 10px;
 }
-
-.lumenLabel {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+.stackHeaderOrb   { flex-shrink: 0; }
+.stackHeaderName  {
   font-family: var(--font-mono);
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   color: var(--safe);
+  flex: 1;
+}
+.clearAllBtn {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid var(--ink-5);
+  border-radius: 8px;
+  padding: 4px 9px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.clearAllBtn:hover { color: var(--ink-1); border-color: var(--ink-3); }
+
+/* Scrollable notif area */
+.stackScroll {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  max-height: calc(80vh - 48px);
+  padding-right: 2px;
+}
+.stackScroll::-webkit-scrollbar { width: 2px; }
+.stackScroll::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 2px; }
+
+/* ══════════════════════════════════════════════
+   SMS notification group
+   ══════════════════════════════════════════════ */
+.smsNotif {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* ── Individual bubble ── */
+.smsBubble {
+  border-radius: 18px 18px 18px 4px;
+  padding: 10px 14px;
+  width: fit-content;
+  max-width: 100%;
+  position: relative;
+  /* Stagger via CSS var set inline */
+  animation: sms-slide .28s cubic-bezier(.34,1.25,.64,1) both;
+  animation-delay: var(--anim-delay, 0ms);
+}
+
+@keyframes sms-slide {
+  from { opacity: 0; transform: translateX(-10px) scale(.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Bubble 1 — opener, plain dark */
+.smsBubbleBase {
+  background: var(--bg-3);
+  border: 1px solid rgba(255,255,255,.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,.35);
+}
+
+/* Bubble 2 variants — fact, accent tinted */
+.smsBubbleFact { max-width: 100%; }
+
+.smsBubbleDebt {
+  background: rgba(232,115,99,.09);
+  border: 1px solid rgba(232,115,99,.22);
+  box-shadow: 0 2px 12px rgba(232,115,99,.08);
+}
+.smsBubbleWin {
+  background: rgba(93,202,165,.09);
+  border: 1px solid rgba(93,202,165,.22);
+  box-shadow: 0 2px 12px rgba(93,202,165,.08);
+}
+.smsBubbleNeutral {
+  background: rgba(108,140,255,.08);
+  border: 1px solid rgba(108,140,255,.2);
+  box-shadow: 0 2px 12px rgba(0,0,0,.3);
+}
+
+/* Bubble 3 — CTA, no background, just replies */
+.smsBubbleCta {
+  background: transparent;
+  border: none;
+  padding: 2px 0 0;
+  border-radius: 0;
+}
+
+/* ── Text ── */
+.smsText {
+  font-size: 13px;
+  color: var(--ink-0);
+  line-height: 1.6;
+  display: block;
+}
+.smsTextCta {
+  font-size: 13px;
+  color: var(--ink-0);
+  line-height: 1.6;
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* ── Meta row (time + read receipt) ── */
+.smsMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+.smsTime {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--ink-4);
+  letter-spacing: .3px;
+}
+.smsRead {
+  font-size: 9px;
+  color: var(--calm);
+  opacity: .7;
+}
+
+/* ── Reply buttons ── */
+.smsReplies {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.smsReply {
+  padding: 7px 14px;
+  border-radius: 18px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+.smsReplyPrimary {
+  background: rgba(93,202,165,.1);
+  border: 1px solid rgba(93,202,165,.3);
+  color: var(--safe);
+}
+.smsReplyPrimary:hover {
+  background: var(--safe);
+  color: #040608;
+}
+.smsReplyDanger {
+  background: rgba(232,115,99,.1);
+  border: 1px solid rgba(232,115,99,.3);
+  color: var(--debt);
+}
+.smsReplyDanger:hover {
+  background: var(--debt);
+  color: #fff;
+}
+.smsReplyNeutral {
+  background: transparent;
+  border: 1px solid var(--ink-5);
+  color: var(--ink-3);
+}
+.smsReplyNeutral:hover {
+  border-color: var(--ink-3);
+  color: var(--ink-1);
 }
 
 /* ══════════════════════════════════════════════
    MOBILE DRAWER VARIANT
    ══════════════════════════════════════════════ */
-.drawerWrap {
-  width: 100%;
-}
+.drawerWrap { width: 100%; }
 
 .drawerTrigger {
   width: 100%;
@@ -120,33 +267,37 @@
   color: #fff;
   font-size: 9px;
   font-weight: 700;
-  min-width: 16px; height: 16px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 4px;
   border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
 .drawerChevron {
   color: var(--safe);
   transition: transform var(--t-fast);
-  display: flex; align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .drawerPanel {
   margin-top: 8px;
   background: var(--bg-2);
   border: 1px solid var(--ink-5);
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  animation: drawer-panel-in .15s ease both;
-  max-height: 320px;
+  animation: drawer-in .18s ease both;
+  max-height: 380px;
   display: flex;
   flex-direction: column;
 }
-@keyframes drawer-panel-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes drawer-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
 }
 
 .drawerPanelHeader {
@@ -159,305 +310,53 @@
 }
 .drawerPanelLabel {
   font-family: var(--font-mono);
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   color: var(--ink-3);
 }
-
-/* ══════════════════════════════════════════════
-   SHARED ELEMENTS
-   ══════════════════════════════════════════════ */
 .clearBtn {
-  background: none; border: none;
-  font-family: var(--font-mono); font-size: 9px;
-  color: var(--ink-3); letter-spacing: .5px; text-transform: uppercase;
-  cursor: pointer; padding: 3px 7px; border-radius: 5px;
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 3px 7px;
+  border-radius: 5px;
   transition: all var(--t-fast);
 }
 .clearBtn:hover { color: var(--ink-1); background: rgba(255,255,255,.04); }
 
-.empty {
-  padding: 20px 16px;
-}
-.emptyMsg {
-  font-size: 13px; color: var(--ink-1); margin: 0 0 4px;
-}
-.emptySub {
-  font-size: 11px; color: var(--ink-3); margin: 0; line-height: 1.5;
-}
-.emptyDots {
-  font-size: 18px; color: var(--safe); letter-spacing: 4px;
-  animation: dots-pulse 1.2s ease-in-out infinite;
-}
-@keyframes dots-pulse {
-  0%, 100% { opacity: .4; }
-  50%       { opacity: 1;  }
-}
-
-.list {
+.drawerScroll {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   overflow-y: auto;
   flex: 1;
 }
-.list::-webkit-scrollbar { width: 3px; }
-.list::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 3px; }
+.drawerScroll::-webkit-scrollbar { width: 2px; }
+.drawerScroll::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 2px; }
 
-.item {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--ink-5);
-  position: relative;
-  animation: item-in .28s cubic-bezier(0.34,1.1,0.64,1) both;
-  animation-delay: var(--item-delay, 0ms);
-  transition: background var(--t-fast);
-}
-.item:last-child { border-bottom: none; }
-.item:hover { background: rgba(255,255,255,.02); }
-
-.unread::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--accent, var(--calm));
-  border-radius: 0 2px 2px 0;
-}
-
-@keyframes item-in {
-  from { opacity: 0; transform: translateX(6px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-.itemTop {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 3px;
-}
-.itemIcon  { font-size: 14px; flex-shrink: 0; }
-.itemTitle { flex: 1; font-size: 12px; font-weight: 600; color: var(--ink-0); line-height: 1.3; }
-
-.dismissBtn {
-  background: none; border: none;
-  color: var(--ink-4); font-size: 15px; line-height: 1;
-  cursor: pointer; padding: 0 2px; margin-top: -2px;
-  opacity: 0; transition: opacity var(--t-fast), color var(--t-fast);
-  flex-shrink: 0;
-}
-.item:hover .dismissBtn { opacity: 1; }
-.dismissBtn:hover { color: var(--ink-1); }
-
-.itemBody {
-  font-size: 11px; color: var(--ink-2);
-  margin: 0 0 4px; line-height: 1.5;
-  padding-left: 21px;
-}
-.itemTime {
-  font-family: var(--font-mono); font-size: 9px;
-  color: var(--ink-3); letter-spacing: .5px;
-  padding-left: 21px;
-}
-
-/* Phase B — Duplicate action buttons */
-.itemActions {
-  display: flex; gap: 6px;
-  padding: 4px 0 6px 21px;
-}
-.actionBtnDanger {
-  font-size: 10px; padding: 4px 8px;
-  background: var(--debt); color: #fff;
-  border: none; border-radius: 4px;
-  cursor: pointer; transition: opacity var(--t-fast);
-}
-.actionBtnDanger:hover { opacity: 0.85; }
-.actionBtnNeutral {
-  font-size: 10px; padding: 4px 8px;
-  background: var(--surface-1); color: var(--ink-2);
-  border: 1px solid var(--border); border-radius: 4px;
-  cursor: pointer; transition: opacity var(--t-fast);
-}
-.actionBtnNeutral:hover { opacity: 0.75; }
-
-/* ── Mobile — panel drops down from top, full width ── */
-@media (max-width: 768px) {
-  .wrap {
-    position: static;
-  }
-  .bubble {
-    position: fixed;
-    top: 60px;
-    left: 8px;
-    right: 8px;
-    width: auto;
-    max-height: 70dvh;
-    transform: none;
-    z-index: 400;
-  }
-}
-
-/* ── iMessage-style speech bubbles ── */
-.wrap { position: relative; }
-
-.trigger {
-  position: relative;
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  background: transparent; border: none; cursor: pointer; border-radius: 50%;
-  transition: background var(--t-fast);
-}
-.trigger:hover { background: rgba(255,255,255,.06); }
-.triggerOpen  { background: rgba(93,202,165,.08); }
-
-.badge {
-  position: absolute; top: -2px; right: -2px;
-  background: var(--debt); color: #fff;
-  font-family: var(--font-mono); font-size: 8px; font-weight: 700;
-  min-width: 16px; height: 16px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center; padding: 0 3px;
-}
-
-/* Stack container — opens to the right of the orb */
-.stack {
-  position: absolute;
-  left: calc(100% + 20px);
-  bottom: -8px;
-  width: 320px;
-  display: flex; flex-direction: column; gap: 10px;
-  z-index: 200;
-}
-
-.clearAllBtn {
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
-  color: var(--ink-3); background: transparent; border: 1px solid var(--ink-5);
-  border-radius: 8px; padding: 7px; cursor: pointer; transition: all var(--t-fast);
-}
-.clearAllBtn:hover { color: var(--ink-1); border-color: var(--ink-3); }
-
-/* The speech bubble itself */
-.bubble {
-  background: var(--bg-2);
-  border-radius: 18px 18px 18px 4px;
-  padding: 14px 16px;
-  position: relative;
-  box-shadow: 0 4px 24px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.06);
-  animation: bubblePop .28s cubic-bezier(.34,1.2,.64,1) both;
-  transform-origin: left bottom;
-}
-
-/* Coloured left accent — shows notification type */
-.bubble::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 14px; bottom: 14px;
-  width: 3px;
-  background: var(--accent, var(--calm));
-  border-radius: 0 2px 2px 0;
-  opacity: .75;
-}
-
-/* Triangle tail — points left toward the orb */
-.bubbleTail {
-  position: absolute;
-  left: -10px;
-  bottom: 14px;
-  width: 0; height: 0;
-  border-top: 8px solid transparent;
-  border-right: 10px solid var(--bg-2);
-  border-bottom: 0;
-  filter: drop-shadow(-2px 1px 3px rgba(0,0,0,.35));
-}
-
-/* Sender row */
-.bubbleHeader {
-  display: flex; align-items: center; gap: 7px; margin-bottom: 10px;
-}
-.bubbleOrb    { flex-shrink: 0; }
-.bubbleLumen  {
-  font-family: var(--font-mono); font-size: 9px;
-  color: var(--safe); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
-}
-.bubbleType {
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase;
-  padding: 2px 7px; border-radius: 10px;
-  background: color-mix(in srgb, var(--accent, var(--calm)) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent, var(--calm)) 28%, transparent);
-  color: var(--accent, var(--calm));
-}
-.bubbleTime {
-  font-family: var(--font-mono); font-size: 8px; color: var(--ink-4); margin-left: auto;
-}
-
-/* Message text — reads naturally */
-.bubbleBody {
-  font-size: 13px; color: var(--ink-0); line-height: 1.65;
-  margin: 0 0 14px;
-}
-
-/* Quick-reply buttons below message */
-.bubbleActions {
-  display: flex; gap: 8px; flex-wrap: wrap;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,.06);
-}
-.gotItBtn {
-  flex: 1; text-align: center;
-  padding: 7px 16px; border-radius: 20px;
-  background: rgba(93,202,165,.1); border: 1px solid rgba(93,202,165,.28);
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
-  color: var(--safe); cursor: pointer; transition: all var(--t-fast);
-}
-.gotItBtn:hover { background: var(--safe); color: #040608; }
-.dismissBtn {
-  flex: 1; text-align: center;
-  padding: 7px 16px; border-radius: 20px;
-  background: transparent; border: 1px solid var(--ink-5);
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
-  color: var(--ink-3); cursor: pointer; transition: all var(--t-fast);
-}
-.dismissBtn:hover { border-color: var(--ink-3); color: var(--ink-1); }
-.actionDanger {
-  flex: 1; text-align: center;
-  padding: 7px 14px; border-radius: 20px;
-  background: rgba(232,115,99,.1); border: 1px solid rgba(232,115,99,.3);
-  font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .5px;
-  color: var(--debt); cursor: pointer; transition: all var(--t-fast);
-}
-.actionDanger:hover { background: rgba(232,115,99,.2); }
-.actionNeutral {
-  flex: 1; text-align: center;
-  padding: 7px 14px; border-radius: 20px;
-  background: transparent; border: 1px solid var(--ink-5);
-  font-family: var(--font-mono); font-size: 9px;
-  color: var(--ink-3); cursor: pointer; transition: all var(--t-fast);
-}
-.actionNeutral:hover { border-color: var(--ink-3); color: var(--ink-1); }
-
-/* Drawer bubbles — no tail, no position tricks */
-.drawerBubbles {
-  display: flex; flex-direction: column; gap: 10px; padding: 10px 12px; overflow-y: auto;
-}
-.drawerBubbles .bubble {
-  position: static; transform: none !important; opacity: 1 !important;
-  animation: bubblePop .2s cubic-bezier(.34,1.2,.64,1) both;
-  border-radius: 14px;
-}
-.drawerBubbles .bubble::before { border-radius: 4px 0 0 4px; }
-.drawerBubbles .bubbleTail { display: none; }
-
-/* Empty state */
-.empty     { padding: 24px 16px; }
-.emptyMsg  { font-size: 13px; color: var(--ink-0); margin-bottom: 5px; }
-.emptySub  { font-size: 11px; color: var(--ink-3); line-height: 1.55; }
-
-@keyframes bubblePop {
-  from { opacity: 0; transform: scale(.88) translateX(-12px); }
-  to   { opacity: 1; transform: scale(1)   translateX(0); }
-}
-
-/* Mobile — stack above tab bar */
+/* ── Mobile responsive override ── */
 @media (max-width: 768px) {
   .stack {
-    left: auto; right: 8px;
+    /* On mobile, panel comes up from bottom of screen instead */
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: auto;
     bottom: calc(var(--tab-bar-h, 60px) + 8px);
-    width: calc(100vw - 24px); max-width: 360px;
+    transform: none;
+    width: auto;
+    max-width: 100%;
+    animation: stack-mobile-in .25s cubic-bezier(.34,1.2,.64,1) both;
   }
-  .bubbleTail { display: none; }
-  .bubble { border-radius: 14px; }
+  @keyframes stack-mobile-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+  }
 }
