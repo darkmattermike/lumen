@@ -5,6 +5,7 @@
   padding: 18px 20px 14px;
   min-width: 260px;
   max-width: 380px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -141,4 +142,15 @@
   font-size: 9px;
   color: var(--ink-3);
   letter-spacing: .3px;
+}
+
+@media (max-width: 768px) {
+  .card {
+    max-width: none;
+    border-radius: 12px;
+    padding: 14px 16px 12px;
+  }
+  .statVal { font-size: 18px; }
+  .titleMain { font-size: 20px; }
+  .titleSub  { font-size: 14px; }
 }
