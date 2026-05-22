@@ -783,3 +783,11 @@
   transition: opacity var(--t-fast); flex-shrink: 0;
 }
 .privacyBtn:hover { opacity: 1; }
+
+@media (max-width: 768px) {
+  .privacyBtn {
+    opacity: 1;          /* always visible on mobile — no hover state */
+    font-size: 15px;     /* easier to tap */
+    padding: 4px 6px;   /* larger tap target */
+  }
+}
