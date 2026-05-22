@@ -47,10 +47,10 @@ const NAV_ITEMS = [
 // Mobile primary tabs — always visible
 const MOBILE_PRIMARY = [
   { path: '/dashboard',    icon: 'home',     label: 'Home'         },
-  { path: '/transactions', icon: 'txns',     label: 'Transactions' },
-  { path: '/budgets',      icon: 'budgets',  label: 'Budgets'      },
-  { path: '/calendar',     icon: 'calendar', label: 'Calendar'     },
-  { path: '/analytics',    icon: 'stats',    label: 'Analytics'    },
+  { path: '/transactions', icon: 'txns',     label: 'Txns'     },
+  { path: '/budgets',      icon: 'budgets',  label: 'Budgets'  },
+  { path: '/calendar',     icon: 'calendar', label: 'Calendar' },
+  { path: '/analytics',    icon: 'stats',    label: 'Stats'    },
 ]
 
 // Mobile "More" drawer items
