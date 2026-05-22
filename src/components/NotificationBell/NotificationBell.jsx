@@ -181,7 +181,7 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
   if (mobileDrawer && startOpen) {
     return (
       <div className={styles.mobileCloudWrap}>
-        <Trail />
+        {/* Cloud on top */}
         {!notifs.length ? (
           <EmptyCloud onClose={() => {}} />
         ) : (
@@ -194,6 +194,8 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
             )}
           </>
         )}
+        {/* Trail dots below cloud, right-aligned pointing toward orb */}
+        <Trail />
       </div>
     )
   }

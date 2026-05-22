@@ -192,27 +192,27 @@
 .mobileCloudWrap {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 4px 0 8px;
+  /* right-align so trail dots line up with the orb in bottom-right corner */
+  align-items: flex-end;
+  gap: 6px;
 }
 
-/* On mobile the cloud should feel contained — no float anim */
+/* Cloud fills the panel width, no float anim on mobile */
 .mobileCloudWrap .cloud {
   width: 100%;
   animation: cloud-in 0.4s cubic-bezier(.34,1.3,.64,1) both;
-  /* override the float — too jumpy in a fixed panel */
 }
 .mobileCloudWrap .cloud:nth-child(2) { animation-delay: .06s; }
 .mobileCloudWrap .cloud:nth-child(3) { animation-delay: .12s; }
 
-/* Trail on mobile — horizontal dots from left edge toward cloud */
+/* Trail on mobile — vertical (same as desktop), right-aligned toward orb */
 .mobileCloudWrap .trail {
-  flex-direction: row;         /* horizontal on mobile */
-  padding-left: 14px;
-  padding-bottom: 0;
-  margin-bottom: 0;
+  flex-direction: column;    /* vertical — large dot on top near cloud */
+  padding-left: 0;
+  padding-right: 18px;       /* nudge left to align with orb center */
   align-items: center;
+  position: static;
+  top: auto;
 }
 
 /* ══════════════════════════════════════════════════════════
