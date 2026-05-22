@@ -116,7 +116,7 @@ export default function Dashboard() {
               }
 
               // Verdict
-              const verdict = heroBalance < 0 ? 'You're underwater — move money now.'
+              const verdict = heroBalance < 0 ? "You're underwater — move money now."
                 : pressureLabel === 'CRITICAL' ? 'This is tight. Watch closely.'
                 : pressureLabel === 'TIGHT'    ? 'A bit tight — keep an eye on spending.'
                 : pressureLabel === 'WATCH'    ? 'Manageable, but stay aware.'

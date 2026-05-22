@@ -190,12 +190,12 @@ function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLea
   // Alphabetical sort applied by the parent — budgets arrives pre-sorted
   const sortedBudgets = budgets
 
-  return (
-    // Family visibility — hide entirely or blur
-    if (isFamilyMember && tx._visibility === 'hidden') return null
-    const isBlurred = isFamilyMember && tx._visibility === 'blurred'
+  // Family visibility — hide entirely or blur
+  if (isFamilyMember && tx._visibility === 'hidden') return null
+  const isBlurred = isFamilyMember && tx._visibility === 'blurred'
 
-    return <div className={`${styles.txWrap} ${open ? styles.txWrapOpen : ''} ${isBlurred ? styles.txWrapBlurred : ''}`} style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
+  return (
+    <div className={`${styles.txWrap} ${open ? styles.txWrapOpen : ''} ${isBlurred ? styles.txWrapBlurred : ''}`} style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
       {/* ── Main row ── */}
       <div className={styles.txRow} onClick={() => !isBlurred && setOpen(o => !o)}>
         <div className={styles.txIcon}>{tx.icon || (isIncome ? '💰' : '💳')}</div>
