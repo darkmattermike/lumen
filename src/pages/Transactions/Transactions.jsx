@@ -4,9 +4,11 @@ import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import CsvImportModal from '../../components/CsvImportModal/CsvImportModal'
 import DocumentUpload from '../../components/DocumentUpload/DocumentUpload'
 import MergeReview from '../../components/MergeReview/MergeReview'
+import SpendingPaceCard from '../../components/SpendingPaceCard/SpendingPaceCard'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
+import { useAuth } from '../../context/AuthContext'
 import styles from './Transactions.module.css'
 
 const FILTERS = ['All', 'INCOME', 'FOOD_AND_DRINK', 'SHOPS', 'TRANSPORTATION', 'PAYMENT', 'TRANSFER']
@@ -114,7 +116,7 @@ function RuleToast({ suggestion, onAccept, onDismiss }) {
 }
 
 // ── Expandable transaction row ────────────────────────────────
-function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLearned }) {
+function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLearned, isFamilyMember = false, isOwnerView = false, onTogglePrivacy }) {
   const [open, setOpen]     = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -189,14 +191,20 @@ function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLea
   const sortedBudgets = budgets
 
   return (
-    <div className={`${styles.txWrap} ${open ? styles.txWrapOpen : ''}`} style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
+    // Family visibility — hide entirely or blur
+    if (isFamilyMember && tx._visibility === 'hidden') return null
+    const isBlurred = isFamilyMember && tx._visibility === 'blurred'
+
+    return <div className={`${styles.txWrap} ${open ? styles.txWrapOpen : ''} ${isBlurred ? styles.txWrapBlurred : ''}`} style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
       {/* ── Main row ── */}
-      <div className={styles.txRow} onClick={() => setOpen(o => !o)}>
+      <div className={styles.txRow} onClick={() => !isBlurred && setOpen(o => !o)}>
         <div className={styles.txIcon}>{tx.icon || (isIncome ? '💰' : '💳')}</div>
         <div className={styles.txInfo}>
           <div className={styles.txName}>
-            {tx.cleaned_name || form.name}
-            {tx.status === 'pending' && <span className={styles.pendingBadge}>pending</span>}
+            {isBlurred
+              ? <span className={styles.blurredText}>{'●'.repeat(Math.min((tx.cleaned_name || form.name).length, 12))}</span>
+              : <>{tx.cleaned_name || form.name}{tx.status === 'pending' && <span className={styles.pendingBadge}>pending</span>}</>
+            }
           </div>
           {tx.cleaned_name && tx.cleaned_name !== tx.name && (
             <div className={styles.txRawName}>{tx.name}</div>
@@ -211,9 +219,18 @@ function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLea
           </div>
         </div>
         <div className={styles.txAmt} style={{ color: amtColor }}>
-          {isTransfer ? '↔' : isIncome ? '+' : '−'}${fmt(Math.abs(amt))}
+          {isBlurred ? <span className={styles.blurredAmt}>$●●●</span> : <>{isTransfer ? '↔' : isIncome ? '+' : '−'}${fmt(Math.abs(amt))}</>}
         </div>
         <div className={styles.txChevron} style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}>›</div>
+        {(isOwnerView || isBlurred) && onTogglePrivacy && (
+          <button
+            className={styles.privacyBtn}
+            onClick={e => { e.stopPropagation(); onTogglePrivacy(tx.id, tx._visibility) }}
+            title={tx._visibility ? `Privacy: ${tx._visibility} — click to change` : 'Set private'}
+          >
+            {tx._visibility === 'hidden' ? '🙈' : tx._visibility === 'blurred' ? '🔒' : '🔓'}
+          </button>
+        )}
       </div>
 
       {/* ── Expanded editor ── */}
@@ -700,6 +717,12 @@ export default function Transactions() {
             </div>
           </div>
           <div className={styles.headerRight}>
+            <SpendingPaceCard
+              spending={spending}
+              income={income}
+              dailyCumulative={dailyCumulative}
+              lastMonthSpend={lastMonthSpend}
+            />
           </div>
         </div>
 
@@ -746,6 +769,7 @@ export default function Transactions() {
                 <div className={styles.dayHead}>{date}</div>
                 {txs.map((tx, i) => (
                   <TxRow key={tx.id} tx={tx} index={i} budgets={budgets} rules={rules} onSaved={handleTxSaved} onRuleSuggestion={setRuleSuggestion}
+                    isOwnerView={isFamilyPro} onTogglePrivacy={isFamilyPro ? handleTogglePrivacy : undefined}
                     onLearned={msg => { setLearnedToast(msg); setTimeout(() => setLearnedToast(null), 3500) }}
                   />
                 ))}

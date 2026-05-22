@@ -3,12 +3,74 @@ import { api } from '../../data/api'
 import LumenDot from '../LumenDot/LumenDot'
 import styles from './NotificationBell.module.css'
 
-/**
- * NotificationBell
- * Desktop: orb trigger in the rail, panel expands to the right as a chat bubble.
- * Mobile (mobileDrawer prop): orb + label row inside the More drawer;
- *   tapping expands an inline panel below rather than a floating bubble.
- */
+const TYPE_COLOR = {
+  alert:'var(--debt)', warning:'var(--warn)', insight:'var(--calm)',
+  win:'var(--safe)', duplicate:'var(--warn)', recurring_change:'var(--calm)',
+  anomaly:'var(--debt)', pattern:'var(--calm)', subscription:'var(--calm)',
+  double_billing:'var(--debt)',
+}
+
+function relativeTime(ts) {
+  if (!ts) return ''
+  const diff = (Date.now() - new Date(ts)) / 1000
+  if (diff < 60)    return 'just now'
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
+}
+
+// ── Single speech bubble notification ────────────────────────
+function NotifBubble({ notif, onGotIt, onDismiss, index, total }) {
+  const color = TYPE_COLOR[notif.type] || 'var(--calm)'
+  const offset = (total - 1 - index) * 8  // stack offset — newest on top
+
+  return (
+    <div
+      className={styles.bubble}
+      style={{
+        '--accent': color,
+        transform: `translateY(${-offset}px) scale(${1 - (total - 1 - index) * 0.02})`,
+        zIndex: index + 1,
+        opacity: index === total - 1 ? 1 : Math.max(0.5, 1 - (total - 1 - index) * 0.15),
+      }}
+    >
+      {/* Tail */}
+      <div className={styles.bubbleTail} />
+
+      {/* Header */}
+      <div className={styles.bubbleHeader}>
+        <div className={styles.bubbleOrb}><LumenDot size={14} mood="idle" /></div>
+        <span className={styles.bubbleLumen}>Lumen</span>
+        <span className={styles.bubbleType} style={{ color }}>{notif.title}</span>
+        <span className={styles.bubbleTime}>{relativeTime(notif.created_at)}</span>
+      </div>
+
+      {/* Body — Lumen voice */}
+      <p className={styles.bubbleBody}>{notif.body}</p>
+
+      {/* Duplicate actions */}
+      {notif.type === 'duplicate' && (
+        <div className={styles.bubbleActions}>
+          <button className={styles.actionDanger} onClick={() => onDismiss(notif.id, true)}>Remove duplicate</button>
+          <button className={styles.actionNeutral} onClick={() => onGotIt(notif.id)}>Not a duplicate</button>
+        </div>
+      )}
+
+      {/* Got it / Dismiss */}
+      {notif.type !== 'duplicate' && (
+        <div className={styles.bubbleActions}>
+          <button className={styles.gotItBtn} onClick={() => onGotIt(notif.id)}>
+            Got it
+          </button>
+          <button className={styles.dismissBtn} onClick={() => onDismiss(notif.id)}>
+            Dismiss
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function NotificationBell({ mobileDrawer = false }) {
   const [data, setData]       = useState({ notifications: [], unread_count: 0 })
   const [open, setOpen]       = useState(false)
@@ -20,7 +82,7 @@ export default function NotificationBell({ mobileDrawer = false }) {
       setLoading(true)
       const d = await api.notifications()
       setData(d)
-    } catch { /* silent */ }
+    } catch {}
     finally { setLoading(false) }
   }
 
@@ -30,7 +92,6 @@ export default function NotificationBell({ mobileDrawer = false }) {
     return () => clearInterval(id)
   }, [])
 
-  // Desktop: close panel on outside click
   useEffect(() => {
     if (!open || mobileDrawer) return
     function handler(e) {
@@ -44,11 +105,7 @@ export default function NotificationBell({ mobileDrawer = false }) {
     const wasOpen = open
     setOpen(v => !v)
     if (!wasOpen && data.unread_count > 0) {
-      await api.markAllNotificationsRead()
-      // Feature 10 — track 'opened' for all unread notification types
-      for (const n of data.notifications.filter(x => !x.read)) {
-        api.notifFeedback({ notification_type: n.type, action: 'opened' }).catch(() => {})
-      }
+      await api.markAllNotificationsRead().catch(() => {})
       setData(prev => ({
         ...prev,
         unread_count: 0,
@@ -57,114 +114,52 @@ export default function NotificationBell({ mobileDrawer = false }) {
     }
   }
 
-  async function dismiss(id) {
-    const notif = data.notifications.find(n => n.id === id)
-    await api.dismissNotification(id)
-    // Feature 10 — track dismiss
-    if (notif?.type) api.notifFeedback({ notification_type: notif.type, action: 'dismissed' }).catch(() => {})
-    setData(prev => ({
-      ...prev,
-      notifications: prev.notifications.filter(n => n.id !== id)
-    }))
+  // "Got it" — closes the bubble but keeps badge count as-is (already marked read)
+  async function handleGotIt(id, confirmDup = false) {
+    try {
+      if (confirmDup) await api.confirmDuplicate(id).catch(() => {})
+      // Just remove from visible stack, don't dismiss from DB
+      setData(prev => ({
+        ...prev,
+        notifications: prev.notifications.filter(n => n.id !== id)
+      }))
+    } catch {}
+  }
+
+  // "Dismiss" — removes from stack AND marks dismissed in DB (clears badge)
+  async function handleDismiss(id, isDup = false) {
+    try {
+      if (isDup) await api.dismissDuplicate(id).catch(() => {})
+      else await api.dismissNotification(id).catch(() => {})
+      setData(prev => ({
+        ...prev,
+        unread_count: Math.max(0, prev.unread_count - 1),
+        notifications: prev.notifications.filter(n => n.id !== id)
+      }))
+    } catch {}
   }
 
   async function clearAll() {
-    for (const n of data.notifications) await api.dismissNotification(n.id)
+    for (const n of data.notifications) {
+      await api.dismissNotification(n.id).catch(() => {})
+    }
     setData({ notifications: [], unread_count: 0 })
   }
 
-  async function confirmDuplicate(notifId) {
-    try {
-      await api.confirmDuplicate(notifId)
-      setData(prev => ({
-        ...prev,
-        notifications: prev.notifications.filter(n => n.id !== notifId)
-      }))
-    } catch { /* silent */ }
-  }
+  const notifs = data.notifications
 
-  async function dismissDuplicate(notifId) {
-    try {
-      await api.dismissDuplicate(notifId)
-      setData(prev => ({
-        ...prev,
-        notifications: prev.notifications.filter(n => n.id !== notifId)
-      }))
-    } catch { /* silent */ }
-  }
-
-  const TYPE_COLOR = {
-    alert:             'var(--debt)',
-    warning:           'var(--warn)',
-    insight:           'var(--calm)',
-    win:               'var(--safe)',
-    duplicate:         'var(--warn)',
-    recurring_change:  'var(--calm)',
-    // Phase E types
-    anomaly:           'var(--debt)',
-    pattern:           'var(--calm)',
-    subscription:      'var(--calm)',
-    double_billing:    'var(--debt)',
-  }
-
-  const list = (
-    <div className={styles.list}>
-      {data.notifications.map((n, i) => (
-        <div
-          key={n.id}
-          className={`${styles.item} ${!n.read ? styles.unread : ''}`}
-          style={{ '--accent': TYPE_COLOR[n.type] || 'var(--calm)', '--item-delay': `${i * 40}ms` }}
-        >
-          <div className={styles.itemTop}>
-            <span className={styles.itemIcon}>{n.icon}</span>
-            <span className={styles.itemTitle}>{n.title}</span>
-            <button className={styles.dismissBtn} onClick={() => dismiss(n.id)} aria-label="Dismiss">×</button>
-          </div>
-          <p className={styles.itemBody}>{n.body}</p>
-          {n.type === 'duplicate' && (
-            <div className={styles.itemActions}>
-              <button className={styles.actionBtnDanger} onClick={() => confirmDuplicate(n.id)}>
-                Yes, remove duplicate
-              </button>
-              <button className={styles.actionBtnNeutral} onClick={() => dismissDuplicate(n.id)}>
-                Not a duplicate
-              </button>
-            </div>
-          )}
-          <span className={styles.itemTime}>{relativeTime(n.created_at)}</span>
-        </div>
-      ))}
-    </div>
-  )
-
-  const emptyState = (
-    <div className={styles.empty}>
-      <p className={styles.emptyMsg}>You're all caught up ✓</p>
-      <p className={styles.emptySub}>I'll let you know when something needs attention.</p>
-    </div>
-  )
-
-  // ── Mobile drawer variant ──────────────────────────────────────────────────
+  // ── Mobile drawer ─────────────────────────────────────────
   if (mobileDrawer) {
     return (
       <div className={styles.drawerWrap} ref={wrapRef}>
         <button className={styles.drawerTrigger} onClick={handleOpen}>
-          <LumenDot
-            size={18}
-            rings={open}
-            mood={open ? 'excited' : data.unread_count > 0 ? 'unread' : 'idle'}
-            unread={data.unread_count}
-          />
+          <LumenDot size={18} rings={open} mood={open ? 'excited' : data.unread_count > 0 ? 'unread' : 'idle'} unread={data.unread_count} />
           <span className={styles.drawerTriggerLabel}>
             Lumen
-            {data.unread_count > 0 && (
-              <span className={styles.drawerBadge}>{data.unread_count}</span>
-            )}
+            {data.unread_count > 0 && <span className={styles.drawerBadge}>{data.unread_count}</span>}
           </span>
           <span className={styles.drawerChevron} style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </span>
         </button>
 
@@ -172,28 +167,36 @@ export default function NotificationBell({ mobileDrawer = false }) {
           <div className={styles.drawerPanel}>
             <div className={styles.drawerPanelHeader}>
               <span className={styles.drawerPanelLabel}>Notifications</span>
-              {data.notifications.length > 0 && (
-                <button className={styles.clearBtn} onClick={clearAll}>Clear all</button>
-              )}
+              {notifs.length > 0 && <button className={styles.clearBtn} onClick={clearAll}>Clear all</button>}
             </div>
-            {loading && !data.notifications.length
-              ? <div className={styles.empty}><span className={styles.emptyDots}>···</span></div>
-              : !data.notifications.length ? emptyState : list
-            }
+            {!notifs.length ? (
+              <div className={styles.empty}>
+                <p className={styles.emptyMsg}>You're all caught up ✓</p>
+                <p className={styles.emptySub}>I'll let you know when something needs attention.</p>
+              </div>
+            ) : (
+              <div className={styles.drawerBubbles}>
+                {notifs.map((n, i) => (
+                  <NotifBubble
+                    key={n.id} notif={n} index={i} total={notifs.length}
+                    onGotIt={handleGotIt} onDismiss={handleDismiss}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
     )
   }
 
-  // ── Desktop rail variant ──────────────────────────────────────────────────
+  // ── Desktop rail ──────────────────────────────────────────
   return (
     <div className={styles.wrap} ref={wrapRef}>
       <button
         className={`${styles.trigger} ${open ? styles.triggerOpen : ''}`}
         onClick={handleOpen}
         aria-label="Lumen notifications"
-        title="Notifications"
       >
         <LumenDot size={22} rings={open} />
         {data.unread_count > 0 && (
@@ -201,33 +204,36 @@ export default function NotificationBell({ mobileDrawer = false }) {
         )}
       </button>
 
+      {/* Speech bubble stack */}
       {open && (
-        <div className={styles.bubble}>
-          <div className={styles.tail} />
-          <div className={styles.bubbleHeader}>
-            <div className={styles.lumenLabel}>
-              <LumenDot size={14} mood="idle" />
-              <span>Lumen</span>
+        <div className={styles.stack}>
+          {!notifs.length ? (
+            <div className={styles.bubble} style={{ '--accent': 'var(--safe)', zIndex: 1 }}>
+              <div className={styles.bubbleTail} />
+              <div className={styles.bubbleHeader}>
+                <div className={styles.bubbleOrb}><LumenDot size={14} mood="idle" /></div>
+                <span className={styles.bubbleLumen}>Lumen</span>
+              </div>
+              <p className={styles.bubbleBody} style={{ color: 'var(--ink-2)' }}>
+                You're all caught up. I'll let you know when something needs attention.
+              </p>
+              <div className={styles.bubbleActions}>
+                <button className={styles.gotItBtn} onClick={() => setOpen(false)}>Got it</button>
+              </div>
             </div>
-            {data.notifications.length > 0 && (
-              <button className={styles.clearBtn} onClick={clearAll}>Clear all</button>
-            )}
-          </div>
-          {loading && !data.notifications.length
-            ? <div className={styles.empty}><span className={styles.emptyDots}>···</span></div>
-            : !data.notifications.length ? emptyState : list
-          }
+          ) : (
+            notifs.map((n, i) => (
+              <NotifBubble
+                key={n.id} notif={n} index={i} total={notifs.length}
+                onGotIt={handleGotIt} onDismiss={handleDismiss}
+              />
+            ))
+          )}
+          {notifs.length > 1 && (
+            <button className={styles.clearAllBtn} onClick={clearAll}>Dismiss all</button>
+          )}
         </div>
       )}
     </div>
   )
-}
-
-function relativeTime(ts) {
-  if (!ts) return ''
-  const diff = (Date.now() - new Date(ts)) / 1000
-  if (diff < 60)    return 'just now'
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  return `${Math.floor(diff / 86400)}d ago`
 }

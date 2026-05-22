@@ -765,3 +765,21 @@
 @media (min-width: 769px) {
   .learnedToast { bottom: 24px; left: calc(var(--rail-w,52px) + 24px); transform: none; }
 }
+
+/* ── Family privacy ── */
+.txWrapBlurred { opacity: .7; }
+.txWrapBlurred .txRow { cursor: default; }
+.blurredText {
+  filter: blur(4px); user-select: none;
+  color: var(--ink-3); letter-spacing: 2px;
+}
+.blurredAmt {
+  filter: blur(3px); user-select: none;
+  color: var(--ink-3);
+}
+.privacyBtn {
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; padding: 2px 4px; opacity: .5;
+  transition: opacity var(--t-fast); flex-shrink: 0;
+}
+.privacyBtn:hover { opacity: 1; }

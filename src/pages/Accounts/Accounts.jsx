@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { usePlaidLink } from 'react-plaid-link'
+import { useAuth } from '../../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenDot from '../../components/LumenDot/LumenDot'
 import LumenInsight from '../../components/LumenInsight/LumenInsight'
@@ -220,19 +222,25 @@ function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDe
   )
 }
 
-// ── Plaid connect button ──────────────────────────────────────────────────────
+// ── Plaid connect button — tier-gated ────────────────────────────────────────
 function AddAccountButton({ onSuccess }) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [linkToken, setLinkToken] = useState(null)
   const [loading, setLoading]     = useState(false)
+  const [showBlock, setShowBlock] = useState(false)
+
+  const isFree = !user?.tier || user.tier === 'free'
 
   useEffect(() => {
+    if (isFree) return  // Don't fetch link token for free users
     api.getLinkToken()
       .then(d => setLinkToken(d.link_token))
       .catch(err => console.error('Link token error:', err))
-  }, [])
+  }, [isFree])
 
   const { open, ready } = usePlaidLink({
-    token: linkToken,
+    token: linkToken || 'placeholder',
     onSuccess: async (publicToken, metadata) => {
       setLoading(true)
       try {
@@ -251,9 +259,38 @@ function AddAccountButton({ onSuccess }) {
   })
 
   return (
-    <button className={styles.addBtn} onClick={() => open()} disabled={!ready || loading}>
-      {loading ? 'Connecting…' : '+ Add Account'}
-    </button>
+    <>
+      <button
+        className={styles.addBtn}
+        onClick={() => isFree ? setShowBlock(true) : open()}
+        disabled={(!ready && !isFree) || loading}
+      >
+        {loading ? 'Connecting…' : '+ Add Account'}
+      </button>
+
+      {/* Hard block upgrade modal */}
+      {showBlock && (
+        <div className={styles.upgradeOverlay} onClick={() => setShowBlock(false)}>
+          <div className={styles.upgradeModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.upgradeLock}>🏦</div>
+            <div className={styles.upgradeTitle}>Bank sync is a Plus feature</div>
+            <p className={styles.upgradeBody}>
+              Live bank sync via Plaid is available on <strong>Lumen Plus</strong> ($4.99/mo)
+              or <strong>Lumen Pro</strong> ($9.99/mo). On the free plan, you can still
+              add accounts manually or import transactions via CSV.
+            </p>
+            <div className={styles.upgradeActions}>
+              <button className={styles.upgradeBtn} onClick={() => { setShowBlock(false); navigate('/pricing') }}>
+                View Plans →
+              </button>
+              <button className={styles.upgradeCancel} onClick={() => setShowBlock(false)}>
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

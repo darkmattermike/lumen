@@ -112,12 +112,12 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
     flex: 1;
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 5px 1px;
+    padding: 6px 2px;
     color: var(--ink-3);
     transition: color var(--t-fast);
     -webkit-tap-highlight-color: transparent;
@@ -130,16 +130,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   .mobileBtnLabel {
     font-family: var(--font-mono);
-    font-size: 7px;
-    letter-spacing: 0px;
+    font-size: 8px;
+    letter-spacing: .4px;
     text-transform: uppercase;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 40px;
     line-height: 1;
   }
 }
@@ -234,4 +237,31 @@
     text-transform: uppercase;
     white-space: nowrap;
   }
+}
+
+/* ── Mobile orb notification button ── */
+.mobileOrbWrap {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mobileOrbBtn {
+  position: relative;
+  width: 44px; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+.mobileOrbBtnOpen { background: rgba(93,202,165,.08); border-radius: 8px; }
+.mobileOrbBadge {
+  position: absolute; top: 6px; right: 4px;
+  background: var(--debt); color: #fff;
+  font-family: var(--font-mono); font-size: 7px; font-weight: 700;
+  min-width: 14px; height: 14px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center; padding: 0 2px;
+}
+/* The actual NotificationBell inside the orb panel is hidden — we use the panel directly */
+.mobileOrbPanel {
+  display: none; /* The orb tap opens NotificationBell's own mobileDrawer UI */
 }

@@ -536,3 +536,42 @@
   .acctBadges { display: none; }
   .acctDetail { padding-left: 28px; }
 }
+
+/* ── Tier upgrade block modal ── */
+.upgradeOverlay {
+  position: fixed; inset: 0; z-index: 600;
+  background: rgba(0,0,0,.7);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; animation: fadeIn .2s ease;
+}
+.upgradeModal {
+  background: var(--bg-2); border: 1px solid var(--ink-4);
+  border-radius: 20px; padding: 32px 28px; max-width: 400px; width: 100%;
+  text-align: center; animation: modalIn .25s cubic-bezier(.34,1.1,.64,1) both;
+}
+.upgradeLock { font-size: 40px; margin-bottom: 16px; }
+.upgradeTitle {
+  font-family: var(--font-serif); font-size: 22px; font-weight: 300;
+  color: var(--ink-0); margin-bottom: 12px;
+}
+.upgradeBody {
+  font-size: 13px; color: var(--ink-2); line-height: 1.7;
+  margin-bottom: 24px;
+}
+.upgradeBody strong { color: var(--calm); }
+.upgradeActions { display: flex; flex-direction: column; gap: 10px; }
+.upgradeBtn {
+  width: 100%; padding: 12px;
+  background: rgba(108,140,255,.1); border: 1px solid rgba(108,140,255,.35);
+  border-radius: 10px; font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--calm);
+  cursor: pointer; transition: all var(--t-base);
+}
+.upgradeBtn:hover { background: var(--calm); color: #040608; }
+.upgradeCancel {
+  background: transparent; border: none; color: var(--ink-3);
+  font-size: 12px; cursor: pointer; transition: color var(--t-fast);
+}
+.upgradeCancel:hover { color: var(--ink-1); }
+@keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+@keyframes modalIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }

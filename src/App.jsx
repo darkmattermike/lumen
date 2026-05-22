@@ -20,6 +20,8 @@ import Onboarding   from './components/Onboarding/Onboarding'
 import Dani         from './pages/Dani/Dani'
 import { TermsOfService, PrivacyPolicy, DataUsagePolicy } from './pages/Legal/Legal'
 import PushPromptBanner from './components/PushPromptBanner/PushPromptBanner'
+import Pricing     from './pages/Pricing/Pricing'
+import FamilyJoin  from './pages/FamilyJoin/FamilyJoin'
 import { api } from './data/api'
 import styles from './App.module.css'
 
@@ -58,6 +60,8 @@ function AppShell() {
             <Route path="/privacy"      element={<PrivacyPolicy />} />
             <Route path="/data-usage"   element={<DataUsagePolicy />} />
             {user?.role === 'owner' && <Route path="/dani" element={<Dani />} />}
+            <Route path="/pricing"          element={<Pricing />} />
+            <Route path="/family/join/:code" element={<FamilyJoin />} />
           </Routes>
         </main>
       </div>

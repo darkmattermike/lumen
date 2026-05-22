@@ -1,0 +1,130 @@
+.page {
+  min-height: 100dvh;
+  background: var(--bg-0);
+  position: relative;
+  overflow: hidden;
+  padding: 0 24px 60px;
+}
+
+.glow {
+  position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(167,139,255,.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.header {
+  max-width: 560px; margin: 0 auto;
+  padding: 32px 0 40px; text-align: center;
+}
+.back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-3); background: transparent; border: 1px solid var(--ink-5);
+  border-radius: 7px; padding: 6px 14px; cursor: pointer; margin-bottom: 32px;
+  transition: all var(--t-fast);
+}
+.back:hover { color: var(--ink-0); border-color: var(--ink-3); }
+.pre {
+  font-family: var(--font-mono); font-size: 9px; color: var(--ink-3);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;
+}
+.title {
+  font-family: var(--font-serif); font-size: 40px; font-weight: 300;
+  color: var(--ink-0); margin-bottom: 14px; line-height: 1.15;
+}
+.sub {
+  font-size: 14px; color: var(--ink-2); line-height: 1.7;
+}
+
+/* Plan grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 960px;
+  margin: 0 auto 32px;
+}
+
+.card {
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--ink-5);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color var(--t-base);
+}
+.card:hover { border-color: var(--ink-3); }
+.popular {
+  border-color: rgba(167,139,255,.35);
+  background: rgba(167,139,255,.04);
+}
+.current { border-color: var(--safe) !important; }
+
+.popularBadge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+  background: var(--goal); color: #040608; padding: 4px 14px; border-radius: 20px;
+  white-space: nowrap;
+}
+.currentBadge {
+  position: absolute; top: -12px; right: 16px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+  background: var(--safe); color: #040608; padding: 4px 12px; border-radius: 20px;
+}
+
+.cardTop { margin-bottom: 20px; }
+.planName {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.planPrice { display: flex; align-items: baseline; gap: 3px; margin-bottom: 8px; }
+.priceAmt  { font-family: var(--font-serif); font-size: 36px; font-weight: 300; color: var(--ink-0); }
+.pricePeriod { font-size: 12px; color: var(--ink-3); }
+.planTagline { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+
+.divider { height: 1px; background: var(--ink-5); margin: 16px 0; }
+
+.features { list-style: none; display: flex; flex-direction: column; gap: 8px; flex: 1; margin-bottom: 24px; }
+.feature { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--ink-1); line-height: 1.4; }
+.check { font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+.featureMissing { color: var(--ink-4); }
+.cross { font-size: 10px; color: var(--ink-4); flex-shrink: 0; margin-top: 1px; }
+
+.cta {
+  width: 100%; padding: 11px;
+  border-radius: 10px; border: 1px solid var(--ink-5);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; transition: all var(--t-base); background: transparent; color: var(--ink-3);
+}
+.ctaCurrent { border-color: var(--safe); color: var(--safe); cursor: default; }
+.ctaUpgrade {
+  background: rgba(var(--plan-color), .1);
+  border-color: var(--plan-color);
+  color: var(--plan-color);
+}
+.ctaUpgrade:hover:not(:disabled) {
+  background: var(--plan-color);
+  color: #040608;
+}
+.cta:disabled { opacity: .7; }
+
+.error {
+  text-align: center; color: var(--debt); font-size: 13px;
+  background: rgba(232,115,99,.07); border: 1px solid rgba(232,115,99,.2);
+  border-radius: 10px; padding: 12px; max-width: 500px; margin: 0 auto 24px;
+}
+
+.footer {
+  display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+  font-size: 12px; color: var(--ink-3); max-width: 960px; margin: 0 auto;
+}
+.footerItem { display: flex; align-items: center; gap: 6px; }
+
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; max-width: 400px; }
+  .title { font-size: 28px; }
+  .footer { gap: 16px; flex-direction: column; align-items: center; }
+}

@@ -194,6 +194,21 @@ export const api = {
   updatePassword:   (body) => request('/api/settings/password', { method: 'PATCH', body: JSON.stringify(body) }),
   updateKeys:       (body) => request('/api/settings/keys',     { method: 'PATCH', body: JSON.stringify(body) }),
 
+
+  // Billing
+  billingStatus:      ()         => request('/api/billing/status'),
+  billingCheckout:    (plan)     => request('/api/billing/checkout',    { method: 'POST', body: JSON.stringify({ plan }) }),
+  billingPortal:      ()         => request('/api/billing/portal',      { method: 'POST' }),
+  adminSetTier:       (body)     => request('/api/billing/admin/set-tier', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Family
+  familyStatus:       ()         => request('/api/family/status'),
+  familyCreate:       ()         => request('/api/family/create',       { method: 'POST' }),
+  familyJoinInfo:     (code)     => request(`/api/family/join/${code}`),
+  familyJoin:         (code)     => request(`/api/family/join/${code}`,  { method: 'POST' }),
+  familyRemove:       (userId)   => request(`/api/family/members/${userId}`, { method: 'DELETE' }),
+  familyRegenInvite:  ()         => request('/api/family/regenerate-invite', { method: 'POST' }),
+  setTxVisibility:    (body)     => request('/api/family/visibility/transaction', { method: 'POST', body: JSON.stringify(body) }),
   // Gmail
   gmailAuthUrl:    ()  => request('/api/gmail/auth-url'),
   gmailStatus:     ()  => request('/api/gmail/status'),
@@ -212,6 +227,21 @@ export const api = {
   aiCategorize:        ()     => request('/api/lumen/categorize',         { method: 'POST' }),
   aiBudgetLimits:      ()     => request('/api/lumen/budget-limits',      { method: 'POST' }),
   enrichTransactions:  ()     => request('/api/lumen/enrich',           { method: 'POST' }),
+
+  // Billing
+  billingStatus:      ()         => request('/api/billing/status'),
+  billingCheckout:    (plan)     => request('/api/billing/checkout',    { method: 'POST', body: JSON.stringify({ plan }) }),
+  billingPortal:      ()         => request('/api/billing/portal',      { method: 'POST' }),
+  adminSetTier:       (body)     => request('/api/billing/admin/set-tier', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Family
+  familyStatus:       ()         => request('/api/family/status'),
+  familyCreate:       ()         => request('/api/family/create',       { method: 'POST' }),
+  familyJoinInfo:     (code)     => request(`/api/family/join/${code}`),
+  familyJoin:         (code)     => request(`/api/family/join/${code}`,  { method: 'POST' }),
+  familyRemove:       (userId)   => request(`/api/family/members/${userId}`, { method: 'DELETE' }),
+  familyRegenInvite:  ()         => request('/api/family/regenerate-invite', { method: 'POST' }),
+  setTxVisibility:    (body)     => request('/api/family/visibility/transaction', { method: 'POST', body: JSON.stringify(body) }),
   // Gmail Phase 5
   gmailPhase5Scan:      ()     => request('/api/gmail/scan/phase5',      { method: 'POST' }),
   gmailPriceChanges:    ()     => request('/api/gmail/price-changes'),

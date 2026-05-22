@@ -1,322 +1,333 @@
-import { useState } from 'react'
-import LumenDot from '../LumenDot/LumenDot'
+import { useState, useEffect, useRef } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import { api } from '../../data/api'
+import LumenDot from '../LumenDot/LumenDot'
 import styles from './Onboarding.module.css'
 
-const STEPS = [
-  { id: 'welcome',  title: 'Welcome to Lumen',        icon: null },
-  { id: 'account',  title: 'Add your first account',  icon: '🏦' },
-  { id: 'income',   title: 'What do you earn?',        icon: '💰' },
-  { id: 'budget',   title: 'Set a first budget',       icon: '📊' },
-  { id: 'connect',  title: 'Bring in your data',       icon: '🔗' },
+// ── Conversation script ───────────────────────────────────────
+const SCRIPT = [
+  {
+    id: 'welcome',
+    lumen: "Hi! I'm Lumen — your financial picture, clearly. I track your money, spot patterns, and warn you about problems before they happen. Ready to get set up?",
+    type: 'choice',
+    choices: ["Let's do it", "Skip for now"],
+  },
+  {
+    id: 'account_name',
+    lumen: "Great! What's your main checking account called? Just something you'd recognize.",
+    type: 'text',
+    placeholder: 'e.g. Chase Checking',
+    field: 'accountName',
+  },
+  {
+    id: 'account_type',
+    lumen: "And what type of account is it?",
+    type: 'choice',
+    choices: ['Checking', 'Savings', 'Credit Card', 'Cash'],
+    field: 'accountType',
+  },
+  {
+    id: 'account_balance',
+    lumen: "What's the current balance? Just a rough number is fine.",
+    type: 'number',
+    placeholder: '0.00',
+    prefix: '$',
+    field: 'balance',
+  },
+  {
+    id: 'income_amount',
+    lumen: "Got it. Now — what's your take-home pay each paycheck? After taxes.",
+    type: 'number',
+    placeholder: 'e.g. 2500',
+    prefix: '$',
+    field: 'incomeAmount',
+  },
+  {
+    id: 'income_freq',
+    lumen: "And how often do you get paid?",
+    type: 'choice',
+    choices: ['Weekly', 'Every 2 weeks', 'Twice a month', 'Monthly'],
+    field: 'incomeFreq',
+  },
+  {
+    id: 'budget_cat',
+    lumen: "Perfect. Which spending category do you most want to keep an eye on? Pick one to start — you can add more later.",
+    type: 'choice',
+    choices: ['Dining', 'Groceries', 'Transport', 'Shopping', 'Entertainment', 'Subscriptions'],
+    field: 'budgetCategory',
+  },
+  {
+    id: 'budget_cap',
+    lumen: (data) => `What's your monthly cap for ${data.budgetCategory || 'that category'}?`,
+    type: 'number',
+    placeholder: 'e.g. 300',
+    prefix: '$',
+    field: 'budgetCap',
+  },
+  {
+    id: 'connect',
+    lumen: "Last thing — how do you want to bring in your transactions?",
+    type: 'choice',
+    choices: ['Connect my bank (Plaid)', 'Import a CSV', "I'll do it later"],
+    field: 'connectChoice',
+    note: 'You can always connect your bank later in Accounts.',
+  },
+  {
+    id: 'done',
+    lumen: (data) => `You're all set${data.accountName ? `, ${data.accountName} is ready` : ''}! I'll start building your financial picture right away.`,
+    type: 'done',
+  },
 ]
 
-export default function Onboarding({ user, onComplete }) {
-  const [step, setStep]     = useState(0)
-  const [saving, setSaving] = useState(false)
+// ── Typing animation ──────────────────────────────────────────
+function LumenMessage({ text, onDone }) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone]           = useState(false)
+  const idx = useRef(0)
 
-  // Per-step form state
-  const [account, setAccount]   = useState({ name: 'Checking', type: 'checking', balance: '' })
-  const [income, setIncome]     = useState({ amount: '', frequency: 'monthly' })
-  const [budget, setBudget]     = useState({ category: 'Dining', cap: '' })
-  const [pushEnabled, setPushEnabled] = useState(false)
+  useEffect(() => {
+    setDisplayed('')
+    setDone(false)
+    idx.current = 0
+    const interval = setInterval(() => {
+      if (idx.current >= text.length) {
+        clearInterval(interval)
+        setDone(true)
+        onDone?.()
+        return
+      }
+      setDisplayed(t => t + text[idx.current])
+      idx.current++
+    }, 18)
+    return () => clearInterval(interval)
+  }, [text])
 
-  async function next() {
+  return (
+    <div className={styles.lumenBubble}>
+      {displayed}
+      {!done && <span className={styles.cursor} />}
+    </div>
+  )
+}
+
+// ── Main Onboarding ───────────────────────────────────────────
+export default function Onboarding() {
+  const { user, completeOnboarding } = useAuth()
+  const [step, setStep]       = useState(0)
+  const [messages, setMessages] = useState([])  // { role: 'lumen'|'user', text, id }
+  const [inputReady, setInputReady] = useState(false)
+  const [data, setData]       = useState({
+    accountName: '', accountType: '', balance: '',
+    incomeAmount: '', incomeFreq: '',
+    budgetCategory: '', budgetCap: '',
+    connectChoice: '',
+  })
+  const [textInput, setTextInput] = useState('')
+  const [saving, setSaving]   = useState(false)
+  const bottomRef = useRef(null)
+
+  const currentStep = SCRIPT[step]
+  const lumenText   = typeof currentStep?.lumen === 'function'
+    ? currentStep.lumen(data) : currentStep?.lumen
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, inputReady])
+
+  // Add first Lumen message on mount
+  useEffect(() => {
+    setMessages([{ role: 'lumen', text: SCRIPT[0].lumen, id: 0 }])
+  }, [])
+
+  function addLumenMessage(text, stepIdx) {
+    setInputReady(false)
+    setMessages(prev => [...prev, { role: 'lumen', text, id: stepIdx }])
+  }
+
+  function addUserMessage(text) {
+    setMessages(prev => [...prev, { role: 'user', text }])
+  }
+
+  async function advance(userText, newData) {
+    addUserMessage(userText)
+
+    const nextStep = step + 1
+
+    if (nextStep >= SCRIPT.length) {
+      // Done
+      await saveAndFinish(newData)
+      return
+    }
+
+    const next = SCRIPT[nextStep]
+    const nextText = typeof next.lumen === 'function' ? next.lumen(newData) : next.lumen
+
+    setTimeout(() => {
+      setStep(nextStep)
+      addLumenMessage(nextText, nextStep)
+    }, 400)
+  }
+
+  async function handleChoice(choice) {
+    if (currentStep.id === 'welcome') {
+      if (choice === 'Skip for now') {
+        await completeOnboarding()
+        return
+      }
+      addUserMessage(choice)
+      setTimeout(() => {
+        const next = SCRIPT[1]
+        setStep(1)
+        addLumenMessage(next.lumen, 1)
+      }, 400)
+      return
+    }
+
+    if (currentStep.id === 'connect') {
+      const newData = { ...data, connectChoice: choice }
+      setData(newData)
+      await advance(choice, newData)
+      return
+    }
+
+    const newData = { ...data, [currentStep.field]: choice }
+    setData(newData)
+    await advance(choice, newData)
+  }
+
+  async function handleTextSubmit() {
+    if (!textInput.trim()) return
+    const val    = textInput.trim()
+    const newData = { ...data, [currentStep.field]: val }
+    setData(newData)
+    setTextInput('')
+    await advance(val, newData)
+  }
+
+  async function handleNumberSubmit() {
+    const val = textInput.trim() || '0'
+    const newData = { ...data, [currentStep.field]: val }
+    setData(newData)
+    setTextInput('')
+    await advance(`$${Number(val).toLocaleString()}`, newData)
+  }
+
+  async function saveAndFinish(finalData) {
     setSaving(true)
     try {
-      if (step === 1 && account.balance) {
+      // Create account
+      if (finalData.accountName) {
         await api.createAccount({
-          name:    account.name,
-          type:    account.type,
-          balance: Number(account.balance),
-          is_debt: false,
-        }).catch(() => {})
+          name:    finalData.accountName,
+          type:    (finalData.accountType || 'checking').toLowerCase().replace(' ', '_').replace('credit card', 'credit'),
+          balance: Number(finalData.balance || 0),
+          include_in_balance: true,
+        })
       }
-      if (step === 2 && income.amount) {
-        await api.createRecurring?.({
-          name: 'Salary / Income',
-          amount: Number(income.amount),
+      // Create income recurring
+      if (finalData.incomeAmount) {
+        const freqMap = { 'Weekly': 'weekly', 'Every 2 weeks': 'biweekly', 'Twice a month': 'semimonthly', 'Monthly': 'monthly' }
+        await api.createRecurring({
+          name:        'Paycheck',
+          amount:      Number(finalData.incomeAmount),
+          type:        'income',
           day_of_month: 1,
-          frequency: income.frequency,
-          type: 'income',
-          icon: '💰',
-        }).catch(() => {})
+          icon:        '💰',
+          frequency:   freqMap[finalData.incomeFreq] || 'biweekly',
+        })
       }
-      if (step === 3 && budget.cap) {
-        await api.createBudget?.({
-          name: budget.category,
-          cap:  Number(budget.cap),
-          icon: '📊',
-        }).catch(() => {})
+      // Create budget
+      if (finalData.budgetCategory && finalData.budgetCap) {
+        await api.createBudget({
+          name:   finalData.budgetCategory,
+          cap:    Number(finalData.budgetCap),
+          period: 'monthly',
+        })
       }
-    } catch { /* non-fatal */ }
-    finally { setSaving(false) }
-
-    if (step === STEPS.length - 1) {
-      finish()
-    } else {
-      setStep(s => s + 1)
+      await completeOnboarding()
+    } catch (err) {
+      console.error('[Onboarding] Save error:', err)
+      await completeOnboarding()
+    } finally {
+      setSaving(false)
     }
   }
 
-  function skip() {
-    if (step === STEPS.length - 1) {
-      finish()
-    } else {
-      setStep(s => s + 1)
-    }
-  }
-
-  function finish() {
-    api.updateOnboarding().catch(() => {})
-    onComplete()
-  }
-
-  async function enablePush() {
-    try {
-      if (!('Notification' in window) || !('serviceWorker' in navigator)) return
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') return
-
-      const { publicKey } = await api.vapidKey()
-      const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly:      true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      })
-      const json = sub.toJSON()
-      await api.pushSubscribe({ endpoint: json.endpoint, keys: json.keys })
-      setPushEnabled(true)
-    } catch { /* not critical */ }
-  }
-
-  const progress = ((step) / (STEPS.length - 1)) * 100
-
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        {/* Progress bar */}
-        <div className={styles.progressBar}>
-          <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-        </div>
-
-        {/* Step content */}
-        <div className={styles.body}>
-          {step === 0 && <WelcomeStep user={user} />}
-          {step === 1 && <AccountStep form={account} setForm={setAccount} />}
-          {step === 2 && <IncomeStep form={income} setForm={setIncome} />}
-          {step === 3 && <BudgetStep form={budget} setForm={setBudget} />}
-          {step === 4 && <ConnectStep pushEnabled={pushEnabled} onEnablePush={enablePush} />}
-        </div>
-
-        {/* Navigation */}
-        <div className={styles.footer}>
-          <button className={styles.skipBtn} onClick={skip}>
-            {step === STEPS.length - 1 ? 'Skip for now' : 'Skip'}
-          </button>
-          <div className={styles.dots}>
-            {STEPS.map((_, i) => (
-              <div key={i} className={`${styles.dot} ${i === step ? styles.dotActive : i < step ? styles.dotDone : ''}`} />
-            ))}
-          </div>
-          <button className={styles.nextBtn} onClick={next} disabled={saving}>
-            {saving ? '…' : step === STEPS.length - 1 ? "Let's go →" : 'Next →'}
-          </button>
-        </div>
+    <div className={styles.page}>
+      <div className={styles.orbArea}>
+        <LumenDot size={48} />
       </div>
-    </div>
-  )
-}
 
-// ── Steps ─────────────────────────────────────────────────────────────────────
-
-function WelcomeStep({ user }) {
-  return (
-    <div className={styles.welcomeStep}>
-      <div className={styles.welcomeOrb}>
-        <LumenDot size={64} rings mood="happy" />
-      </div>
-      <h1 className={styles.welcomeTitle}>
-        Hey{user?.name ? ` ${user.name.split(' ')[0]}` : ''}. I'm Lumen.
-      </h1>
-      <p className={styles.welcomeBody}>
-        I'm your financial picture, clearly. I track your money, spot patterns, warn you about problems before they happen, and answer questions about your finances in plain English.
-      </p>
-      <div className={styles.pillRow}>
-        {['Where you stand', "What's coming", 'What if…', 'Why it happened'].map(p => (
-          <div key={p} className={styles.pill}>{p}</div>
+      <div className={styles.thread}>
+        {messages.map((msg, i) => (
+          msg.role === 'lumen' ? (
+            <div key={i} className={styles.lumenRow}>
+              <LumenMessage
+                text={msg.text}
+                onDone={i === messages.length - 1 ? () => setInputReady(true) : undefined}
+              />
+            </div>
+          ) : (
+            <div key={i} className={styles.userRow}>
+              <div className={styles.userBubble}>{msg.text}</div>
+            </div>
+          )
         ))}
+        <div ref={bottomRef} />
       </div>
-      <p className={styles.welcomeNote}>
-        Takes about 2 minutes to set up. Everything can be changed later.
-      </p>
-    </div>
-  )
-}
 
-function AccountStep({ form, setForm }) {
-  const TYPES = [
-    { value: 'checking', label: 'Checking' },
-    { value: 'savings',  label: 'Savings'  },
-    { value: 'credit',   label: 'Credit Card' },
-    { value: 'cash',     label: 'Cash'     },
-  ]
-  return (
-    <div className={styles.step}>
-      <div className={styles.stepIcon}>🏦</div>
-      <h2 className={styles.stepTitle}>Add your main account</h2>
-      <p className={styles.stepSub}>Just one to start. You can add more in Accounts later.</p>
-      <div className={styles.fields}>
-        <div className={styles.field}>
-          <label>Account name</label>
-          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Chase Checking" />
-        </div>
-        <div className={styles.field}>
-          <label>Type</label>
-          <div className={styles.typeGrid}>
-            {TYPES.map(t => (
+      {/* Input area — only shows after Lumen finishes typing */}
+      {inputReady && currentStep && (
+        <div className={styles.inputArea}>
+          {currentStep.type === 'choice' && (
+            <div className={styles.choices}>
+              {currentStep.choices.map(c => (
+                <button key={c} className={styles.choiceBtn} onClick={() => handleChoice(c)}>
+                  {c}
+                </button>
+              ))}
+              {currentStep.note && (
+                <div className={styles.choiceNote}>{currentStep.note}</div>
+              )}
+            </div>
+          )}
+
+          {(currentStep.type === 'text' || currentStep.type === 'number') && (
+            <div className={styles.textInput}>
+              {currentStep.prefix && <span className={styles.prefix}>{currentStep.prefix}</span>}
+              <input
+                autoFocus
+                type={currentStep.type === 'number' ? 'number' : 'text'}
+                value={textInput}
+                onChange={e => setTextInput(e.target.value)}
+                placeholder={currentStep.placeholder}
+                onKeyDown={e => e.key === 'Enter' && (currentStep.type === 'number' ? handleNumberSubmit() : handleTextSubmit())}
+                className={styles.input}
+              />
               <button
-                key={t.value}
-                className={`${styles.typeBtn} ${form.type === t.value ? styles.typeBtnOn : ''}`}
-                onClick={() => setForm(f => ({ ...f, type: t.value }))}
-              >{t.label}</button>
-            ))}
-          </div>
+                className={styles.sendBtn}
+                onClick={currentStep.type === 'number' ? handleNumberSubmit : handleTextSubmit}
+              >→</button>
+            </div>
+          )}
+
+          {currentStep.type === 'done' && (
+            <button
+              className={styles.doneBtn}
+              onClick={() => saveAndFinish(data)}
+              disabled={saving}
+            >
+              {saving ? 'Setting up…' : "Let's go →"}
+            </button>
+          )}
         </div>
-        <div className={styles.field}>
-          <label>Current balance</label>
-          <div className={styles.amtRow}>
-            <span>$</span>
-            <input type="number" value={form.balance} onChange={e => setForm(f => ({ ...f, balance: e.target.value }))} placeholder="0.00" step="0.01" min="0" />
-          </div>
-        </div>
-      </div>
+      )}
+
+      <button className={styles.skipBtn} onClick={() => completeOnboarding()}>
+        Skip setup
+      </button>
     </div>
   )
-}
-
-function IncomeStep({ form, setForm }) {
-  const FREQS = [
-    { value: 'weekly',     label: 'Weekly' },
-    { value: 'biweekly',   label: 'Every 2 weeks' },
-    { value: 'semimonthly',label: 'Twice/month' },
-    { value: 'monthly',    label: 'Monthly' },
-  ]
-  return (
-    <div className={styles.step}>
-      <div className={styles.stepIcon}>💰</div>
-      <h2 className={styles.stepTitle}>What's your take-home pay?</h2>
-      <p className={styles.stepSub}>After taxes. This helps Lumen calibrate your budget and savings rate.</p>
-      <div className={styles.fields}>
-        <div className={styles.field}>
-          <label>Take-home amount</label>
-          <div className={styles.amtRow}>
-            <span>$</span>
-            <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="e.g. 4500" min="0" />
-          </div>
-        </div>
-        <div className={styles.field}>
-          <label>Paid</label>
-          <div className={styles.typeGrid}>
-            {FREQS.map(f => (
-              <button
-                key={f.value}
-                className={`${styles.typeBtn} ${form.frequency === f.value ? styles.typeBtnOn : ''}`}
-                onClick={() => setForm(p => ({ ...p, frequency: f.value }))}
-              >{f.label}</button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function BudgetStep({ form, setForm }) {
-  const CATS = ['Dining', 'Groceries', 'Transport', 'Shopping', 'Entertainment', 'Subscriptions']
-  return (
-    <div className={styles.step}>
-      <div className={styles.stepIcon}>📊</div>
-      <h2 className={styles.stepTitle}>Set one budget to start</h2>
-      <p className={styles.stepSub}>Pick the category you most want to control. One is enough for now.</p>
-      <div className={styles.fields}>
-        <div className={styles.field}>
-          <label>Category</label>
-          <div className={styles.typeGrid}>
-            {CATS.map(c => (
-              <button
-                key={c}
-                className={`${styles.typeBtn} ${form.category === c ? styles.typeBtnOn : ''}`}
-                onClick={() => setForm(f => ({ ...f, category: c }))}
-              >{c}</button>
-            ))}
-          </div>
-        </div>
-        <div className={styles.field}>
-          <label>Monthly cap</label>
-          <div className={styles.amtRow}>
-            <span>$</span>
-            <input type="number" value={form.cap} onChange={e => setForm(f => ({ ...f, cap: e.target.value }))} placeholder="e.g. 300" min="0" />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ConnectStep({ pushEnabled, onEnablePush }) {
-  return (
-    <div className={styles.step}>
-      <div className={styles.stepIcon}>🔗</div>
-      <h2 className={styles.stepTitle}>Bring in your transactions</h2>
-      <p className={styles.stepSub}>A few ways to get your spending data into Lumen:</p>
-      <div className={styles.connectOptions}>
-        <div className={styles.connectOption}>
-          <div className={styles.connectOptionIcon}>🏦</div>
-          <div className={styles.connectOptionBody}>
-            <div className={styles.connectOptionTitle}>Connect your bank</div>
-            <div className={styles.connectOptionSub}>Live sync via Plaid. Set up in Accounts after this.</div>
-          </div>
-        </div>
-        <div className={styles.connectOption}>
-          <div className={styles.connectOptionIcon}>📄</div>
-          <div className={styles.connectOptionBody}>
-            <div className={styles.connectOptionTitle}>Upload a PDF statement</div>
-            <div className={styles.connectOptionSub}>Drop any bank statement PDF in Transactions → Upload PDF.</div>
-          </div>
-        </div>
-        <div className={styles.connectOption}>
-          <div className={styles.connectOptionIcon}>📊</div>
-          <div className={styles.connectOptionBody}>
-            <div className={styles.connectOptionTitle}>Import a CSV</div>
-            <div className={styles.connectOptionSub}>Export from any bank and import via Transactions → CSV Import.</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Push notification opt-in */}
-      <div className={styles.pushCard}>
-        <div className={styles.pushLeft}>
-          <LumenDot size={22} mood={pushEnabled ? 'happy' : 'idle'} />
-          <div>
-            <div className={styles.pushTitle}>Let Lumen tap you when it matters</div>
-            <div className={styles.pushSub}>Cash crunches, duplicate charges, wins. No noise.</div>
-          </div>
-        </div>
-        {pushEnabled ? (
-          <div className={styles.pushEnabled}>✓ Enabled</div>
-        ) : (
-          <button className={styles.pushBtn} onClick={onEnablePush}>Enable</button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── Utility ───────────────────────────────────────────────────────────────────
-function urlBase64ToUint8Array(base64String) {
-  const padding  = '='.repeat((4 - base64String.length % 4) % 4)
-  const base64   = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const rawData  = atob(base64)
-  return new Uint8Array([...rawData].map(c => c.charCodeAt(0)))
 }

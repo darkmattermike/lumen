@@ -3,6 +3,7 @@ import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import LumenDot from '../../components/LumenDot/LumenDot'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { api } from '../../data/api'
 import styles from './Settings.module.css'
@@ -455,6 +456,204 @@ function DataSection() {
   )
 }
 
+
+// ── Plan section ──────────────────────────────────────────────
+const TIER_COLOR = { free: 'var(--ink-3)', plus: 'var(--calm)', pro: 'var(--goal)' }
+const TIER_LABEL = { free: 'Free', plus: 'Lumen Plus', pro: 'Lumen Pro' }
+
+function PlanSection() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const [billingData, setBillingData] = useState(null)
+  const [portalLoading, setPortalLoading] = useState(false)
+
+  useEffect(() => {
+    api.billingStatus().then(setBillingData).catch(() => {})
+  }, [])
+
+  const tier  = billingData?.tier || user?.tier || 'free'
+  const color = TIER_COLOR[tier] || 'var(--ink-2)'
+  const label = TIER_LABEL[tier] || 'Free'
+  const isFree = tier === 'free'
+  const periodEnd = billingData?.currentPeriodEnd
+    ? new Date(billingData.currentPeriodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+
+  async function openPortal() {
+    setPortalLoading(true)
+    try {
+      const { url } = await api.billingPortal()
+      window.location.href = url
+    } catch { setPortalLoading(false) }
+  }
+
+  return (
+    <Section title="Plan" subtitle="Your current Lumen subscription.">
+      <div className={styles.planRow}>
+        <div className={styles.planBadge} style={{ color, borderColor: color, background: `${color}18` }}>
+          {label}
+        </div>
+        {periodEnd && !billingData?.cancelAtPeriodEnd && (
+          <div className={styles.planRenew}>Renews {periodEnd}</div>
+        )}
+        {billingData?.cancelAtPeriodEnd && (
+          <div className={styles.planCancel}>Cancels {periodEnd}</div>
+        )}
+      </div>
+      <div className={styles.planActions}>
+        {isFree ? (
+          <button className={styles.upgradeBtn} onClick={() => navigate('/pricing')}>
+            Upgrade Plan →
+          </button>
+        ) : (
+          <button className={styles.manageBtn} onClick={openPortal} disabled={portalLoading}>
+            {portalLoading ? 'Loading…' : 'Manage Subscription'}
+          </button>
+        )}
+        {!isFree && (
+          <button className={styles.viewPlansBtn} onClick={() => navigate('/pricing')}>
+            View all plans
+          </button>
+        )}
+      </div>
+    </Section>
+  )
+}
+
+// ── Family section ─────────────────────────────────────────────
+function FamilySection() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [status, setStatus]     = useState(null)
+  const [loading, setLoading]   = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [copied, setCopied]     = useState(false)
+
+  const isPro = user?.tier === 'pro' || user?.role === 'owner'
+
+  useEffect(() => {
+    if (!isPro) { setLoading(false); return }
+    api.familyStatus().then(d => { setStatus(d); setLoading(false) }).catch(() => setLoading(false))
+  }, [isPro])
+
+  async function createGroup() {
+    setCreating(true)
+    try {
+      await api.familyCreate()
+      const d = await api.familyStatus()
+      setStatus(d)
+    } catch (err) { console.error(err) }
+    finally { setCreating(false) }
+  }
+
+  async function regenerateInvite() {
+    try {
+      await api.familyRegenInvite()
+      const d = await api.familyStatus()
+      setStatus(d)
+    } catch {}
+  }
+
+  async function removeMember(userId) {
+    if (!window.confirm('Remove this member from your family plan?')) return
+    try {
+      await api.familyRemove(userId)
+      const d = await api.familyStatus()
+      setStatus(d)
+    } catch {}
+  }
+
+  function copyInvite() {
+    const url = `${window.location.origin}/family/join/${status.group.invite_code}`
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  if (!isPro) {
+    return (
+      <Section title="Family Plan" subtitle="Share your finances with up to 2 family members.">
+        <div className={styles.familyGate}>
+          <p className={styles.familyGateText}>Family plan requires <strong>Lumen Pro</strong>.</p>
+          <button className={styles.upgradeBtn} onClick={() => navigate('/pricing')}>Upgrade to Pro →</button>
+        </div>
+      </Section>
+    )
+  }
+
+  return (
+    <Section title="Family Plan" subtitle="Share finances with up to 2 additional members.">
+      {loading && <div className={styles.settingLoading}>Loading…</div>}
+
+      {!loading && !status?.group && (
+        <div className={styles.familySetup}>
+          <p className={styles.familySetupText}>You haven't set up a family group yet.</p>
+          <button className={styles.createGroupBtn} onClick={createGroup} disabled={creating}>
+            {creating ? 'Creating…' : 'Create Family Group'}
+          </button>
+        </div>
+      )}
+
+      {!loading && status?.group && status?.role === 'owner' && (
+        <div className={styles.familyOwner}>
+          {/* Invite link */}
+          <div className={styles.inviteBlock}>
+            <div className={styles.inviteLabel}>Invite Link</div>
+            <div className={styles.inviteUrl}>
+              {`${window.location.origin}/family/join/${status.group.invite_code}`}
+            </div>
+            <div className={styles.inviteBtns}>
+              <button className={styles.copyBtn} onClick={copyInvite}>
+                {copied ? '✓ Copied!' : 'Copy Link'}
+              </button>
+              <button className={styles.regenBtn} onClick={regenerateInvite}>
+                Regenerate
+              </button>
+            </div>
+            <div className={styles.inviteNote}>
+              Share this link with family members. They'll need a Lumen account.
+              Slots: {status.members?.length || 0}/2 used.
+            </div>
+          </div>
+
+          {/* Members list */}
+          {status.members?.length > 0 && (
+            <div className={styles.membersList}>
+              <div className={styles.membersLabel}>Members</div>
+              {status.members.map(m => (
+                <div key={m.user_id} className={styles.memberRow}>
+                  <div className={styles.memberAvatar}>
+                    {m.google_avatar
+                      ? <img src={m.google_avatar} alt={m.name} className={styles.memberAvatarImg} />
+                      : <div className={styles.memberAvatarInitial}>{(m.name || m.email || '?')[0].toUpperCase()}</div>
+                    }
+                  </div>
+                  <div className={styles.memberInfo}>
+                    <div className={styles.memberName}>{m.name || m.email}</div>
+                    <div className={styles.memberEmail}>{m.email}</div>
+                  </div>
+                  <button className={styles.removeMemberBtn} onClick={() => removeMember(m.user_id)}>
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!loading && status?.role === 'member' && (
+        <div className={styles.familyMember}>
+          <p className={styles.familyMemberText}>
+            You're a member of <strong>{status.group?.owner_name}'s</strong> family plan.
+            You can see shared accounts and transactions, and mark items private to yourself.
+          </p>
+        </div>
+      )}
+    </Section>
+  )
+}
+
 // ── Admin section (owner only) ────────────────────────────────
 function AdminSection() {
   const [users,   setUsers]   = useState([])
@@ -523,6 +722,19 @@ function AdminSection() {
                 >
                   {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
+                <select
+                  className={styles.roleSelect}
+                  value={u.tier || 'free'}
+                  style={{ color: TIER_COLOR[u.tier || 'free'] || 'var(--ink-2)' }}
+                  onChange={async e => {
+                    setActing(u.id)
+                    try { await api.adminSetTier({ userId: u.id, tier: e.target.value }); await loadUsers() }
+                    catch {} finally { setActing(null) }
+                  }}
+                  disabled={acting === u.id}
+                >
+                  {['free','plus','pro'].map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
                 <button
                   className={styles.revokeBtn}
                   onClick={() => revokeUser(u.id, u.email)}
@@ -574,6 +786,8 @@ export default function Settings() {
           {isOwner && <AdminSection />}
         </div>
         <div className={styles.right}>
+          <PlanSection />
+          <FamilySection />
           <ApiKeysSection  data={data} onRefresh={refresh} />
           <GmailSection    data={data} onRefresh={refresh} />
           <DataSection     data={data} />

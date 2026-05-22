@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import styles from './Rail.module.css'
 import NotificationBell from '../NotificationBell/NotificationBell'
+import { api } from '../../data/api'
 
 const Icon = ({ d, size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -47,10 +48,10 @@ const NAV_ITEMS = [
 // Mobile primary tabs — always visible
 const MOBILE_PRIMARY = [
   { path: '/dashboard',    icon: 'home',     label: 'Home'         },
-  { path: '/transactions', icon: 'txns',     label: 'Txns'     },
-  { path: '/budgets',      icon: 'budgets',  label: 'Budgets'  },
-  { path: '/calendar',     icon: 'calendar', label: 'Calendar' },
-  { path: '/analytics',    icon: 'stats',    label: 'Stats'    },
+  { path: '/transactions', icon: 'txns',     label: 'Transactions' },
+  { path: '/budgets',      icon: 'budgets',  label: 'Budgets'      },
+  { path: '/calendar',     icon: 'calendar', label: 'Calendar'     },
+  { path: '/analytics',    icon: 'stats',    label: 'Analytics'    },
 ]
 
 // Mobile "More" drawer items
@@ -64,6 +65,54 @@ const MOBILE_MORE = [
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'     },
   { path: '/settings',     icon: 'settings', label: 'Settings'  },
 ]
+
+
+// ── Mobile orb notification button ───────────────────────────
+function MobileOrbBtn() {
+  const [data, setData]   = useState({ unread_count: 0 })
+  const [open, setOpen]   = useState(false)
+  const wrapRef           = useRef(null)
+
+  useEffect(() => {
+    async function load() {
+      try { const d = await api.notifications(); setData(d) } catch {}
+    }
+    load()
+    const id = setInterval(load, 60_000)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    function handler(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div className={styles.mobileOrbWrap} ref={wrapRef}>
+      <button
+        className={`${styles.mobileOrbBtn} ${open ? styles.mobileOrbBtnOpen : ''}`}
+        onClick={() => setOpen(v => !v)}
+        aria-label="Lumen notifications"
+      >
+        <LumenDot size={20} rings={open} mood={data.unread_count > 0 ? 'unread' : 'idle'} />
+        {data.unread_count > 0 && (
+          <span className={styles.mobileOrbBadge}>
+            {data.unread_count > 9 ? '9+' : data.unread_count}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className={styles.mobileOrbPanel}>
+          <NotificationBell mobileDrawer />
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function Rail() {
   const navigate          = useNavigate()
@@ -160,10 +209,13 @@ export default function Rail() {
           aria-label="More"
         >
           <span className={styles.mobileBtnIcon}>
-            <Icon d={ICONS.more} size={20} />
+            <Icon d={ICONS.more} size={18} />
           </span>
           <span className={styles.mobileBtnLabel}>More</span>
         </button>
+
+        {/* Lumen orb — right side of nav bar */}
+        <MobileOrbBtn />
       </nav>
 
       {/* ── More drawer — slides up above tab bar ── */}
