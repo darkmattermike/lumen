@@ -111,13 +111,11 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
   useEffect(() => {
     if (!open || !triggerRef.current) { setCloudPos(null); return }
     const rect = triggerRef.current.getBoundingClientRect()
-    // Use the rail's right edge — the trigger sits inside the 48px rail,
-    // so we find the rightmost point of the rail element (parent of trigger)
-    const rail = triggerRef.current.closest('nav') || triggerRef.current.parentElement?.parentElement
-    const railRight = rail ? rail.getBoundingClientRect().right : rect.right
+    // Read --rail-w from CSS variables (set to 48px on desktop)
+    const railW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rail-w')) || 48
     setCloudPos({
       orbCenterY: rect.top + rect.height / 2,
-      left:       railRight + 14,
+      left:       railW + 14,
     })
   }, [open])
 

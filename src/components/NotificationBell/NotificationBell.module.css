@@ -67,7 +67,7 @@
 /* Cloud — sits above the trail, bottom edge at trail top */
 .cloudScroll {
   position: absolute;
-  bottom: 18px;         /* trail height + gap */
+  bottom: 18px;
   left: 0;
   width: 268px;
   display: flex;
@@ -75,7 +75,9 @@
   gap: 8px;
   max-height: var(--cloud-max-h, 400px);
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible;
+  /* Float the whole container so the border moves with the content */
+  animation: cloud-float 3.2s ease-in-out 0.45s infinite;
 }
 .cloudScroll::-webkit-scrollbar { width: 3px; }
 .cloudScroll::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 3px; }
@@ -107,9 +109,7 @@
     0 8px 32px rgba(0,0,0,.55),
     0 0 0 1px rgba(93,202,165,.05),
     0 0 40px rgba(93,202,165,.06);
-  animation:
-    cloud-in 0.45s cubic-bezier(.34,1.3,.64,1) both,
-    cloud-float 3.2s ease-in-out 0.45s infinite;
+  animation: cloud-in 0.45s cubic-bezier(.34,1.3,.64,1) both;
 }
 @keyframes cloud-in {
   from { opacity: 0; transform: scale(.75) translateY(14px); }
