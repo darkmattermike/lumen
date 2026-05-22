@@ -229,11 +229,6 @@ export default function Rail() {
           <div className={styles.moreDrawer} ref={drawerRef}>
             <div className={styles.moreHandle} />
 
-            {/* Lumen notifications row */}
-            <div className={styles.moreNotifRow}>
-              <NotificationBell mobileDrawer />
-            </div>
-
             <div className={styles.moreGrid}>
               {MOBILE_MORE.map(({ path, icon, label }) => (
                 <button
