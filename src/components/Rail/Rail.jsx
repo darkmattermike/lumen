@@ -83,6 +83,7 @@ function MobileOrbBtn() {
     return () => clearInterval(id)
   }, [])
 
+  // Close on outside tap
   useEffect(() => {
     if (!open) return
     function handler(e) {
@@ -99,16 +100,18 @@ function MobileOrbBtn() {
         onClick={() => setOpen(v => !v)}
         aria-label="Lumen notifications"
       >
-        <LumenDot size={20} rings={open} mood={data.unread_count > 0 ? 'unread' : 'idle'} />
-        {data.unread_count > 0 && (
+        <LumenDot size={20} rings={open} mood={data.unread_count > 0 ? 'unread' : open ? 'excited' : 'idle'} />
+        {data.unread_count > 0 && !open && (
           <span className={styles.mobileOrbBadge}>
             {data.unread_count > 9 ? '9+' : data.unread_count}
           </span>
         )}
       </button>
+
+      {/* Panel — fixed above the tab bar, full-width */}
       {open && (
         <div className={styles.mobileOrbPanel}>
-          <NotificationBell mobileDrawer />
+          <NotificationBell mobileDrawer startOpen />
         </div>
       )}
     </div>

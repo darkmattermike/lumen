@@ -4,51 +4,10 @@ import LumenDot from '../LumenDot/LumenDot'
 import styles from './NotificationBell.module.css'
 
 const TYPE_COLOR = {
-  alert:            'var(--debt)',
-  warning:          'var(--warn)',
-  insight:          'var(--calm)',
-  win:              'var(--safe)',
-  duplicate:        'var(--warn)',
-  recurring_change: 'var(--calm)',
-  anomaly:          'var(--debt)',
-  pattern:          'var(--calm)',
-  subscription:     'var(--calm)',
-  double_billing:   'var(--debt)',
-}
-
-// How many SMS-style "message bubbles" a notification type renders as
-// opener → fact → question
-function buildMessages(notif) {
-  const color = TYPE_COLOR[notif.type] || 'var(--calm)'
-  const isAlert   = notif.type === 'alert'   || notif.type === 'anomaly'
-  const isDup     = notif.type === 'duplicate' || notif.type === 'double_billing'
-  const isWin     = notif.type === 'win'
-  const isWarning = notif.type === 'warning'
-
-  // Opener bubble — short hook
-  const opener = isWin
-    ? 'Hey — good news.'
-    : isDup
-    ? 'Hey — I noticed something.'
-    : isAlert
-    ? 'Heads up.'
-    : isWarning
-    ? 'Something to watch.'
-    : 'I found something.'
-
-  // Fact bubble — the actual notification body
-  const fact = notif.body
-
-  // CTA bubble — question + reply buttons
-  const cta = isDup
-    ? { text: 'Should I flag it?', yes: 'Yes, flag it', no: 'Not a dup', isDanger: false }
-    : isWin
-    ? { text: null, yes: 'Got it ✓', no: 'Dismiss', isDanger: false }
-    : isAlert
-    ? { text: null, yes: 'Show me', no: 'Dismiss', isDanger: false }
-    : { text: null, yes: 'Got it', no: 'Dismiss', isDanger: false }
-
-  return { opener, fact, cta, color }
+  alert:'var(--debt)', warning:'var(--warn)', insight:'var(--calm)',
+  win:'var(--safe)', duplicate:'var(--warn)', recurring_change:'var(--calm)',
+  anomaly:'var(--debt)', pattern:'var(--calm)', subscription:'var(--calm)',
+  double_billing:'var(--debt)',
 }
 
 function relativeTime(ts) {
@@ -60,89 +19,63 @@ function relativeTime(ts) {
   return `${Math.floor(diff / 86400)}d ago`
 }
 
-// ── SMS-style 3-bubble notification ──────────────────────────
-function SmsNotif({ notif, onGotIt, onDismiss, animDelay = 0 }) {
-  const { opener, fact, cta, color } = buildMessages(notif)
-  const isDup = notif.type === 'duplicate' || notif.type === 'double_billing'
-  const isDebt = color === 'var(--debt)'
-  const isWin  = notif.type === 'win'
+// ── Single speech bubble notification ────────────────────────
+function NotifBubble({ notif, onGotIt, onDismiss, index, total }) {
+  const color = TYPE_COLOR[notif.type] || 'var(--calm)'
+  const offset = (total - 1 - index) * 8  // stack offset — newest on top
 
   return (
-    <div className={styles.smsNotif} style={{ '--anim-delay': `${animDelay}ms` }}>
+    <div
+      className={styles.bubble}
+      style={{
+        '--accent': color,
+        transform: `translateY(${-offset}px) scale(${1 - (total - 1 - index) * 0.02})`,
+        zIndex: index + 1,
+        opacity: index === total - 1 ? 1 : Math.max(0.5, 1 - (total - 1 - index) * 0.15),
+      }}
+    >
+      {/* Tail */}
+      <div className={styles.bubbleTail} />
 
-      {/* Bubble 1 — opener */}
-      <div className={`${styles.smsBubble} ${styles.smsBubbleBase}`}
-           style={{ animationDelay: `${animDelay}ms` }}>
-        <span className={styles.smsText}>{opener}</span>
-        <div className={styles.smsMeta}>
-          <span className={styles.smsTime}>{relativeTime(notif.created_at)}</span>
-          <span className={styles.smsRead}>✓✓</span>
+      {/* Header */}
+      <div className={styles.bubbleHeader}>
+        <div className={styles.bubbleOrb}><LumenDot size={14} mood="idle" /></div>
+        <span className={styles.bubbleLumen}>Lumen</span>
+        <span className={styles.bubbleType} style={{ color }}>{notif.title}</span>
+        <span className={styles.bubbleTime}>{relativeTime(notif.created_at)}</span>
+      </div>
+
+      {/* Body — Lumen voice */}
+      <p className={styles.bubbleBody}>{notif.body}</p>
+
+      {/* Duplicate actions */}
+      {notif.type === 'duplicate' && (
+        <div className={styles.bubbleActions}>
+          <button className={styles.actionDanger} onClick={() => onDismiss(notif.id, true)}>Remove duplicate</button>
+          <button className={styles.actionNeutral} onClick={() => onGotIt(notif.id)}>Not a duplicate</button>
         </div>
-      </div>
+      )}
 
-      {/* Bubble 2 — fact, accent colored */}
-      <div className={`${styles.smsBubble} ${styles.smsBubbleFact} ${isDebt ? styles.smsBubbleDebt : isWin ? styles.smsBubbleWin : styles.smsBubbleNeutral}`}
-           style={{ animationDelay: `${animDelay + 60}ms` }}>
-        <span className={styles.smsText}>{fact}</span>
-      </div>
-
-      {/* Bubble 3 — CTA */}
-      <div className={`${styles.smsBubble} ${styles.smsBubbleCta}`}
-           style={{ animationDelay: `${animDelay + 120}ms` }}>
-        {cta.text && <span className={styles.smsTextCta}>{cta.text}</span>}
-        <div className={styles.smsReplies}>
-          <button
-            className={`${styles.smsReply} ${isDup ? styles.smsReplyDanger : styles.smsReplyPrimary}`}
-            onClick={() => isDup ? onDismiss(notif.id, true) : onGotIt(notif.id)}
-          >
-            {cta.yes}
+      {/* Got it / Dismiss */}
+      {notif.type !== 'duplicate' && (
+        <div className={styles.bubbleActions}>
+          <button className={styles.gotItBtn} onClick={() => onGotIt(notif.id)}>
+            Got it
           </button>
-          <button
-            className={`${styles.smsReply} ${styles.smsReplyNeutral}`}
-            onClick={() => isDup ? onGotIt(notif.id) : onDismiss(notif.id)}
-          >
-            {cta.no}
+          <button className={styles.dismissBtn} onClick={() => onDismiss(notif.id)}>
+            Dismiss
           </button>
         </div>
-      </div>
-
+      )}
     </div>
   )
 }
 
-// ── Empty state — single calm SMS bubble ─────────────────────
-function EmptyBubble({ onClose }) {
-  return (
-    <div className={styles.smsNotif}>
-      <div className={`${styles.smsBubble} ${styles.smsBubbleBase}`}>
-        <span className={styles.smsText}>You're all caught up.</span>
-        <div className={styles.smsMeta}>
-          <span className={styles.smsTime}>just now</span>
-          <span className={styles.smsRead}>✓✓</span>
-        </div>
-      </div>
-      <div className={`${styles.smsBubble} ${styles.smsBubbleWin}`}
-           style={{ animationDelay: '60ms' }}>
-        <span className={styles.smsText}>I'll let you know when something needs attention.</span>
-      </div>
-      <div className={`${styles.smsBubble} ${styles.smsBubbleCta}`}
-           style={{ animationDelay: '120ms' }}>
-        <div className={styles.smsReplies}>
-          <button className={`${styles.smsReply} ${styles.smsReplyPrimary}`} onClick={onClose}>
-            Got it ✓
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function NotificationBell({ mobileDrawer = false }) {
+export default function NotificationBell({ mobileDrawer = false, startOpen = false }) {
   const [data, setData]       = useState({ notifications: [], unread_count: 0 })
-  const [open, setOpen]       = useState(false)
+  const [open, setOpen]       = useState(startOpen)
   const [loading, setLoading] = useState(false)
   const wrapRef               = useRef(null)
-  const triggerRef            = useRef(null)
 
   async function load() {
     try {
@@ -159,7 +92,6 @@ export default function NotificationBell({ mobileDrawer = false }) {
     return () => clearInterval(id)
   }, [])
 
-  // Close on outside click
   useEffect(() => {
     if (!open || mobileDrawer) return
     function handler(e) {
@@ -182,9 +114,11 @@ export default function NotificationBell({ mobileDrawer = false }) {
     }
   }
 
+  // "Got it" — closes the bubble but keeps badge count as-is (already marked read)
   async function handleGotIt(id, confirmDup = false) {
     try {
       if (confirmDup) await api.confirmDuplicate(id).catch(() => {})
+      // Just remove from visible stack, don't dismiss from DB
       setData(prev => ({
         ...prev,
         notifications: prev.notifications.filter(n => n.id !== id)
@@ -192,6 +126,7 @@ export default function NotificationBell({ mobileDrawer = false }) {
     } catch {}
   }
 
+  // "Dismiss" — removes from stack AND marks dismissed in DB (clears badge)
   async function handleDismiss(id, isDup = false) {
     try {
       if (isDup) await api.dismissDuplicate(id).catch(() => {})
@@ -213,20 +148,23 @@ export default function NotificationBell({ mobileDrawer = false }) {
 
   const notifs = data.notifications
 
-  // ── Mobile drawer ──────────────────────────────────────────
+  // ── Mobile drawer ─────────────────────────────────────────
   if (mobileDrawer) {
     return (
       <div className={styles.drawerWrap} ref={wrapRef}>
-        <button className={styles.drawerTrigger} onClick={handleOpen}>
-          <LumenDot size={18} rings={open} mood={open ? 'excited' : data.unread_count > 0 ? 'unread' : 'idle'} unread={data.unread_count} />
-          <span className={styles.drawerTriggerLabel}>
-            Lumen
-            {data.unread_count > 0 && <span className={styles.drawerBadge}>{data.unread_count}</span>}
-          </span>
-          <span className={styles.drawerChevron} style={{ transform: open ? 'rotate(180deg)' : 'none' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-          </span>
-        </button>
+        {/* Hide trigger when startOpen — parent (MobileOrbBtn) is the trigger */}
+        {!startOpen && (
+          <button className={styles.drawerTrigger} onClick={handleOpen}>
+            <LumenDot size={18} rings={open} mood={open ? 'excited' : data.unread_count > 0 ? 'unread' : 'idle'} unread={data.unread_count} />
+            <span className={styles.drawerTriggerLabel}>
+              Lumen
+              {data.unread_count > 0 && <span className={styles.drawerBadge}>{data.unread_count}</span>}
+            </span>
+            <span className={styles.drawerChevron} style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </button>
+        )}
 
         {open && (
           <div className={styles.drawerPanel}>
@@ -234,67 +172,69 @@ export default function NotificationBell({ mobileDrawer = false }) {
               <span className={styles.drawerPanelLabel}>Notifications</span>
               {notifs.length > 0 && <button className={styles.clearBtn} onClick={clearAll}>Clear all</button>}
             </div>
-            <div className={styles.drawerScroll}>
-              {!notifs.length ? (
-                <EmptyBubble onClose={() => setOpen(false)} />
-              ) : (
-                notifs.map((n, i) => (
-                  <SmsNotif
-                    key={n.id} notif={n} animDelay={i * 40}
+            {!notifs.length ? (
+              <div className={styles.empty}>
+                <p className={styles.emptyMsg}>You're all caught up ✓</p>
+                <p className={styles.emptySub}>I'll let you know when something needs attention.</p>
+              </div>
+            ) : (
+              <div className={styles.drawerBubbles}>
+                {notifs.map((n, i) => (
+                  <NotifBubble
+                    key={n.id} notif={n} index={i} total={notifs.length}
                     onGotIt={handleGotIt} onDismiss={handleDismiss}
                   />
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
     )
   }
 
-  // ── Desktop rail ───────────────────────────────────────────
-  // Stack is position:fixed so it always appears to the right of the rail
-  // regardless of where in the rail the trigger sits
+  // ── Desktop rail ──────────────────────────────────────────
   return (
     <div className={styles.wrap} ref={wrapRef}>
       <button
-        ref={triggerRef}
         className={`${styles.trigger} ${open ? styles.triggerOpen : ''}`}
         onClick={handleOpen}
         aria-label="Lumen notifications"
       >
-        <LumenDot
-          size={22}
-          rings={open}
-          mood={open ? 'excited' : data.unread_count > 0 ? 'unread' : 'idle'}
-          unread={data.unread_count}
-        />
+        <LumenDot size={22} rings={open} />
+        {data.unread_count > 0 && (
+          <span className={styles.badge}>{data.unread_count > 9 ? '9+' : data.unread_count}</span>
+        )}
       </button>
 
+      {/* Speech bubble stack */}
       {open && (
         <div className={styles.stack}>
-          {/* Header row */}
-          <div className={styles.stackHeader}>
-            <div className={styles.stackHeaderOrb}><LumenDot size={16} mood="idle" /></div>
-            <span className={styles.stackHeaderName}>Lumen</span>
-            {notifs.length > 1 && (
-              <button className={styles.clearAllBtn} onClick={clearAll}>Clear all</button>
-            )}
-          </div>
-
-          {/* Bubbles */}
-          <div className={styles.stackScroll}>
-            {!notifs.length ? (
-              <EmptyBubble onClose={() => setOpen(false)} />
-            ) : (
-              notifs.map((n, i) => (
-                <SmsNotif
-                  key={n.id} notif={n} animDelay={i * 50}
-                  onGotIt={handleGotIt} onDismiss={handleDismiss}
-                />
-              ))
-            )}
-          </div>
+          {!notifs.length ? (
+            <div className={styles.bubble} style={{ '--accent': 'var(--safe)', zIndex: 1 }}>
+              <div className={styles.bubbleTail} />
+              <div className={styles.bubbleHeader}>
+                <div className={styles.bubbleOrb}><LumenDot size={14} mood="idle" /></div>
+                <span className={styles.bubbleLumen}>Lumen</span>
+              </div>
+              <p className={styles.bubbleBody} style={{ color: 'var(--ink-2)' }}>
+                You're all caught up. I'll let you know when something needs attention.
+              </p>
+              <div className={styles.bubbleActions}>
+                <button className={styles.gotItBtn} onClick={() => setOpen(false)}>Got it</button>
+              </div>
+            </div>
+          ) : (
+            notifs.map((n, i) => (
+              <NotifBubble
+                key={n.id} notif={n} index={i} total={notifs.length}
+                onGotIt={handleGotIt} onDismiss={handleDismiss}
+              />
+            ))
+          )}
+          {notifs.length > 1 && (
+            <button className={styles.clearAllBtn} onClick={clearAll}>Dismiss all</button>
+          )}
         </div>
       )}
     </div>
