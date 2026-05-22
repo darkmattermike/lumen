@@ -4,7 +4,6 @@ import LumenInsight from '../../components/LumenInsight/LumenInsight'
 import CsvImportModal from '../../components/CsvImportModal/CsvImportModal'
 import DocumentUpload from '../../components/DocumentUpload/DocumentUpload'
 import MergeReview from '../../components/MergeReview/MergeReview'
-import SpendingPaceCard from '../../components/SpendingPaceCard/SpendingPaceCard'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
@@ -534,12 +533,6 @@ function AutoCategorizeModal({ budgets, onClose, onDone }) {
 
 // ── Main page ─────────────────────────────────────────────────
 export default function Transactions() {
-  const { user } = useAuth()
-  // isFamilyPro: true when user is on a family plan and is the account owner.
-  // Enables per-transaction privacy toggles for shared family views.
-  // Defaults to false until family plan billing is implemented.
-  const isFamilyPro = user?.plan === 'family' || user?.is_owner === true || false
-
   const [activeFilter, setActiveFilter]   = useState('All')
   const [search, setSearch]               = useState('')
   const [showCatModal, setShowCatModal]   = useState(false)
@@ -722,14 +715,7 @@ export default function Transactions() {
               {enrichMsg && <div className={styles.enrichMsg}>{enrichMsg}</div>}
             </div>
           </div>
-          <div className={styles.headerRight}>
-            <SpendingPaceCard
-              spending={spending}
-              income={income}
-              dailyCumulative={dailyCumulative}
-              lastMonthSpend={lastMonthSpend}
-            />
-          </div>
+
         </div>
 
         {showDocUpload && (

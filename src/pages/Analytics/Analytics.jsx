@@ -102,13 +102,15 @@ export default function Analytics() {
       </div>
 
       <div className={styles.body}>
-        {/* Spending Pace Card */}
-        <SpendingPaceCard
-          spending={Number(kpis.totalSpend || 0)}
-          income={Number(kpis.totalIncome || 0)}
-          dailyCumulative={monthlySummary?.dailyCumulative || []}
-          lastMonthSpend={Number(kpis.lastMonthSpend || 0)}
-        />
+        {/* Spending Pace Card — full width */}
+        <div className={`${styles.chartCard} ${styles.full}`} style={{ '--card-delay': '0.15s', padding: 0, overflow: 'hidden' }}>
+          <SpendingPaceCard
+            spending={Number(kpis.totalSpend || monthlySummary?.totalSpend || 0)}
+            income={Number(kpis.totalIncome || monthlySummary?.totalIncome || 0)}
+            dailyCumulative={monthlySummary?.dailyCumulative || []}
+            lastMonthSpend={Number(kpis.lastMonthSpend || monthlySummary?.lastMonthSpend || 0)}
+          />
+        </div>
 
         {/* Cash flow forecast chart */}
         <div className={`${styles.chartCard} ${styles.full}`} style={{ '--card-delay': '0.2s' }}>
