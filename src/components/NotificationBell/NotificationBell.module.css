@@ -44,30 +44,32 @@
    position: fixed with top/left set by JS to align exactly
    with the orb button's measured position.               */
 /* ── Desktop cloud wrapper ─────────────────────────────────
-   top = orbCenterY - trailHeight (~30px) so trail aligns with orb.
-   flex-direction: column-reverse — Trail DOM-first renders at bottom
-   (orb level), cloud stacks above it growing upward.              */
+   The wrapper is a zero-size fixed point sitting exactly at
+   orbCenterY. Trail dots are inside, vertically centered on
+   that point. Cloud is absolutely positioned ABOVE the trail.  */
 .cloudWrap {
   position: fixed;
   z-index: 400;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: flex-start;
-  gap: 6px;
+  /* width/height: 0 — children use absolute positioning */
 }
 
-/* Trail — visually at bottom, level with orb */
+/* Trail — 3 dots centered on the orb Y */
 .trail {
+  position: absolute;
+  top: -14px;           /* half of trail height (~28px) to center on orb */
+  left: 8px;
   display: flex;
-  flex-direction: column;    /* large dot on top toward cloud */
+  flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  padding-left: 8px;
-  flex-shrink: 0;
 }
 
-/* Cloud scroll container — grows upward, capped at screen top */
+/* Cloud — sits above the trail, bottom edge at trail top */
 .cloudScroll {
+  position: absolute;
+  bottom: 18px;         /* trail height + gap */
+  left: 0;
+  width: 268px;
   display: flex;
   flex-direction: column;
   gap: 8px;

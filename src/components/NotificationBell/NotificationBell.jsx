@@ -111,9 +111,13 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
   useEffect(() => {
     if (!open || !triggerRef.current) { setCloudPos(null); return }
     const rect = triggerRef.current.getBoundingClientRect()
+    // Use the rail's right edge — the trigger sits inside the 48px rail,
+    // so we find the rightmost point of the rail element (parent of trigger)
+    const rail = triggerRef.current.closest('nav') || triggerRef.current.parentElement?.parentElement
+    const railRight = rail ? rail.getBoundingClientRect().right : rect.right
     setCloudPos({
       orbCenterY: rect.top + rect.height / 2,
-      left:       rect.right + 14,
+      left:       railRight + 14,
     })
   }, [open])
 
@@ -255,11 +259,9 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
         <div
           className={styles.cloudWrap}
           style={{
-            // Trail (~30px) sits at orb center — so top = orbCenterY - 30px
-            top:  cloudPos.orbCenterY - 30,
+            top:  cloudPos.orbCenterY,
             left: cloudPos.left,
-            // Cloud max-height = space from top of screen to just above orb
-            '--cloud-max-h': `${Math.max(100, cloudPos.orbCenterY - 16 - 30 - 6)}px`,
+            '--cloud-max-h': `${Math.max(120, cloudPos.orbCenterY - 24)}px`,
           }}
         >
           {/* Cloud — anchored to bottom of wrapper, grows upward */}
