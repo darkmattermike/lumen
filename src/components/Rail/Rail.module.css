@@ -97,27 +97,31 @@
     left: 0;
     right: 0;
     z-index: 200;
-    height: var(--tab-bar-h, 56px);
+    /* Total height = icon area + safe-area padding */
+    height: calc(var(--tab-bar-h, 72px) + env(safe-area-inset-bottom, 0px));
     background: rgba(7,9,13,0.97);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--ink-5);
-    align-items: stretch;
+    align-items: flex-start;   /* icons stay near the top of the bar */
     justify-content: space-around;
-    padding-bottom: env(safe-area-inset-bottom);
+    /* Top padding pushes icons slightly down from the border,
+       bottom padding fills the safe area on curved screens */
+    padding-top: 6px;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
   }
 
   .mobileBtn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;  /* hug top of button area */
     gap: 3px;
     flex: 1;
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 6px 2px;
+    padding: 8px 2px 4px;        /* 8px top gives breathing room from border */
     color: var(--ink-3);
     transition: color var(--t-fast);
     -webkit-tap-highlight-color: transparent;
@@ -170,7 +174,7 @@
   /* ── More drawer ── */
   .moreDrawer {
     position: fixed;
-    bottom: calc(var(--tab-bar-h, 56px) + env(safe-area-inset-bottom));
+    bottom: calc(var(--tab-bar-h, 72px) + env(safe-area-inset-bottom, 0px));
     left: 0;
     right: 0;
     z-index: 199;

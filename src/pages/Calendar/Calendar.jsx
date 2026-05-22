@@ -509,6 +509,7 @@ export default function Calendar() {
             <div>
               <div className={styles.pre}>◷ What's Coming</div>
               <div className={styles.title}>Calendar</div>
+              <div className={styles.sub}>Bills, income, and subscriptions — every recurring item mapped to the day it hits.</div>
             </div>
             <div className={styles.headerControls}>
               <div className={styles.monthNav}>

@@ -297,4 +297,5 @@ export const api = {
   adminUsers:      ()           => request('/api/admin/users'),
   adminSetRole:    (id, role)   => request(`/api/admin/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
   adminRevokeUser: (id)         => request(`/api/admin/users/${id}`, { method: 'DELETE' }),
+  adminUnlockUser: (id)         => request(`/api/admin/users/${id}/unlock`, { method: 'PATCH' }),
 }

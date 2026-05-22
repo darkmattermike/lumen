@@ -752,19 +752,34 @@ function AdminSection() {
   )
 }
 
+// ── Tab definitions ──────────────────────────────────────────
+const TABS = [
+  { id: 'account',      label: 'Account',      icon: '◈' },
+  { id: 'security',     label: 'Security',     icon: '⬡' },
+  { id: 'integrations', label: 'Integrations', icon: '⇄' },
+  { id: 'plan',         label: 'Plan',         icon: '✦' },
+  { id: 'data',         label: 'Data',         icon: '↓' },
+]
+
 // ── Main Settings page ────────────────────────────────────────
 export default function Settings() {
   const { logout, user } = useAuth()
   const { data, loading, error, refresh } = useApi(api.getSettings)
   const isOwner = user?.role === 'owner'
+  const [tab, setTab] = useState('account')
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
 
+  const tabs = isOwner
+    ? [...TABS, { id: 'admin', label: 'Admin', icon: '⚑' }]
+    : TABS
+
   return (
     <ScreenWrap>
+      {/* ── Header ── */}
       <div className={styles.header}>
-        <div>
+        <div className={styles.headerLeft}>
           <div className={styles.pre}>⚙ Settings</div>
           <div className={styles.title}>Settings</div>
           <div className={styles.sub}>Manage your profile, security, and integrations.</div>
@@ -778,21 +793,63 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className={styles.body}>
-        <div className={styles.left}>
-          <ProfileSection  data={data} onRefresh={refresh} />
-          <PasswordSection />
-          <LegalSection    data={data} />
-          {isOwner && <AdminSection />}
-        </div>
-        <div className={styles.right}>
-          <PlanSection />
-          <FamilySection />
-          <ApiKeysSection  data={data} onRefresh={refresh} />
-          <GmailSection    data={data} onRefresh={refresh} />
-          <DataSection     data={data} />
-          <AccountInfoSection data={data} onLogout={logout} />
-        </div>
+      {/* ── Tabs ── */}
+      <div className={styles.tabBar}>
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            className={`${styles.tabBtn} ${tab === t.id ? styles.tabBtnActive : ''}`}
+            onClick={() => setTab(t.id)}
+          >
+            <span className={styles.tabIcon}>{t.icon}</span>
+            <span className={styles.tabLabel}>{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── Tab content ── */}
+      <div className={styles.tabContent} key={tab}>
+
+        {tab === 'account' && (
+          <div className={styles.panelGrid}>
+            <ProfileSection data={data} onRefresh={refresh} />
+            <AccountInfoSection data={data} onLogout={logout} />
+          </div>
+        )}
+
+        {tab === 'security' && (
+          <div className={styles.panelGrid}>
+            <PasswordSection />
+            <LegalSection data={data} />
+          </div>
+        )}
+
+        {tab === 'integrations' && (
+          <div className={styles.panelGrid}>
+            <GmailSection data={data} onRefresh={refresh} />
+            <ApiKeysSection data={data} onRefresh={refresh} />
+          </div>
+        )}
+
+        {tab === 'plan' && (
+          <div className={styles.panelGrid}>
+            <PlanSection />
+            <FamilySection />
+          </div>
+        )}
+
+        {tab === 'data' && (
+          <div className={styles.panelSingle}>
+            <DataSection data={data} />
+          </div>
+        )}
+
+        {tab === 'admin' && isOwner && (
+          <div className={styles.panelSingle}>
+            <AdminSection />
+          </div>
+        )}
+
       </div>
     </ScreenWrap>
   )

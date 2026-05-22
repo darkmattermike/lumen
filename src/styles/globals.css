@@ -379,7 +379,7 @@ body {
     --rail-w:   0px;
     --pad-x:    16px;
     --pad-y:    20px;
-    --tab-bar-h: 60px;
+    --tab-bar-h: 72px;
   }
 
   /* Push page content above the bottom tab bar */
@@ -405,14 +405,15 @@ body {
     left: 0;
     right: 0;
     z-index: 200;
-    height: var(--tab-bar-h);
+    height: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px));
     background: rgba(7, 9, 13, 0.97);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--ink-5);
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-around;
-    padding: 0 4px;
+    padding-top: 6px;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
     padding-bottom: env(safe-area-inset-bottom);
   }
 
