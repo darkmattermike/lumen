@@ -99,9 +99,21 @@ function Trail() {
 
 // ── Main export ───────────────────────────────────────────────
 export default function NotificationBell({ mobileDrawer = false, startOpen = false }) {
-  const [data, setData] = useState({ notifications: [], unread_count: 0 })
-  const [open, setOpen] = useState(startOpen)
-  const wrapRef         = useRef(null)
+  const [data, setData]         = useState({ notifications: [], unread_count: 0 })
+  const [open, setOpen]         = useState(startOpen)
+  const [cloudPos, setCloudPos] = useState(null)
+  const wrapRef                 = useRef(null)
+  const triggerRef              = useRef(null)
+
+  // Measure trigger position on open so cloud aligns precisely with the orb
+  useEffect(() => {
+    if (!open || !triggerRef.current) { setCloudPos(null); return }
+    const rect = triggerRef.current.getBoundingClientRect()
+    setCloudPos({
+      top:  rect.top + rect.height / 2 - 60, // center cloud roughly on orb
+      left: rect.right + 14,
+    })
+  }, [open])
 
   useEffect(() => {
     async function load() {
@@ -223,6 +235,7 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
     <div className={styles.wrap} ref={wrapRef}>
 
       <button
+        ref={triggerRef}
         className={`${styles.trigger} ${open ? styles.triggerOpen : ''}`}
         onClick={handleOpen}
         aria-label="Lumen notifications"
@@ -236,12 +249,12 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
         )}
       </button>
 
-      {open && (
-        <div className={styles.cloudWrap}>
-          {/* 3 trail dots rising from orb toward cloud */}
-          <Trail />
-
-          {/* The thought cloud itself */}
+      {open && cloudPos && (
+        <div
+          className={styles.cloudWrap}
+          style={{ top: cloudPos.top, left: cloudPos.left }}
+        >
+          {/* Cloud first — sits level with the orb */}
           {!notifs.length ? (
             <EmptyCloud onClose={() => setOpen(false)} />
           ) : (
@@ -254,6 +267,9 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
               )}
             </>
           )}
+
+          {/* Trail dots below cloud, bridging down toward the orb */}
+          <Trail />
         </div>
       )}
     </div>

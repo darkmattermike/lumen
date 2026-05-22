@@ -41,30 +41,24 @@
 }
 
 /* ── Desktop cloud wrapper ────────────────────────────────
-   Positions everything to the right of the 48px rail.
-   Trail + cloud are absolutely positioned children.      */
+   position: fixed with top/left set by JS to align exactly
+   with the orb button's measured position.               */
 .cloudWrap {
   position: fixed;
-  left: calc(var(--rail-w, 48px) + 6px);
-  bottom: 60px;           /* aligns near the orb in the rail */
   z-index: 400;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  pointer-events: none;   /* trail dots shouldn't intercept clicks */
+  gap: 6px;
 }
-.cloudWrap > * { pointer-events: auto; }
 
-/* ── Trail dots ───────────────────────────────────────────
-   3 dots, smallest→largest, rising from orb toward cloud  */
+/* Trail sits below the cloud, bridging toward the orb */
 .trail {
   display: flex;
-  flex-direction: column-reverse; /* dot 1 = smallest = bottom */
+  flex-direction: column;   /* largest at top = closest to cloud */
   align-items: flex-start;
   gap: 5px;
-  padding-left: 11px;             /* align with orb center */
-  margin-bottom: 2px;
+  padding-left: 8px;
 }
 .trailDot {
   border-radius: 50%;
@@ -72,9 +66,11 @@
   animation: trail-pulse 1.2s ease-in-out infinite;
   flex-shrink: 0;
 }
-.trailDot:nth-child(1) { width: 4px;  height: 4px;  animation-delay: 0s;   }
+/* Top dot = largest = closest to cloud */
+.trailDot:nth-child(1) { width: 9px;  height: 9px;  animation-delay: 0s;   }
 .trailDot:nth-child(2) { width: 6px;  height: 6px;  animation-delay: .18s; }
-.trailDot:nth-child(3) { width: 9px;  height: 9px;  animation-delay: .35s; }
+/* Bottom dot = smallest = closest to orb */
+.trailDot:nth-child(3) { width: 4px;  height: 4px;  animation-delay: .35s; }
 @keyframes trail-pulse {
   0%,100% { opacity: .3; transform: scale(.8);  }
   50%     { opacity: .9; transform: scale(1.15); }
