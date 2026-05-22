@@ -68,8 +68,11 @@ export default function Dashboard() {
   const w1PayTotal   = (w1?.paycheckOnStartTotal ?? 0) + (w1?.paychecksInTotal ?? 0)
   const w1Free       = w1PayTotal - w1Bills
   const w1IsTight    = w1Bills > 0 && w1Free < 300
-  const w1Shortfall  = w1IsTight ? Math.max(0, w1Bills - w1PayTotal) : 0
-  const safeToSpend  = Math.max(0, heroBalance - w1Shortfall)
+
+  // Safe-to-spend: what you'll have after ALL known windows clear.
+  // = heroBalance (w0 free) + w1 paycheck - w1 bills
+  // This is the number you shouldn't exceed if you want to stay solvent through w1.
+  const safeToSpend = heroBalance + w1PayTotal - w1Bills
 
   // Build bill rows for aside
   const billRows = upcomingBills.map(b => ({
@@ -120,28 +123,22 @@ export default function Dashboard() {
       )
     }
 
-    // 2. Next-window warning if it's tight
+    // 2. Next-window context — always shown when w1 has bills
     if (w1 && w1Bills > 0) {
-      const w1PayDate  = fmtDate(w1?.endDate)
+      const w1PayDate   = fmtDate(w1?.endDate)
       const w1StartDate = fmtDate(w1?.startDate)
-      if (w1IsTight) {
-        parts.push(
-          <span key="w1-warn">
-            <strong style={{ color: 'var(--warn)' }}>Heads up:</strong>{' '}
-            <strong style={{ color: 'var(--debt)' }}>${fmt(w1Bills)}</strong> in bills hit between {w1StartDate}–{w1PayDate || 'your next pay'}.
-            {w1Free < 0
-              ? <> You'll be <strong style={{ color: 'var(--debt)' }}>${fmt(Math.abs(w1Free))} short</strong> — move money before then.</>
-              : <> Only <strong style={{ color: 'var(--warn)' }}>${fmt(w1Free)}</strong> left after those bills, so keep spending under <strong>${fmt(safeToSpend)}</strong> until then.</>
-            }{' '}
-          </span>
-        )
-      } else {
-        parts.push(
-          <span key="w1-ok">
-            Next period ({w1StartDate}–{w1PayDate || 'next pay'}): <strong style={{ color: 'var(--warn)' }}>${fmt(w1Bills)}</strong> in bills, <strong style={{ color: 'var(--safe)' }}>${fmt(w1Free)}</strong> left over.{' '}
-          </span>
-        )
-      }
+      const w1PayLabel  = w1PayTotal > 0 ? `$${fmt(w1PayTotal)} paycheck` : null
+
+      parts.push(
+        <span key="w1-warn">
+          {w1IsTight && <strong style={{ color: 'var(--warn)' }}>Heads up: </strong>}
+          <strong style={{ color: w1IsTight ? 'var(--debt)' : 'var(--warn)' }}>${fmt(w1Bills)}</strong> in bills
+          between {w1StartDate}–{w1PayDate}{w1PayLabel ? <> covered mostly by your {w1PayLabel} ({w1Free >= 0 ? <strong style={{ color: 'var(--safe)' }}>${fmt(w1Free)} left over</strong> : <strong style={{ color: 'var(--debt)' }}>${fmt(Math.abs(w1Free))} short</strong>})</> : ' with no paycheck'}.
+          {' '}So don't spend more than{' '}
+          <strong style={{ color: safeToSpend >= 0 ? 'var(--safe)' : 'var(--debt)' }}>${fmt(safeToSpend)}</strong>
+          {' '}before {w1PayDate}.{' '}
+        </span>
+      )
     }
 
     // 3. Verdict
