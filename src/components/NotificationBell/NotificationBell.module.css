@@ -292,7 +292,7 @@
   }
 }
 
-/* ── Speech bubble stack ── */
+/* ── iMessage-style speech bubbles ── */
 .wrap { position: relative; }
 
 .trigger {
@@ -313,134 +313,151 @@
   display: flex; align-items: center; justify-content: center; padding: 0 3px;
 }
 
-/* Stack container — bubbles stack upward from the orb */
+/* Stack container — opens to the right of the orb */
 .stack {
   position: absolute;
-  left: calc(100% + 14px);
-  bottom: 0;
-  width: 300px;
-  display: flex; flex-direction: column; gap: 0;
+  left: calc(100% + 20px);
+  bottom: -8px;
+  width: 320px;
+  display: flex; flex-direction: column; gap: 10px;
   z-index: 200;
 }
 
 .clearAllBtn {
-  margin-top: 8px; width: 100%;
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
   color: var(--ink-3); background: transparent; border: 1px solid var(--ink-5);
   border-radius: 8px; padding: 7px; cursor: pointer; transition: all var(--t-fast);
 }
 .clearAllBtn:hover { color: var(--ink-1); border-color: var(--ink-3); }
 
-/* Speech bubble */
+/* The speech bubble itself */
 .bubble {
   background: var(--bg-2);
-  border: 1px solid var(--ink-4);
-  border-left: 3px solid var(--accent, var(--calm));
-  border-radius: 12px;
+  border-radius: 18px 18px 18px 4px;
   padding: 14px 16px;
   position: relative;
-  transition: all .2s ease;
-  animation: bubblePop .25s cubic-bezier(.34,1.1,.64,1) both;
+  box-shadow: 0 4px 24px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.06);
+  animation: bubblePop .28s cubic-bezier(.34,1.2,.64,1) both;
   transform-origin: left bottom;
-  box-shadow: 0 8px 32px rgba(0,0,0,.4);
-  margin-bottom: 8px;
 }
 
-/* Tail pointing left toward the orb */
-.bubbleTail {
-  position: absolute;
-  left: -9px; bottom: 16px;
-  width: 0; height: 0;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  border-right: 9px solid var(--ink-4);
-}
-.bubbleTail::after {
+/* Coloured left accent — shows notification type */
+.bubble::before {
   content: '';
   position: absolute;
-  left: 2px; top: -6px;
-  width: 0; height: 0;
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
-  border-right: 8px solid var(--bg-2);
+  left: 0; top: 14px; bottom: 14px;
+  width: 3px;
+  background: var(--accent, var(--calm));
+  border-radius: 0 2px 2px 0;
+  opacity: .75;
 }
 
-.bubbleHeader {
-  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+/* Triangle tail — points left toward the orb */
+.bubbleTail {
+  position: absolute;
+  left: -10px;
+  bottom: 14px;
+  width: 0; height: 0;
+  border-top: 8px solid transparent;
+  border-right: 10px solid var(--bg-2);
+  border-bottom: 0;
+  filter: drop-shadow(-2px 1px 3px rgba(0,0,0,.35));
 }
-.bubbleOrb { flex-shrink: 0; }
-.bubbleLumen {
-  font-family: var(--font-mono); font-size: 9px; color: var(--ink-2);
-  letter-spacing: 1px; text-transform: uppercase;
+
+/* Sender row */
+.bubbleHeader {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 10px;
+}
+.bubbleOrb    { flex-shrink: 0; }
+.bubbleLumen  {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--safe); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
 }
 .bubbleType {
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: .5px;
-  text-transform: uppercase; margin-left: 2px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 10px;
+  background: color-mix(in srgb, var(--accent, var(--calm)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent, var(--calm)) 28%, transparent);
+  color: var(--accent, var(--calm));
 }
 .bubbleTime {
-  font-family: var(--font-mono); font-size: 8px; color: var(--ink-4);
-  margin-left: auto;
+  font-family: var(--font-mono); font-size: 8px; color: var(--ink-4); margin-left: auto;
 }
 
+/* Message text — reads naturally */
 .bubbleBody {
-  font-size: 13px; color: var(--ink-1); line-height: 1.65;
-  margin: 0 0 12px;
+  font-size: 13px; color: var(--ink-0); line-height: 1.65;
+  margin: 0 0 14px;
 }
 
+/* Quick-reply buttons below message */
 .bubbleActions {
-  display: flex; gap: 8px;
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.06);
 }
 .gotItBtn {
-  padding: 6px 14px; border-radius: 20px;
-  background: rgba(93,202,165,.08); border: 1px solid rgba(93,202,165,.25);
+  flex: 1; text-align: center;
+  padding: 7px 16px; border-radius: 20px;
+  background: rgba(93,202,165,.1); border: 1px solid rgba(93,202,165,.28);
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
   color: var(--safe); cursor: pointer; transition: all var(--t-fast);
 }
 .gotItBtn:hover { background: var(--safe); color: #040608; }
 .dismissBtn {
-  padding: 6px 14px; border-radius: 20px;
+  flex: 1; text-align: center;
+  padding: 7px 16px; border-radius: 20px;
   background: transparent; border: 1px solid var(--ink-5);
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
   color: var(--ink-3); cursor: pointer; transition: all var(--t-fast);
 }
 .dismissBtn:hover { border-color: var(--ink-3); color: var(--ink-1); }
 .actionDanger {
-  padding: 6px 12px; border-radius: 20px;
+  flex: 1; text-align: center;
+  padding: 7px 14px; border-radius: 20px;
   background: rgba(232,115,99,.1); border: 1px solid rgba(232,115,99,.3);
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: .5px; text-transform: uppercase;
-  color: var(--debt); cursor: pointer; font-size: 10px;
+  font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--debt); cursor: pointer; transition: all var(--t-fast);
 }
+.actionDanger:hover { background: rgba(232,115,99,.2); }
 .actionNeutral {
-  padding: 6px 12px; border-radius: 20px;
+  flex: 1; text-align: center;
+  padding: 7px 14px; border-radius: 20px;
   background: transparent; border: 1px solid var(--ink-5);
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--ink-3); cursor: pointer;
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3); cursor: pointer; transition: all var(--t-fast);
 }
+.actionNeutral:hover { border-color: var(--ink-3); color: var(--ink-1); }
 
-/* Drawer bubbles in mobile */
-.drawerBubbles { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
+/* Drawer bubbles — no tail, no position tricks */
+.drawerBubbles {
+  display: flex; flex-direction: column; gap: 10px; padding: 10px 12px; overflow-y: auto;
+}
 .drawerBubbles .bubble {
   position: static; transform: none !important; opacity: 1 !important;
-  animation: none;
+  animation: bubblePop .2s cubic-bezier(.34,1.2,.64,1) both;
+  border-radius: 14px;
 }
+.drawerBubbles .bubble::before { border-radius: 4px 0 0 4px; }
 .drawerBubbles .bubbleTail { display: none; }
 
 /* Empty state */
-.empty { padding: 20px; text-align: center; }
-.emptyMsg { font-size: 13px; color: var(--safe); margin-bottom: 4px; }
+.empty     { padding: 24px 16px; }
+.emptyMsg  { font-size: 13px; color: var(--ink-0); margin-bottom: 5px; }
 .emptySub  { font-size: 11px; color: var(--ink-3); line-height: 1.55; }
 
 @keyframes bubblePop {
-  from { opacity: 0; transform: scale(.92) translateX(-8px); }
+  from { opacity: 0; transform: scale(.88) translateX(-12px); }
   to   { opacity: 1; transform: scale(1)   translateX(0); }
 }
 
-/* Mobile positioning */
+/* Mobile — stack above tab bar */
 @media (max-width: 768px) {
   .stack {
-    left: auto; right: 8px; bottom: calc(var(--tab-bar-h, 60px) + 8px);
+    left: auto; right: 8px;
+    bottom: calc(var(--tab-bar-h, 60px) + 8px);
     width: calc(100vw - 24px); max-width: 360px;
   }
-  .bubble { margin-bottom: 8px; }
   .bubbleTail { display: none; }
+  .bubble { border-radius: 14px; }
 }
