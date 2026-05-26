@@ -1,19 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import styles from './LumenDot.module.css'
 
 /**
- * LumenDot — the Lumen orb character.
- * Uses the ChatGPT-designed orb image (/lumen_orb.png) as background.
+ * LumenDot — the Lumen orb. A living financial spirit.
  *
- * Props (unchanged API):
+ * Props:
  *   size     {number}  — diameter in px (default 44)
  *   rings    {boolean} — expanding ring pulses (default false)
  *   speed    {string}  — animation duration override
- *   mood     {string}  — 'idle'|'thinking'|'speaking'|'excited'|'happy'|'alert'|'loading'|'unread'
+ *   mood     {string}  — 'idle' | 'thinking' | 'speaking' | 'excited' | 'happy' | 'alert' | 'loading' | 'unread'
  *   unread   {number}  — unread count → badge + wiggle
  *   onClick  {fn}      — tap handler
  *   tooltip  {string}  — hover quip
- *   spirit   {boolean} — spontaneous micro-animations (default true on larger sizes)
+ *   spirit   {boolean} — if true, orb occasionally does spontaneous micro-animations (default true on larger sizes)
  */
 export default function LumenDot({
   size     = 44,
@@ -30,31 +29,39 @@ export default function LumenDot({
   const [currentMood, setCurrentMood] = useState(mood)
   const [showTooltip, setShowTooltip] = useState(false)
   const [hovered,     setHovered]     = useState(false)
-  const [spiritAnim,  setSpiritAnim]  = useState(null)
-  const prevUnread   = useRef(unread)
-  const prevMood     = useRef(mood)
+  const [spiritAnim,  setSpiritAnim]  = useState(null) // spontaneous micro-anim class
+  const prevUnread  = useRef(unread)
+  const prevMood    = useRef(mood)
   const tooltipTimer = useRef(null)
   const spiritTimer  = useRef(null)
 
+  // Sync mood prop — animate transition
   useEffect(() => {
-    if (mood !== prevMood.current) prevMood.current = mood
+    if (mood !== prevMood.current) {
+      prevMood.current = mood
+    }
     setCurrentMood(mood)
   }, [mood])
 
+  // Particle burst when unread count increases
   useEffect(() => {
-    if (unread > prevUnread.current && unread > 0) burstParticles(7)
+    if (unread > prevUnread.current && unread > 0) {
+      burstParticles(7)
+    }
     prevUnread.current = unread
   }, [unread])
 
+  // Unread wiggle
   useEffect(() => {
     if (unread > 0 && mood === 'idle') setCurrentMood('unread')
     else if (unread === 0 && currentMood === 'unread') setCurrentMood('idle')
   }, [unread, mood])
 
+  // Spirit mode — occasional spontaneous expressions when idle
   useEffect(() => {
     if (!enableSpirit || currentMood !== 'idle') return
     function scheduleSpirit() {
-      const delay = 6000 + Math.random() * 10000
+      const delay = 6000 + Math.random() * 10000 // 6-16s between moments
       spiritTimer.current = setTimeout(() => {
         const anims = ['spirit-curiosity', 'spirit-nudge', 'spirit-shimmy', 'spirit-peek']
         const pick  = anims[Math.floor(Math.random() * anims.length)]
@@ -67,29 +74,36 @@ export default function LumenDot({
   }, [currentMood, enableSpirit])
 
   function burstParticles(count = 8) {
-    const ps = Array.from({ length: count }, (_, i) => ({
+    const newParticles = Array.from({ length: count }, (_, i) => ({
       id:    Date.now() + i,
       angle: (360 / count) * i + Math.random() * 28 - 14,
       dist:  size * 0.65 + Math.random() * size * 0.45,
       scale: 0.25 + Math.random() * 0.55,
       dur:   380 + Math.random() * 320,
-      hue:   Math.random() > 0.7 ? 40 : 0,
+      hue:   Math.random() > 0.7 ? 40 : 0, // some particles shift hue slightly
     }))
-    setParticles(p => [...p, ...ps])
-    setTimeout(() => setParticles(p => p.filter(x => !ps.find(n => n.id === x.id))), 900)
+    setParticles(p => [...p, ...newParticles])
+    setTimeout(() => {
+      setParticles(p => p.filter(x => !newParticles.find(n => n.id === x.id)))
+    }, 900)
   }
 
   function handleClick(e) {
     if (!onClick) return
     setCurrentMood('excited')
     burstParticles(12)
-    setTimeout(() => setCurrentMood(unread > 0 ? 'unread' : mood), 700)
+    setTimeout(() => {
+      setCurrentMood(unread > 0 ? 'unread' : mood)
+    }, 700)
     onClick(e)
   }
 
   function handleMouseEnter() {
     setHovered(true)
-    if (tooltip) tooltipTimer.current = setTimeout(() => setShowTooltip(true), 500)
+    if (tooltip) {
+      tooltipTimer.current = setTimeout(() => setShowTooltip(true), 500)
+    }
+    // Tiny curiosity bump on hover
     if (currentMood === 'idle' && enableSpirit) {
       setSpiritAnim('spirit-hover')
       setTimeout(() => setSpiritAnim(null), 300)
@@ -104,42 +118,34 @@ export default function LumenDot({
 
   const moodClass = {
     idle:     '',
-    thinking: styles.dotThinking,
-    speaking: styles.dotSpeaking,
-    excited:  styles.dotExcited,
-    happy:    styles.dotHappy,
-    alert:    styles.dotAlert,
-    unread:   styles.dotUnread,
-    loading:  styles.dotLoading,
+    thinking: 'dot-thinking',
+    speaking: 'dot-speaking',
+    excited:  'dot-excited',
+    happy:    'dot-happy',
+    alert:    'dot-alert',
+    unread:   'dot-unread',
+    loading:  'dot-loading',
   }[currentMood] || ''
+
+  const dotStyle = {
+    width:  size,
+    height: size,
+    animationDuration: speed || undefined,
+    cursor: onClick ? 'pointer' : 'default',
+  }
 
   const spiritClass = spiritAnim ? styles[spiritAnim] : ''
   const hovClass    = hovered && !spiritAnim ? styles.orbHovered : ''
 
-  const glowColor = {
-    alert:   '0 0 0 1px rgba(255,128,111,.3), 0 0 18px rgba(255,128,111,.55), 0 0 40px rgba(255,128,111,.2)',
-    excited: '0 0 0 1px rgba(93,202,165,.4), 0 0 22px rgba(93,202,165,.8), 0 0 55px rgba(93,202,165,.35)',
-    happy:   '0 0 0 1px rgba(93,202,165,.3), 0 0 18px rgba(93,202,165,.65), 0 0 45px rgba(93,202,165,.25)',
-  }[currentMood] || '0 0 0 1px rgba(93,202,165,.18), 0 0 14px rgba(93,202,165,.50), 0 0 36px rgba(93,202,165,.18), 0 0 70px rgba(93,202,165,.07)'
-
-  const orbEl = (
+  const dot = (
     <span
-      className={`${styles.orb} ${moodClass} ${spiritClass} ${hovClass} ${styles.orbEnter}`}
-      style={{
-        width:             size,
-        height:            size,
-        cursor:            onClick ? 'pointer' : 'default',
-        animationDuration: speed || undefined,
-        boxShadow:         glowColor,
-        // The orb image — background-image is the most reliable cross-browser approach
-        backgroundImage:   'url(/lumen_orb.png)',
-        backgroundSize:    'cover',
-        backgroundPosition:'center',
-      }}
+      className={`dot ${moodClass} ${styles.orb} ${spiritClass} ${hovClass} ${styles.orbEnter}`}
+      style={dotStyle}
       onClick={onClick ? handleClick : undefined}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Particles */}
       {particles.map(p => (
         <span
           key={p.id}
@@ -156,6 +162,7 @@ export default function LumenDot({
         />
       ))}
 
+      {/* Unread badge */}
       {unread > 0 && size >= 14 && (
         <span className={styles.badge} style={{ fontSize: Math.max(7, size * 0.22) }}>
           {unread > 9 ? '9+' : unread}
@@ -164,14 +171,14 @@ export default function LumenDot({
     </span>
   )
 
-  const tooltipEl = showTooltip && tooltip
-    ? <span className={styles.tooltip}>{tooltip}</span>
-    : null
+  const tooltipEl = showTooltip && tooltip ? (
+    <span className={styles.tooltip}>{tooltip}</span>
+  ) : null
 
   if (!rings) {
     return (
       <span className={styles.wrap} style={{ width: size, height: size, position: 'relative' }}>
-        {orbEl}
+        {dot}
         {tooltipEl}
       </span>
     )
@@ -183,10 +190,13 @@ export default function LumenDot({
         <span
           key={i}
           className={styles.ring}
-          style={{ '--orb-size': `${size}px`, animationDelay: `${delay}s` }}
+          style={{
+            '--orb-size':       `${size}px`,
+            animationDelay:     `${delay}s`,
+          }}
         />
       ))}
-      {orbEl}
+      {dot}
       {tooltipEl}
     </div>
   )
