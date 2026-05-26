@@ -3,9 +3,11 @@ import styles from './LumenDot.module.css'
 
 /**
  * LumenDot — the Lumen orb character.
- * Uses the ChatGPT-designed orb image (/lumen_orb.png) as background.
+ * Renders the photo-realistic orb image (/lumen_orb.png) with the
+ * teal/mint CSS filter from the concept design:
+ *   hue-rotate(-15deg) saturate(1.12) brightness(1.05)
  *
- * Props (unchanged API):
+ * Props:
  *   size     {number}  — diameter in px (default 44)
  *   rings    {boolean} — expanding ring pulses (default false)
  *   speed    {string}  — animation duration override
@@ -131,15 +133,20 @@ export default function LumenDot({
         cursor:            onClick ? 'pointer' : 'default',
         animationDuration: speed || undefined,
         boxShadow:         glowColor,
-        // The orb image — background-image is the most reliable cross-browser approach
-        backgroundImage:   'url(/lumen_orb.png)',
-        backgroundSize:    'cover',
-        backgroundPosition:'center',
       }}
       onClick={onClick ? handleClick : undefined}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Orb image — the concept design photo-realistic sphere with Lumen's mint teal filter */}
+      <img
+        src="/lumen_orb.png"
+        alt=""
+        aria-hidden="true"
+        className={styles.orbImg}
+        draggable={false}
+      />
+
       {particles.map(p => (
         <span
           key={p.id}
