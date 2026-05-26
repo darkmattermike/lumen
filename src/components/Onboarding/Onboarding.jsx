@@ -324,11 +324,12 @@ export default function Onboarding() {
           frequency:    'monthly',
         }).catch(() => {})
       }
+      if (finalData.budgetCategory && finalData.budgetCap) {
         await api.createBudget({
           name:   finalData.budgetCategory,
           cap:    Number(finalData.budgetCap),
           period: 'monthly',
-        })
+        }).catch(() => {})
       }
       await completeOnboarding()
     } catch (err) {
