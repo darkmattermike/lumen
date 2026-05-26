@@ -284,13 +284,13 @@ export default function Dashboard() {
           <LumenInsight
             label="Pressure & Bills"
             contextType="dashboard"
-            prompt="What is the single most important thing about my current financial pressure right now — consider upcoming bills, balance, any skip plans, and incoming paychecks."
+            prompt={`The dashboard shows $${Math.round(heroBalance).toLocaleString()} free to spend this pay window (balance minus bills due before next paycheck${w0NextPay ? `, which is in ${daysUntilPay} days` : ''}). In 2-3 sentences, comment on the current financial pressure — mention this exact number, any bills coming up, and whether it looks comfortable or tight.`}
             color="blue"
           />
           <LumenInsight
             label="This Month"
             contextType="dashboard"
-            prompt="One finding about how this month is going — income, spending, or one category that stands out."
+            prompt="One finding about how this month is going — income, spending, or one category that stands out. Be specific with numbers."
             color="green"
           />
         </div>

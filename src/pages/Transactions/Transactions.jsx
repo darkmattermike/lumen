@@ -572,10 +572,14 @@ export default function Transactions() {
     setHasMore(false)
   }, [activeFilter])
 
-  // When fresh data arrives (initial load or filter change), seed loadedTxs
+  // When fresh data arrives — seed loadedTxs ONLY if it's null (initial load or filter reset)
+  // Never overwrite when loadedTxs already has data — that would clobber optimistic category/note edits
   useEffect(() => {
     if (!data) return
-    setLoadedTxs([...(data.currentMonth || []), ...(data.historical || [])])
+    setLoadedTxs(prev => {
+      if (prev !== null) return prev // already seeded — keep local edits
+      return [...(data.currentMonth || []), ...(data.historical || [])]
+    })
     setHasMore(data.pagination?.hasMore || false)
     setHistPage(0)
   }, [data])
