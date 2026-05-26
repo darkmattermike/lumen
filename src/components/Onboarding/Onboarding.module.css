@@ -120,3 +120,43 @@
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Home screen install card ── */
+.homescreenCard {
+  display: flex; flex-direction: column; gap: 14px; width: 100%;
+}
+.homescreenInstructions {
+  background: rgba(255,255,255,.03); border: 1px solid var(--ink-5);
+  border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px;
+}
+.homescreenPlatform { display: flex; align-items: flex-start; gap: 12px; }
+.homescreenIcon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.homescreenPlatformName {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--safe); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;
+}
+.homescreenStep { font-size: 13px; color: var(--ink-1); line-height: 1.5; }
+
+/* ── Claude API card ── */
+.claudeCard {
+  display: flex; flex-direction: column; gap: 14px; width: 100%;
+}
+.claudeSteps {
+  background: rgba(255,255,255,.03); border: 1px solid var(--ink-5);
+  border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.claudeStep { display: flex; align-items: baseline; gap: 12px; }
+.claudeStepNum {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(93,202,165,.1); border: 1px solid rgba(93,202,165,.25);
+  font-family: var(--font-mono); font-size: 9px; color: var(--safe); font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.claudeStepText { font-size: 13px; color: var(--ink-1); line-height: 1.5; }
+.claudeStepText strong { color: var(--safe); }
+.claudeNote {
+  font-family: var(--font-mono); font-size: 9px; color: var(--ink-3);
+  letter-spacing: .5px; line-height: 1.5;
+  padding: 8px 12px; background: rgba(255,255,255,.02);
+  border: 1px solid var(--ink-5); border-radius: 8px;
+}

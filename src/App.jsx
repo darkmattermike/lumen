@@ -18,6 +18,7 @@ import Debt         from './pages/Debt/Debt'
 import Insights     from './pages/Insights/Insights'
 import Onboarding   from './components/Onboarding/Onboarding'
 import Dani         from './pages/Dani/Dani'
+import Landing      from './pages/Landing/Landing'
 import { TermsOfService, PrivacyPolicy, DataUsagePolicy } from './pages/Legal/Legal'
 import PushPromptBanner from './components/PushPromptBanner/PushPromptBanner'
 import Pricing     from './pages/Pricing/Pricing'
@@ -41,6 +42,7 @@ function AppShell() {
         <Rail />
         <main className={styles.main}>
           <Routes>
+            {/* / redirects into the app when logged in */}
             <Route path="/"             element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard"    element={<Dashboard />} />
             <Route path="/transactions" element={<Transactions />} />
@@ -55,12 +57,11 @@ function AppShell() {
             <Route path="/chat"         element={<LumenChat />} />
             <Route path="/debt"         element={<Debt />} />
             <Route path="/insights"     element={<Insights />} />
-            {/* Also accessible when logged in so Settings can link to them */}
             <Route path="/terms"        element={<TermsOfService />} />
             <Route path="/privacy"      element={<PrivacyPolicy />} />
             <Route path="/data-usage"   element={<DataUsagePolicy />} />
             {user?.role === 'owner' && <Route path="/dani" element={<Dani />} />}
-            <Route path="/pricing"          element={<Pricing />} />
+            <Route path="/pricing"           element={<Pricing />} />
             <Route path="/family/join/:code" element={<FamilyJoin />} />
           </Routes>
         </main>
@@ -73,14 +74,13 @@ function AppShell() {
 export default function App() {
   return (
     <AuthProvider>
-      {/*
-        Legal pages are public — rendered OUTSIDE AppShell so they never
-        hit the login gate. AppShell handles everything else via "/*".
-      */}
       <Routes>
+        {/* Public pages — never hit the auth gate */}
+        <Route path="/"           element={<Landing />} />
         <Route path="/terms"      element={<TermsOfService />} />
         <Route path="/privacy"    element={<PrivacyPolicy />} />
         <Route path="/data-usage" element={<DataUsagePolicy />} />
+        {/* Everything else — AppShell handles auth */}
         <Route path="/*"          element={<AppShell />} />
       </Routes>
     </AuthProvider>

@@ -3,8 +3,10 @@ import { api } from '../data/api'
 
 const AuthContext = createContext(null)
 
-// Access token lives 15 min. Refresh 2 min before expiry.
-const BUFFER_MS = 2 * 60 * 1000
+// Access token lives 1 hour. Refresh 5 min before expiry.
+// Mobile browsers kill JS timers when backgrounded, so visibilitychange
+// handles the case where we return after the timer should have fired.
+const BUFFER_MS = 5 * 60 * 1000
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
@@ -55,16 +57,38 @@ export function AuthProvider({ children }) {
   useEffect(() => { window.__lumenRefresh = doRefresh }, [doRefresh])
   useEffect(() => () => clearTimer(), [])
 
-  // ── Visibility — refresh if token close to expiry ────────────
+  // ── Visibility + network — refresh aggressively on mobile ────
   useEffect(() => {
     function onVisible() {
       if (document.visibilityState !== 'visible') return
       const token  = localStorage.getItem('lumen_token')
       const expiry = token ? getExpiry(token) : null
-      if (!expiry || expiry - Date.now() < BUFFER_MS) doRefresh()
+
+      // Always refresh if:
+      // - No token at all (localStorage was cleared by iOS)
+      // - Token expired or within 5 minutes of expiry
+      // Using 5 min buffer (vs 2 min) to account for mobile timer drift
+      const MOBILE_BUFFER = 5 * 60 * 1000
+      if (!expiry || expiry - Date.now() < MOBILE_BUFFER) {
+        doRefresh()
+      }
     }
+
+    // Fire on reconnect too — mobile drops wifi/cell then reconnects
+    function onOnline() {
+      const token  = localStorage.getItem('lumen_token')
+      const expiry = token ? getExpiry(token) : null
+      if (!expiry || expiry - Date.now() < 60 * 1000) {
+        doRefresh()
+      }
+    }
+
     document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', onOnline)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', onOnline)
+    }
   }, [doRefresh])
 
   // ── Mount ─────────────────────────────────────────────────────

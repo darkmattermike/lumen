@@ -66,11 +66,61 @@ const SCRIPT = [
   },
   {
     id: 'connect',
-    lumen: "Last thing — how do you want to bring in your transactions?",
+    lumen: "Last thing for setup — how do you want to bring in your transactions?",
     type: 'choice',
     choices: ['Connect my bank (Plaid)', 'Import a CSV', "I'll do it later"],
     field: 'connectChoice',
     note: 'You can always connect your bank later in Accounts.',
+  },
+  {
+    id: 'expense_intro',
+    lumen: "One thing that makes Lumen really accurate — your recurring expenses. Bills, rent, subscriptions. Can you add your biggest one right now?",
+    type: 'choice',
+    choices: ['Sure', 'Skip for now'],
+  },
+  {
+    id: 'expense_name',
+    lumen: "What's the bill called?",
+    type: 'text',
+    placeholder: 'e.g. Rent, Netflix, Car payment',
+    field: 'expenseName',
+  },
+  {
+    id: 'expense_amount',
+    lumen: (data) => `How much is ${data.expenseName || 'it'} each month?`,
+    type: 'number',
+    placeholder: 'e.g. 1200',
+    prefix: '$',
+    field: 'expenseAmount',
+  },
+  {
+    id: 'expense_day',
+    lumen: (data) => `And what day of the month does ${data.expenseName || 'it'} usually hit?`,
+    type: 'number',
+    placeholder: 'e.g. 1 for the 1st, 15 for the 15th',
+    field: 'expenseDay',
+  },
+  {
+    id: 'expense_reminder',
+    lumen: "Perfect — saved. The more bills you add in the Calendar tab, the more accurate your \"free to spend\" number gets. Add the rest whenever you're ready.",
+    type: 'choice',
+    choices: ['Got it'],
+  },
+  {
+    id: 'homescreen',
+    lumen: "Lumen works best from your home screen — no browser bar, full screen, instant access. It takes about 10 seconds to install.",
+    type: 'homescreen',
+  },
+  {
+    id: 'claude_key',
+    lumen: "Finally — Lumen has AI features (chat, auto-categorization, spending insights) that run on Claude by Anthropic. You bring your own free API key. Want to know how?",
+    type: 'choice',
+    choices: ['Show me how', 'Skip for now'],
+  },
+  {
+    id: 'claude_instructions',
+    lumen: "Head to console.anthropic.com → sign up free → API Keys → Create Key. Paste it in Settings → API Keys. Your first $5 of usage is free and lasts months for normal use.",
+    type: 'claude_instructions',
   },
   {
     id: 'done',
@@ -121,6 +171,7 @@ export default function Onboarding() {
     incomeAmount: '', incomeFreq: '',
     budgetCategory: '', budgetCap: '',
     connectChoice: '',
+    expenseName: '', expenseAmount: '', expenseDay: '',
   })
   const [textInput, setTextInput] = useState('')
   const [saving, setSaving]   = useState(false)
@@ -184,6 +235,29 @@ export default function Onboarding() {
       return
     }
 
+    // Skip expense entry entirely
+    if (currentStep.id === 'expense_intro' && choice === 'Skip for now') {
+      addUserMessage(choice)
+      const skipTo = SCRIPT.findIndex(s => s.id === 'homescreen')
+      setTimeout(() => {
+        setStep(skipTo)
+        addLumenMessage(SCRIPT[skipTo].lumen, skipTo)
+      }, 400)
+      return
+    }
+
+    // Skip Claude key instructions
+    if (currentStep.id === 'claude_key' && choice === 'Skip for now') {
+      addUserMessage(choice)
+      const doneIdx = SCRIPT.findIndex(s => s.id === 'done')
+      setTimeout(() => {
+        setStep(doneIdx)
+        const doneText = typeof SCRIPT[doneIdx].lumen === 'function' ? SCRIPT[doneIdx].lumen(data) : SCRIPT[doneIdx].lumen
+        addLumenMessage(doneText, doneIdx)
+      }, 400)
+      return
+    }
+
     if (currentStep.id === 'connect') {
       const newData = { ...data, connectChoice: choice }
       setData(newData)
@@ -191,8 +265,10 @@ export default function Onboarding() {
       return
     }
 
-    const newData = { ...data, [currentStep.field]: choice }
-    setData(newData)
+    const newData = currentStep.field
+      ? { ...data, [currentStep.field]: choice }
+      : { ...data }
+    if (currentStep.field) setData(newData)
     await advance(choice, newData)
   }
 
@@ -237,8 +313,17 @@ export default function Onboarding() {
           frequency:   freqMap[finalData.incomeFreq] || 'biweekly',
         })
       }
-      // Create budget
-      if (finalData.budgetCategory && finalData.budgetCap) {
+      // Create recurring expense
+      if (finalData.expenseName && finalData.expenseAmount) {
+        await api.createRecurring({
+          name:         finalData.expenseName,
+          amount:       Number(finalData.expenseAmount),
+          type:         'bill',
+          day_of_month: Number(finalData.expenseDay || 1),
+          icon:         '📅',
+          frequency:    'monthly',
+        }).catch(() => {})
+      }
         await api.createBudget({
           name:   finalData.budgetCategory,
           cap:    Number(finalData.budgetCap),
@@ -321,6 +406,68 @@ export default function Onboarding() {
             >
               {saving ? 'Setting up…' : "Let's go →"}
             </button>
+          )}
+
+          {currentStep.type === 'homescreen' && (
+            <div className={styles.homescreenCard}>
+              <div className={styles.homescreenInstructions}>
+                <div className={styles.homescreenPlatform}>
+                  <span className={styles.homescreenIcon}>🍎</span>
+                  <div>
+                    <div className={styles.homescreenPlatformName}>iPhone / iPad</div>
+                    <div className={styles.homescreenStep}>Safari → Share button → "Add to Home Screen" → Add</div>
+                  </div>
+                </div>
+                <div className={styles.homescreenPlatform}>
+                  <span className={styles.homescreenIcon}>🤖</span>
+                  <div>
+                    <div className={styles.homescreenPlatformName}>Android</div>
+                    <div className={styles.homescreenStep}>Chrome → Menu (⋮) → "Add to Home screen" → Add</div>
+                  </div>
+                </div>
+              </div>
+              <button className={styles.choiceBtn} onClick={() => {
+                addUserMessage("Got it!")
+                const nextIdx = step + 1
+                setTimeout(() => {
+                  setStep(nextIdx)
+                  const nextText = typeof SCRIPT[nextIdx].lumen === 'function' ? SCRIPT[nextIdx].lumen(data) : SCRIPT[nextIdx].lumen
+                  addLumenMessage(nextText, nextIdx)
+                }, 400)
+              }}>
+                Got it →
+              </button>
+            </div>
+          )}
+
+          {currentStep.type === 'claude_instructions' && (
+            <div className={styles.claudeCard}>
+              <div className={styles.claudeSteps}>
+                {[
+                  ['1', 'Go to', 'console.anthropic.com'],
+                  ['2', 'Create a free account'],
+                  ['3', 'API Keys → Create Key → copy it'],
+                  ['4', 'In Lumen: Settings → API Keys → paste'],
+                ].map(([n, a, b]) => (
+                  <div key={n} className={styles.claudeStep}>
+                    <span className={styles.claudeStepNum}>{n}</span>
+                    <span className={styles.claudeStepText}>{a}{b ? <> <strong>{b}</strong></> : null}</span>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.claudeNote}>Your first $5 of usage is free — lasts months for normal use.</div>
+              <button className={styles.choiceBtn} onClick={() => {
+                addUserMessage("Thanks!")
+                const doneIdx = SCRIPT.findIndex(s => s.id === 'done')
+                setTimeout(() => {
+                  setStep(doneIdx)
+                  const doneText = typeof SCRIPT[doneIdx].lumen === 'function' ? SCRIPT[doneIdx].lumen(data) : SCRIPT[doneIdx].lumen
+                  addLumenMessage(doneText, doneIdx)
+                }, 400)
+              }}>
+                Done →
+              </button>
+            </div>
           )}
         </div>
       )}
