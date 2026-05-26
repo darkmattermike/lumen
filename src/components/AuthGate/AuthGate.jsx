@@ -18,6 +18,7 @@ function GoogleIcon() {
 
 export default function AuthGate() {
   const { login, register, silentRefresh } = useAuth()
+  const navigate = useNavigate()
   const [mode, setMode]       = useState('login')
   const [form, setForm]       = useState({ name: '', email: '', password: '' })
   const [termsAgreed, setTermsAgreed]   = useState(false)
@@ -36,7 +37,7 @@ export default function AuthGate() {
       localStorage.setItem('lumen_token', googleToken)
       window.history.replaceState({}, '', window.location.pathname)
       // silentRefresh reads the token from localStorage and sets user in context
-      silentRefresh()
+      silentRefresh().then(() => navigate('/dashboard', { replace: true }))
     }
 
     if (authError) {
@@ -57,6 +58,7 @@ export default function AuthGate() {
     try {
       if (mode === 'login') {
         await login(form.email, form.password, rememberMe)
+        navigate('/dashboard', { replace: true })
       } else {
         if (!termsAgreed) {
           setError('You must agree to the Terms of Service and Privacy Policy')
@@ -64,6 +66,7 @@ export default function AuthGate() {
           return
         }
         await register(form.email, form.password, form.name, true)
+        navigate('/dashboard', { replace: true })
       }
     } catch (err) {
       setError(err.message || 'Something went wrong')

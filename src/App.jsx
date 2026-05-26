@@ -63,6 +63,8 @@ function AppShell() {
             {user?.role === 'owner' && <Route path="/dani" element={<Dani />} />}
             <Route path="/pricing"           element={<Pricing />} />
             <Route path="/family/join/:code" element={<FamilyJoin />} />
+            {/* Catch-all — redirect unknown paths to dashboard */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
       </div>
@@ -71,12 +73,20 @@ function AppShell() {
   )
 }
 
+function RootRoute() {
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingShell />
+  // If logged in, skip landing and go straight to the app
+  if (user) return <Navigate to="/dashboard" replace />
+  return <Landing />
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public pages — never hit the auth gate */}
-        <Route path="/"           element={<Landing />} />
+        {/* Public pages */}
+        <Route path="/"           element={<RootRoute />} />
         <Route path="/terms"      element={<TermsOfService />} />
         <Route path="/privacy"    element={<PrivacyPolicy />} />
         <Route path="/data-usage" element={<DataUsagePolicy />} />
