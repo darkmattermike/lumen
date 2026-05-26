@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
     try { return JSON.parse(atob(token.split('.')[1])).exp * 1000 } catch { return null }
   }
 
-  // ── Core refresh — deduped, no rotation on server ────────────
+  // ── Core refresh — deduped ────────────────────────────────────
   const doRefresh = useCallback(async () => {
     if (inFlightRef.current) return inFlightRef.current
     inFlightRef.current = api.refresh()
@@ -29,12 +29,24 @@ export function AuthProvider({ children }) {
         return data.token
       })
       .catch(err => {
-        // Only log out on definitive 401. Ignore network errors, 5xx, 429.
+        // Only log out on a definitive 401 AND only when the access token is
+        // also expired or missing. A 401 on the refresh endpoint while the
+        // access token is still valid (server restart, cookie domain mismatch,
+        // transient issue) must NOT kill an active session.
         if (err?.status === 401) {
+          const token  = localStorage.getItem('lumen_token')
+          const expiry = token ? getExpiry(token) : null
+          if (expiry && expiry - Date.now() > 0) {
+            // Access token still live — stay logged in, reschedule near expiry
+            scheduleNext(token)
+            return null
+          }
+          // Access token also gone or expired — log out cleanly
           localStorage.removeItem('lumen_token')
           setUser(null)
           clearTimer()
         }
+        // Network errors, 5xx, 429 — do nothing, stay logged in
         return null
       })
       .finally(() => { inFlightRef.current = null })
@@ -57,28 +69,34 @@ export function AuthProvider({ children }) {
   useEffect(() => { window.__lumenRefresh = doRefresh }, [doRefresh])
   useEffect(() => () => clearTimer(), [])
 
-  // ── Visibility + network — refresh aggressively on mobile ────
+  // ── Visibility + network ──────────────────────────────────────
   useEffect(() => {
     function onVisible() {
       if (document.visibilityState !== 'visible') return
       const token  = localStorage.getItem('lumen_token')
       const expiry = token ? getExpiry(token) : null
 
-      // Always refresh if:
-      // - No token at all (localStorage was cleared by iOS)
-      // - Token expired or within 5 minutes of expiry
-      // Using 5 min buffer (vs 2 min) to account for mobile timer drift
-      const MOBILE_BUFFER = 5 * 60 * 1000
-      if (!expiry || expiry - Date.now() < MOBILE_BUFFER) {
+      if (!token) {
+        // No token at all — try refresh cookie (e.g. iOS cleared localStorage)
+        doRefresh()
+        return
+      }
+
+      // Only refresh proactively if token expires within 2 minutes,
+      // or is already expired. Don't refresh mid-session just because
+      // the user switched tabs — that triggers 401s on the refresh endpoint
+      // which previously caused false logouts.
+      const TWO_MIN = 2 * 60 * 1000
+      if (!expiry || expiry - Date.now() < TWO_MIN) {
         doRefresh()
       }
     }
 
-    // Fire on reconnect too — mobile drops wifi/cell then reconnects
+    // Fire on reconnect — but only if token is already expired/missing
     function onOnline() {
       const token  = localStorage.getItem('lumen_token')
       const expiry = token ? getExpiry(token) : null
-      if (!expiry || expiry - Date.now() < 60 * 1000) {
+      if (!expiry || expiry - Date.now() < 0) {
         doRefresh()
       }
     }
@@ -116,11 +134,20 @@ export function AuthProvider({ children }) {
       return
     }
 
-    // Verify token with server
+    // Verify token with server. If /me fails with a network/5xx error,
+    // trust the existing token rather than cascading into a refresh+logout.
     api.me()
       .then(u => { setUser(u); setLoading(false); scheduleNext(token) })
-      .catch(() => {
-        doRefresh().finally(() => setLoading(false))
+      .catch(err => {
+        if (err?.status === 401) {
+          // Token genuinely rejected — try refresh
+          doRefresh().finally(() => setLoading(false))
+        } else {
+          // Network error / 5xx — trust the token we have, stay logged in
+          setUser({ _partial: true })   // sentinel so app renders, not login screen
+          setLoading(false)
+          scheduleNext(token)
+        }
       })
   }, []) // eslint-disable-line
 
