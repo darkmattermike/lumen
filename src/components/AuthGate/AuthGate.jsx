@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import LumenDot from '../LumenDot/LumenDot'
 import styles from './AuthGate.module.css'
