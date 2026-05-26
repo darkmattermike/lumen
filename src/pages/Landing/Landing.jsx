@@ -51,7 +51,7 @@ export default function Landing() {
         .lp-site-header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(18px); background: linear-gradient(180deg, rgba(3,6,9,.92), rgba(3,6,9,.58)); border-bottom: 1px solid rgba(255,255,255,.06); }
         .lp-nav { height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
         .lp-brand { display: flex; align-items: center; gap: 12px; font-weight: 720; letter-spacing: -.02em; }
-        .lp-orb { width: 28px; height: 28px; border-radius: 999px; position: relative; background: radial-gradient(circle at 28% 24%, #e3fff3 0 8%, #8bffd8 18%, #62e0b5 42%, #137258 74%, #051d18 100%); box-shadow: 0 0 0 1px rgba(98,224,181,.25), 0 0 22px rgba(98,224,181,.55), 0 0 80px rgba(98,224,181,.18); animation: lp-breathe 3.2s ease-in-out infinite; }
+        .lp-orb { width: 28px; height: 28px; border-radius: 999px; position: relative; background: url('/lumen_orb.png') center/cover no-repeat; overflow: hidden; box-shadow: 0 0 0 1px rgba(98,224,181,.25), 0 0 22px rgba(98,224,181,.55), 0 0 80px rgba(98,224,181,.18); animation: lp-breathe 3.2s ease-in-out infinite; }
         .lp-orb::before, .lp-orb::after { content: ''; position: absolute; inset: -11px; border-radius: inherit; border: 1px solid rgba(98,224,181,.16); animation: lp-ring 3s ease-out infinite; }
         .lp-orb::after { animation-delay: 1.1s; }
         @keyframes lp-breathe { 0%, 100% { transform: scale(1); filter: saturate(1); } 50% { transform: scale(1.055); filter: saturate(1.2); } }
