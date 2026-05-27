@@ -3,8 +3,6 @@ import { api } from '../data/api'
 
 const AuthContext = createContext(null)
 
-const BUFFER_MS = 5 * 60 * 1000
-
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [loading, setLoading] = useState(true)
@@ -15,6 +13,7 @@ export function AuthProvider({ children }) {
     try { return JSON.parse(atob(token.split('.')[1])).exp * 1000 } catch { return null }
   }
 
+  // ── Silent refresh — deduped ───────────────────────────────────
   const doRefresh = useCallback(async () => {
     if (inFlightRef.current) return inFlightRef.current
     inFlightRef.current = api.refresh()
@@ -26,13 +25,13 @@ export function AuthProvider({ children }) {
       })
       .catch(err => {
         if (err?.status === 401) {
-          // Definitive session expiry — log out
+          // Refresh cookie is gone/expired/revoked — definitive logout
           localStorage.removeItem('lumen_token')
           localStorage.removeItem('lumen_remember')
           setUser(null)
           clearTimer()
         }
-        // Network errors, 5xx — stay logged in, reschedule
+        // Network/5xx — do nothing, preserve current session state
         return null
       })
       .finally(() => { inFlightRef.current = null })
@@ -43,7 +42,8 @@ export function AuthProvider({ children }) {
     clearTimer()
     const expiry = getExpiry(token)
     if (!expiry) return
-    const delay = Math.max(expiry - Date.now() - BUFFER_MS, 30 * 1000)
+    // Fire 5 min before expiry, minimum 30s
+    const delay = Math.max(expiry - Date.now() - 5 * 60 * 1000, 30_000)
     timerRef.current = setTimeout(doRefresh, delay)
   }
 
@@ -54,32 +54,23 @@ export function AuthProvider({ children }) {
   useEffect(() => { window.__lumenRefresh = doRefresh }, [doRefresh])
   useEffect(() => () => clearTimer(), [])
 
-  // ── Visibility + network ──────────────────────────────────────
+  // ── Tab focus / network reconnect ────────────────────────────
   useEffect(() => {
     function onVisible() {
       if (document.visibilityState !== 'visible') return
       const token  = localStorage.getItem('lumen_token')
       const expiry = token ? getExpiry(token) : null
-
-      if (!token) {
-        doRefresh()
-        return
-      }
-      // Only hit refresh if the token is expired or within 2 min of expiry
-      const TWO_MIN = 2 * 60 * 1000
-      if (!expiry || expiry - Date.now() < TWO_MIN) {
+      // Refresh if token is missing, expired, or within 2 min of expiry
+      if (!token || !expiry || expiry - Date.now() < 2 * 60 * 1000) {
         doRefresh()
       }
     }
-
     function onOnline() {
+      // On reconnect, refresh only if token is already dead
       const token  = localStorage.getItem('lumen_token')
       const expiry = token ? getExpiry(token) : null
-      if (!expiry || expiry - Date.now() < 0) {
-        doRefresh()
-      }
+      if (!token || !expiry || expiry - Date.now() < 0) doRefresh()
     }
-
     document.addEventListener('visibilitychange', onVisible)
     window.addEventListener('online', onOnline)
     return () => {
@@ -89,67 +80,41 @@ export function AuthProvider({ children }) {
   }, [doRefresh])
 
   // ── Mount ─────────────────────────────────────────────────────
+  // Strategy: always attempt refresh on mount. The refresh endpoint checks
+  // the httpOnly cookie — if it's valid, we get a fresh token and user back.
+  // If there's no cookie (truly logged out), we get a 401 and show login.
+  // This is the only reliable approach across Railway cold-starts, overnight
+  // expiry, iOS localStorage clearing, and browser restarts.
   useEffect(() => {
+    // Handle Google OAuth redirect token
     const params = new URLSearchParams(window.location.search)
     const googleToken = params.get('google_token')
     if (googleToken) {
       localStorage.setItem('lumen_token', googleToken)
-      localStorage.setItem('lumen_remember', 'true')  // Google logins always remembered
+      localStorage.setItem('lumen_remember', 'true')
       window.history.replaceState({}, '', window.location.pathname)
     }
 
-    const token     = localStorage.getItem('lumen_token')
-    const remember  = localStorage.getItem('lumen_remember') === 'true'
+    const token    = localStorage.getItem('lumen_token')
+    const remember = localStorage.getItem('lumen_remember') === 'true'
+    const expiry   = token ? getExpiry(token) : null
+    const isAlive  = expiry && expiry - Date.now() > 0
 
-    if (!token) {
-      // No access token — if remember-me was set, try the refresh cookie
-      // (handles the overnight expiry case: cookie still valid, token gone)
-      if (remember) {
-        doRefresh().finally(() => setLoading(false))
-      } else {
-        setLoading(false)
-      }
-      return
-    }
-
-    const expiry = getExpiry(token)
-
-    if (!expiry || expiry - Date.now() < 0) {
-      // Token is expired — if remember-me, silently refresh; otherwise log out
-      if (remember) {
-        doRefresh().finally(() => setLoading(false))
-      } else {
-        localStorage.removeItem('lumen_token')
-        setLoading(false)
-      }
-      return
-    }
-
-    if (expiry - Date.now() < 30 * 1000) {
-      // Expires in <30s — refresh immediately
+    if (isAlive) {
+      // Token is valid — verify with /me then schedule next refresh
+      api.me()
+        .then(u  => { setUser(u); scheduleNext(token); setLoading(false) })
+        .catch(() => {
+          // /me failed (network or 401) — try refresh as fallback
+          doRefresh().finally(() => setLoading(false))
+        })
+    } else if (remember) {
+      // Token expired/missing but user checked "remember me" — try refresh cookie
       doRefresh().finally(() => setLoading(false))
-      return
+    } else {
+      // No token, no remember flag — not logged in
+      setLoading(false)
     }
-
-    // Token is alive — verify with server
-    api.me()
-      .then(u => { setUser(u); setLoading(false); scheduleNext(token) })
-      .catch(err => {
-        if (err?.status === 401) {
-          // Rejected by server — try refresh if remembered, else log out
-          if (remember) {
-            doRefresh().finally(() => setLoading(false))
-          } else {
-            localStorage.removeItem('lumen_token')
-            setLoading(false)
-          }
-        } else {
-          // Network / 5xx — trust the token, stay logged in
-          setUser({ _partial: true })
-          setLoading(false)
-          scheduleNext(token)
-        }
-      })
   }, []) // eslint-disable-line
 
   // ── Auth actions ──────────────────────────────────────────────
@@ -205,11 +170,9 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
-  const silentRefresh = doRefresh
-
   return (
     <AuthContext.Provider value={{ user, loading, login, googleLogin, register,
-      logout, logoutAll, silentRefresh, completeOnboarding }}>
+      logout, logoutAll, silentRefresh: doRefresh, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   )
