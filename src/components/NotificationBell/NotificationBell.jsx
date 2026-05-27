@@ -152,7 +152,12 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
   }
 
   async function handleGotIt(id) {
-    setData(prev => ({ ...prev, notifications: prev.notifications.filter(n => n.id !== id) }))
+    await api.dismissNotification(id).catch(() => {})
+    setData(prev => ({
+      ...prev,
+      unread_count: Math.max(0, prev.unread_count - 1),
+      notifications: prev.notifications.filter(n => n.id !== id),
+    }))
   }
 
   async function handleDismiss(id, isDup = false) {
