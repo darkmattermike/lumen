@@ -3,22 +3,18 @@ import { api } from '../data/api'
 
 const AuthContext = createContext(null)
 
-// Access token lives 1 hour. Refresh 5 min before expiry.
-// Mobile browsers kill JS timers when backgrounded, so visibilitychange
-// handles the case where we return after the timer should have fired.
 const BUFFER_MS = 5 * 60 * 1000
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [loading, setLoading] = useState(true)
-  const timerRef   = useRef(null)
-  const inFlightRef = useRef(null)  // deduplicate concurrent refreshes
+  const timerRef    = useRef(null)
+  const inFlightRef = useRef(null)
 
   function getExpiry(token) {
     try { return JSON.parse(atob(token.split('.')[1])).exp * 1000 } catch { return null }
   }
 
-  // ── Core refresh — deduped ────────────────────────────────────
   const doRefresh = useCallback(async () => {
     if (inFlightRef.current) return inFlightRef.current
     inFlightRef.current = api.refresh()
@@ -29,24 +25,14 @@ export function AuthProvider({ children }) {
         return data.token
       })
       .catch(err => {
-        // Only log out on a definitive 401 AND only when the access token is
-        // also expired or missing. A 401 on the refresh endpoint while the
-        // access token is still valid (server restart, cookie domain mismatch,
-        // transient issue) must NOT kill an active session.
         if (err?.status === 401) {
-          const token  = localStorage.getItem('lumen_token')
-          const expiry = token ? getExpiry(token) : null
-          if (expiry && expiry - Date.now() > 0) {
-            // Access token still live — stay logged in, reschedule near expiry
-            scheduleNext(token)
-            return null
-          }
-          // Access token also gone or expired — log out cleanly
+          // Definitive session expiry — log out
           localStorage.removeItem('lumen_token')
+          localStorage.removeItem('lumen_remember')
           setUser(null)
           clearTimer()
         }
-        // Network errors, 5xx, 429 — do nothing, stay logged in
+        // Network errors, 5xx — stay logged in, reschedule
         return null
       })
       .finally(() => { inFlightRef.current = null })
@@ -65,7 +51,6 @@ export function AuthProvider({ children }) {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
   }
 
-  // Expose for api.js auto-retry on 401
   useEffect(() => { window.__lumenRefresh = doRefresh }, [doRefresh])
   useEffect(() => () => clearTimer(), [])
 
@@ -77,22 +62,16 @@ export function AuthProvider({ children }) {
       const expiry = token ? getExpiry(token) : null
 
       if (!token) {
-        // No token at all — try refresh cookie (e.g. iOS cleared localStorage)
         doRefresh()
         return
       }
-
-      // Only refresh proactively if token expires within 2 minutes,
-      // or is already expired. Don't refresh mid-session just because
-      // the user switched tabs — that triggers 401s on the refresh endpoint
-      // which previously caused false logouts.
+      // Only hit refresh if the token is expired or within 2 min of expiry
       const TWO_MIN = 2 * 60 * 1000
       if (!expiry || expiry - Date.now() < TWO_MIN) {
         doRefresh()
       }
     }
 
-    // Fire on reconnect — but only if token is already expired/missing
     function onOnline() {
       const token  = localStorage.getItem('lumen_token')
       const expiry = token ? getExpiry(token) : null
@@ -111,40 +90,62 @@ export function AuthProvider({ children }) {
 
   // ── Mount ─────────────────────────────────────────────────────
   useEffect(() => {
-    // Handle Google OAuth redirect
     const params = new URLSearchParams(window.location.search)
     const googleToken = params.get('google_token')
     if (googleToken) {
       localStorage.setItem('lumen_token', googleToken)
+      localStorage.setItem('lumen_remember', 'true')  // Google logins always remembered
       window.history.replaceState({}, '', window.location.pathname)
     }
 
-    const token = localStorage.getItem('lumen_token')
+    const token     = localStorage.getItem('lumen_token')
+    const remember  = localStorage.getItem('lumen_remember') === 'true'
 
     if (!token) {
-      // No token — try refresh cookie (handles reload after expiry)
-      doRefresh().finally(() => setLoading(false))
+      // No access token — if remember-me was set, try the refresh cookie
+      // (handles the overnight expiry case: cookie still valid, token gone)
+      if (remember) {
+        doRefresh().finally(() => setLoading(false))
+      } else {
+        setLoading(false)
+      }
       return
     }
 
     const expiry = getExpiry(token)
-    if (expiry && expiry - Date.now() < 30 * 1000) {
+
+    if (!expiry || expiry - Date.now() < 0) {
+      // Token is expired — if remember-me, silently refresh; otherwise log out
+      if (remember) {
+        doRefresh().finally(() => setLoading(false))
+      } else {
+        localStorage.removeItem('lumen_token')
+        setLoading(false)
+      }
+      return
+    }
+
+    if (expiry - Date.now() < 30 * 1000) {
       // Expires in <30s — refresh immediately
       doRefresh().finally(() => setLoading(false))
       return
     }
 
-    // Verify token with server. If /me fails with a network/5xx error,
-    // trust the existing token rather than cascading into a refresh+logout.
+    // Token is alive — verify with server
     api.me()
       .then(u => { setUser(u); setLoading(false); scheduleNext(token) })
       .catch(err => {
         if (err?.status === 401) {
-          // Token genuinely rejected — try refresh
-          doRefresh().finally(() => setLoading(false))
+          // Rejected by server — try refresh if remembered, else log out
+          if (remember) {
+            doRefresh().finally(() => setLoading(false))
+          } else {
+            localStorage.removeItem('lumen_token')
+            setLoading(false)
+          }
         } else {
-          // Network error / 5xx — trust the token we have, stay logged in
-          setUser({ _partial: true })   // sentinel so app renders, not login screen
+          // Network / 5xx — trust the token, stay logged in
+          setUser({ _partial: true })
           setLoading(false)
           scheduleNext(token)
         }
@@ -155,7 +156,7 @@ export function AuthProvider({ children }) {
   async function login(email, password, rememberMe = true) {
     const data = await api.login({ email, password, rememberMe })
     localStorage.setItem('lumen_token', data.token)
-    // Fetch full user profile so role is included
+    localStorage.setItem('lumen_remember', rememberMe ? 'true' : 'false')
     try {
       const fullUser = await api.me()
       setUser(fullUser)
@@ -169,6 +170,7 @@ export function AuthProvider({ children }) {
   async function googleLogin(credential) {
     const data = await api.googleLogin({ credential })
     localStorage.setItem('lumen_token', data.token)
+    localStorage.setItem('lumen_remember', 'true')
     setUser(data.user)
     scheduleNext(data.token)
     return data.user
@@ -177,6 +179,7 @@ export function AuthProvider({ children }) {
   async function register(email, password, name, terms_agreed = false) {
     const data = await api.register({ email, password, name, terms_agreed })
     localStorage.setItem('lumen_token', data.token)
+    localStorage.setItem('lumen_remember', 'true')
     setUser(data.user)
     scheduleNext(data.token)
     return data.user
@@ -190,6 +193,7 @@ export function AuthProvider({ children }) {
     clearTimer()
     try { await api.logout() } catch {}
     localStorage.removeItem('lumen_token')
+    localStorage.removeItem('lumen_remember')
     setUser(null)
   }
 
@@ -197,6 +201,7 @@ export function AuthProvider({ children }) {
     clearTimer()
     try { await api.logoutAll() } catch {}
     localStorage.removeItem('lumen_token')
+    localStorage.removeItem('lumen_remember')
     setUser(null)
   }
 
