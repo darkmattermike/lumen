@@ -270,7 +270,7 @@ export default function Dashboard() {
       {/* ── Body: Theater + Aside ── */}
       <div className={styles.body}>
         <div ref={theaterRef}>
-          <WhatIfTheater balance={balance} balanceAfterBills={balanceAfterBills} activePlans={activePlans} plannedSpend={plannedSpend} />
+          <WhatIfTheater balance={heroBalance} balanceAfterBills={balanceAfterBills} activePlans={activePlans} plannedSpend={plannedSpend} />
         </div>
 
         <div className={styles.aside}>
