@@ -501,7 +501,9 @@ function PlanSection() {
         )}
       </div>
       <div className={styles.planActions}>
-        {isFree ? (
+        {billingData?.role === 'owner' ? (
+          <span className={styles.planRenew}>Owner account — billing managed internally.</span>
+        ) : isFree ? (
           <button className={styles.upgradeBtn} onClick={() => navigate('/pricing')}>
             Upgrade Plan →
           </button>
@@ -510,7 +512,7 @@ function PlanSection() {
             {portalLoading ? 'Loading…' : 'Manage Subscription'}
           </button>
         )}
-        {!isFree && (
+        {!isFree && billingData?.role !== 'owner' && (
           <button className={styles.viewPlansBtn} onClick={() => navigate('/pricing')}>
             View all plans
           </button>
