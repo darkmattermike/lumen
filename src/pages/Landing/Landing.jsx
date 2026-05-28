@@ -51,7 +51,7 @@ export default function Landing() {
         .lp-site-header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(18px); background: linear-gradient(180deg, rgba(3,6,9,.92), rgba(3,6,9,.58)); border-bottom: 1px solid rgba(255,255,255,.06); }
         .lp-nav { height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
         .lp-brand { display: flex; align-items: center; gap: 12px; font-weight: 720; letter-spacing: -.02em; }
-        .lp-orb { width: 28px; height: 28px; border-radius: 999px; position: relative; background: url('/lumen_orb.png') center/cover no-repeat; overflow: hidden; box-shadow: 0 0 0 1px rgba(98,224,181,.25), 0 0 22px rgba(98,224,181,.55), 0 0 80px rgba(98,224,181,.18); animation: lp-breathe 3.2s ease-in-out infinite; }
+        .lp-orb { width: 28px; height: 28px; border-radius: 999px; position: relative; background: radial-gradient(circle at 38% 35%, rgba(180,255,230,.92) 0%, rgba(98,224,181,.95) 32%, rgba(42,180,130,.88) 62%, rgba(14,90,72,.9) 100%); overflow: hidden; box-shadow: 0 0 0 1px rgba(98,224,181,.25), 0 0 22px rgba(98,224,181,.55), 0 0 80px rgba(98,224,181,.18); animation: lp-breathe 3.2s ease-in-out infinite; }
         .lp-orb::before, .lp-orb::after { content: ''; position: absolute; inset: -11px; border-radius: inherit; border: 1px solid rgba(98,224,181,.16); animation: lp-ring 3s ease-out infinite; }
         .lp-orb::after { animation-delay: 1.1s; }
         @keyframes lp-breathe { 0%, 100% { transform: scale(1); filter: saturate(1); } 50% { transform: scale(1.055); filter: saturate(1.2); } }
@@ -75,7 +75,7 @@ export default function Landing() {
         .lp-hero-copy { max-width: 590px; margin: 26px 0 0; color: var(--lp-muted); font-size: 18px; line-height: 1.75; }
         .lp-hero-copy strong { color: #fff; font-weight: 720; }
         .lp-hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 34px; }
-        .lp-hero-visual { position: relative; min-height: 580px; }
+        .lp-hero-visual { position: relative; min-height: 580px; overflow: visible; }
         .lp-screenshot-frame { position: absolute; inset: 22px 0 auto auto; width: min(760px, 100%); border-radius: 30px; padding: 1px; background: linear-gradient(135deg, rgba(98,224,181,.35), rgba(127,156,255,.18) 42%, rgba(255,255,255,.07)); box-shadow: var(--lp-shadow), 0 0 100px rgba(98,224,181,.13); transform: perspective(1200px) rotateY(-7deg) rotateX(3deg); transform-origin: center; }
         .lp-screenshot-inner { overflow: hidden; border-radius: 29px; background: #05090f; border: 1px solid rgba(255,255,255,.08); }
         .lp-screenshot-toolbar { height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(255,255,255,.06); background: rgba(4,7,12,.86); color: var(--lp-faint); font-family: var(--lp-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
@@ -89,10 +89,10 @@ export default function Landing() {
         .lp-float-card small { display: block; color: var(--lp-faint); font-family: var(--lp-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 7px; }
         .lp-float-card b { display: block; font-family: var(--lp-serif); font-size: 34px; line-height: 1; font-weight: 500; color: var(--lp-green); }
         .lp-float-card p { margin: 8px 0 0; color: var(--lp-muted); font-size: 12px; line-height: 1.4; }
-        .lp-float-1 { left: 2%; top: 4%; }
-        .lp-float-2 { right: 1%; bottom: 7%; min-width: 210px; }
+        .lp-float-1 { left: -18px; top: 10%; }
+        .lp-float-2 { right: -12px; bottom: 9%; min-width: 210px; }
         .lp-float-2 b { color: var(--lp-blue); }
-        .lp-float-3 { left: 5%; bottom: 17%; min-width: 195px; }
+        .lp-float-3 { left: -18px; bottom: 22%; min-width: 195px; }
         .lp-meter { height: 9px; border-radius: 999px; overflow: hidden; margin-top: 12px; background: rgba(255,255,255,.07); }
         .lp-meter i { display: block; width: 86%; height: 100%; background: linear-gradient(90deg, var(--lp-red), var(--lp-gold), var(--lp-green)); border-radius: inherit; }
         .lp-section { padding: 86px 0; }
