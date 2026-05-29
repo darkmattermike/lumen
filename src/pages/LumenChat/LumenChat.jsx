@@ -208,9 +208,21 @@ export default function LumenChat() {
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
           body:    JSON.stringify({ message: msg, context_type: 'chat' }),
         })
+        // Check for non-OK response before streaming
+        if (!response.ok) {
+          const errBody = await response.json().catch(() => ({}))
+          if (errBody.error === 'NO_KEY') {
+            addMessage('assistant', 'chat', 'Add your Anthropic API key in Settings → AI to enable responses.')
+          } else {
+            addMessage('assistant', 'chat', `Error ${response.status}: ${errBody.message || 'Something went wrong.'}`)
+          }
+          return
+        }
+
         const reader = response.body.getReader()
         const dec    = new TextDecoder()
-        while (true) {
+        let streamDone = false
+        while (!streamDone) {
           const { done, value } = await reader.read()
           if (done) break
           const chunk = dec.decode(value)
@@ -219,12 +231,13 @@ export default function LumenChat() {
             try {
               const evt = JSON.parse(line.slice(6))
               if (evt.type === 'text') { full += evt.text; setStreamText(full) }
-              if (evt.type === 'done') break
-            } catch { /* ignore */ }
+              if (evt.type === 'error') { full = evt.message || 'Something went wrong.'; streamDone = true; break }
+              if (evt.type === 'done') { streamDone = true; break }
+            } catch { /* ignore parse errors */ }
           }
         }
         setStreamText('')
-        addMessage('assistant', 'chat', full)
+        if (full) addMessage('assistant', 'chat', full)
       }
     } catch (err) {
       addMessage('assistant', 'chat', `Something went wrong: ${err.message}`)
