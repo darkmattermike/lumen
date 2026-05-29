@@ -35,8 +35,14 @@ function detectMode(text) {
   const t = text.toLowerCase()
   if (/can i afford|should i buy|worth (it|buying)|purchase/.test(t)) return 'purchase'
   if (/save|goal|by (january|february|march|april|may|june|july|august|september|october|november|december|end of year|next year)|emergency fund/.test(t)) return 'goal'
-  if (/how much|how many|when did|show me|total|last \d+ days|this month|last month|find|list/.test(t)) return 'query'
   if (/what if|scenario|refinanc|floor|minimum|payoff|timeline|savings rate/.test(t)) return 'scenario'
+
+  // Only route to /query for simple single-subject lookups (merchant/category history).
+  // Complex questions involving accounts, bills, investments, advice, or multi-part
+  // reasoning must go to /ask which has full financial context injected.
+  const isComplexFinancial = /bill|invest|account|balance|cover|afford|put in|savings|checking|upcoming|between now|need to|how much do i need|how much can i|cover bills|my investment/.test(t)
+  if (!isComplexFinancial && /how much did|how many times|when did i (last|pay)|show me|total spent on|last \d+ days|charges from|find all|list all/.test(t)) return 'query'
+
   return 'chat'
 }
 
