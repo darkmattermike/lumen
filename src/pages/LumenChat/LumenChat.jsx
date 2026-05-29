@@ -205,7 +205,7 @@ export default function LumenChat() {
         setStreamText('')
         const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lumen/ask`, {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('lumen_token')}` },
           body:    JSON.stringify({ message: msg, context_type: 'chat' }),
         })
         // Check for non-OK response before streaming
