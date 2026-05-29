@@ -206,7 +206,14 @@ export default function LumenChat() {
         const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/lumen/ask`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('lumen_token')}` },
-          body:    JSON.stringify({ message: msg, context_type: 'chat' }),
+          body:    JSON.stringify({
+            message: msg,
+            context_type: 'chat',
+            // Send full chat history so Lumen has conversation memory
+            history: messages
+              .filter(m => m.mode === 'chat' && m.content)
+              .map(m => ({ role: m.role, content: m.content })),
+          }),
         })
         // Check for non-OK response before streaming
         if (!response.ok) {
