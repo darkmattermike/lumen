@@ -798,3 +798,48 @@
   color: var(--ink-0);
   background: rgba(255,255,255,.06);
 }
+
+/* ── Concept mobile overhaul: plain list rows ── */
+@media (max-width: 768px) {
+  /* Strip card chrome from rows */
+  .txRow {
+    background: transparent !important;
+    border-radius: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 9px 0 !important;
+    gap: 10px !important;
+  }
+  .txRow:hover { background: transparent !important; }
+  .txRow:last-child { border-bottom: none; }
+
+  /* Small emoji icon, no box */
+  .txIcon {
+    width: 20px !important;
+    height: 20px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    font-size: 14px !important;
+    flex-shrink: 0;
+  }
+
+  /* Tighten list container */
+  .list { padding: 0 14px !important; }
+
+  /* Day header */
+  .dayHead {
+    font-size: 8px !important;
+    letter-spacing: 2px !important;
+    padding: 12px 0 5px !important;
+    color: var(--ink-4) !important;
+  }
+
+  /* Name / cat */
+  .txName { font-size: 12px !important; font-weight: 500; }
+  .txCat  { font-size: 10px !important; color: var(--ink-3); }
+  .txAmt  { font-size: 11px !important; }
+  .txBal  { display: none; }
+
+  /* Hide aside summary panel */
+  .aside { display: none !important; }
+}

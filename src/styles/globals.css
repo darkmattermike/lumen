@@ -379,7 +379,7 @@ body {
     --rail-w:   0px;
     --pad-x:    16px;
     --pad-y:    20px;
-    --tab-bar-h: 72px;
+    --tab-bar-h: 82px;  /* taller for floating orb nav */
   }
 
   /* Push page content above the bottom tab bar */

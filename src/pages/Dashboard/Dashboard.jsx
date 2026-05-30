@@ -29,11 +29,22 @@ const LABEL_COLOR = { SAFE: 'var(--safe)', WATCH: 'var(--warn)', TIGHT: 'var(--w
 
 export default function Dashboard() {
   const { data, loading, error } = useApi(api.dashboard)
+  const { data: budgetData }       = useApi(api.budgets)
+  const { data: txData }           = useApi(() => api.transactions('?limit=10'))
   const navigate = useNavigate()
   const theaterRef = useRef(null)
 
   if (loading) return <LoadingShell />
   if (error)   return <ErrorShell message={error} />
+
+  const COLOR_MAP = {
+    debt:'var(--debt)', warn:'var(--warn)', safe:'var(--safe)',
+    calm:'var(--calm)', goal:'var(--goal)', pink:'#e87fa3',
+    orange:'#f07a3a', sky:'#5bc4e8', lime:'#8ecf4a', gold:'#d4a017',
+  }
+
+  const topBudgets  = (budgetData?.categories || []).filter(c => !c.completed).slice(0, 3)
+  const recentTxns  = (txData?.transactions  || []).slice(0, 8)
 
   const {
     balance, freeToSpend, balanceAfterBills, balanceAfterPlans,
@@ -156,6 +167,8 @@ export default function Dashboard() {
 
   return (
     <ScreenWrap>
+      {/* Mobile ambient glow */}
+      <div className={styles.mobileGlow} aria-hidden />
       {/* ── Hero ── */}
       <div className={styles.hero}>
         <div className={styles.dotCol}>
@@ -295,6 +308,67 @@ export default function Dashboard() {
           />
         </div>
       </div>
+      {/* ══ MOBILE ONLY: Budget ledger + recent transactions ══ */}
+      <div className={styles.mobileOnly}>
+
+        {/* Budget ledger */}
+        {topBudgets.length > 0 && (
+          <div className={styles.mobileBudgets}>
+            <div className={styles.mobileSectionLabel}>Month so far</div>
+            {topBudgets.map(cat => {
+              const pct    = Math.min(Number(cat.pct) || 0, 100)
+              const color  = COLOR_MAP[cat.color] || 'var(--safe)'
+              const isOver = Number(cat.pct) > 100
+              const val    = isOver
+                ? `$${fmt(cat.spent - cat.cap)} over`
+                : `$${fmt(cat.cap - cat.spent)} left`
+              return (
+                <div key={cat.id} className={styles.mobileBudgetRow}>
+                  <span className={styles.mobileBudgetName}>{cat.icon} {cat.name}</span>
+                  <span className={styles.mobileBudgetBar}>
+                    <span
+                      className={styles.mobileBudgetFill}
+                      style={{ width: `${pct}%`, background: color }}
+                    />
+                  </span>
+                  <span className={styles.mobileBudgetVal} style={{ color: isOver ? 'var(--warn)' : color }}>
+                    {val}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Divider */}
+        <div className={styles.mobileDivider} />
+
+        {/* Recent transactions */}
+        {recentTxns.length > 0 && (
+          <div className={styles.mobileTxns}>
+            <div className={styles.mobileSectionLabel}>Activity</div>
+            {recentTxns.map(tx => {
+              const isIncome  = tx.type === 'income' || Number(tx.amount) > 0
+              const amtColor  = isIncome ? 'var(--safe)' : 'var(--ink-1)'
+              const prefix    = isIncome ? '+' : '−'
+              return (
+                <div key={tx.id} className={styles.mobileTxRow}>
+                  <span className={styles.mobileTxIcon}>{tx.emoji || '💳'}</span>
+                  <span className={styles.mobileTxBody}>
+                    <span className={styles.mobileTxName}>{tx.merchant_name || tx.name}</span>
+                    <span className={styles.mobileTxDate}>{fmtDate(tx.date)}</span>
+                  </span>
+                  <span className={styles.mobileTxAmt} style={{ color: amtColor }}>
+                    {prefix}${fmt(Math.abs(Number(tx.amount)))}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+      </div>
+
     </ScreenWrap>
   )
 }

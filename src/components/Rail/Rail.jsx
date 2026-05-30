@@ -46,13 +46,13 @@ const NAV_ITEMS = [
   { path: '/gmail',        icon: 'gmail',    label: 'Gmail'        },
 ]
 
-// Mobile primary tabs — always visible
-const MOBILE_PRIMARY = [
-  { path: '/dashboard',    icon: 'home',     label: 'Home'         },
-  { path: '/transactions', icon: 'txns',     label: 'Transactions' },
-  { path: '/budgets',      icon: 'budgets',  label: 'Budgets'      },
-  { path: '/calendar',     icon: 'calendar', label: 'Calendar'     },
-  { path: '/analytics',    icon: 'stats',    label: 'Analytics'    },
+// Mobile primary tabs — 2 left, [orb], 2 right
+const MOBILE_LEFT = [
+  { path: '/transactions', icon: 'txns',  label: 'Txns'  },
+  { path: '/analytics',   icon: 'stats', label: 'Stats' },
+]
+const MOBILE_RIGHT = [
+  { path: '/chat', icon: 'chat', label: 'Ask' },
 ]
 
 // Mobile "More" drawer items
@@ -68,52 +68,23 @@ const MOBILE_MORE = [
 ]
 
 
-// ── Mobile orb notification button ───────────────────────────
-function MobileOrbBtn() {
-  const [data, setData]   = useState({ unread_count: 0 })
-  const [open, setOpen]   = useState(false)
-  const wrapRef           = useRef(null)
-
-  useEffect(() => {
-    async function load() {
-      try { const d = await api.notifications(); setData(d) } catch {}
-    }
-    load()
-    const id = setInterval(load, 60_000)
-    return () => clearInterval(id)
-  }, [])
-
-  // Close on outside tap
-  useEffect(() => {
-    if (!open) return
-    function handler(e) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
-
+// ── Mobile home orb — floats above the nav bar ───────────────
+function MobileHomeOrb({ navigate, pathname }) {
+  const isHome = pathname === '/dashboard'
   return (
-    <div className={styles.mobileOrbWrap} ref={wrapRef}>
+    <div className={styles.mobileOrbWrap}>
       <button
-        className={`${styles.mobileOrbBtn} ${open ? styles.mobileOrbBtnOpen : ''}`}
-        onClick={() => setOpen(v => !v)}
-        aria-label="Lumen notifications"
+        className={styles.mobileOrbBtn}
+        onClick={() => navigate('/dashboard')}
+        aria-label="Home"
       >
-        <LumenDot size={20} rings={open} mood={data.unread_count > 0 ? 'unread' : open ? 'excited' : 'idle'} />
-        {data.unread_count > 0 && !open && (
-          <span className={styles.mobileOrbBadge}>
-            {data.unread_count > 9 ? '9+' : data.unread_count}
-          </span>
-        )}
+        <LumenDot
+          size={54}
+          rings={isHome}
+          mood={isHome ? 'happy' : 'idle'}
+        />
       </button>
-
-      {/* Panel — fixed above the tab bar, full-width */}
-      {open && (
-        <div className={styles.mobileOrbPanel}>
-          <NotificationBell mobileDrawer startOpen />
-        </div>
-      )}
+      <span className={styles.mobileOrbLabel}>Home</span>
     </div>
   )
 }
@@ -146,7 +117,7 @@ export default function Rail() {
     setMoreOpen(false)
   }
 
-  const moreActive = MOBILE_MORE.some(m => m.path === pathname)
+  const moreActive = MOBILE_MORE.some(m => m.path === pathname) && pathname !== '/dashboard'
 
   return (
     <>
@@ -191,35 +162,44 @@ export default function Rail() {
 
       {/* ── Mobile bottom tab bar ── */}
       <nav className={styles.mobileNav}>
-        {/* 5 primary tabs */}
-        {MOBILE_PRIMARY.map(({ path, icon, label }) => (
+        {/* Left tabs */}
+        {MOBILE_LEFT.map(({ path, icon, label }) => (
           <button
             key={path}
             className={`${styles.mobileBtn} ${pathname === path ? styles.mobileBtnOn : ''}`}
             onClick={() => go(path)}
             aria-label={label}
           >
-            <span className={styles.mobileBtnIcon}>
-              <Icon d={ICONS[icon]} size={20} />
-            </span>
+            <span className={styles.mobileBtnIcon}><Icon d={ICONS[icon]} size={20} /></span>
             <span className={styles.mobileBtnLabel}>{label}</span>
           </button>
         ))}
 
-        {/* More button */}
+        {/* Center: floating orb home button */}
+        <MobileHomeOrb navigate={navigate} pathname={pathname} />
+
+        {/* Right: Ask */}
+        {MOBILE_RIGHT.map(({ path, icon, label }) => (
+          <button
+            key={path}
+            className={`${styles.mobileBtn} ${pathname === path ? styles.mobileBtnOn : ''}`}
+            onClick={() => go(path)}
+            aria-label={label}
+          >
+            <span className={styles.mobileBtnIcon}><Icon d={ICONS[icon]} size={20} /></span>
+            <span className={styles.mobileBtnLabel}>{label}</span>
+          </button>
+        ))}
+
+        {/* More */}
         <button
           className={`${styles.mobileBtn} ${moreActive || moreOpen ? styles.mobileBtnOn : ''}`}
           onClick={() => setMoreOpen(v => !v)}
           aria-label="More"
         >
-          <span className={styles.mobileBtnIcon}>
-            <Icon d={ICONS.more} size={18} />
-          </span>
+          <span className={styles.mobileBtnIcon}><Icon d={ICONS.more} size={18} /></span>
           <span className={styles.mobileBtnLabel}>More</span>
         </button>
-
-        {/* Lumen orb — right side of nav bar */}
-        <MobileOrbBtn />
       </nav>
 
       {/* ── More drawer — slides up above tab bar ── */}
