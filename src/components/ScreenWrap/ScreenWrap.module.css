@@ -16,11 +16,16 @@
 }
 
 @media (max-width: 768px) {
+  /* Strip the card — mobile is full-bleed */
   .wrap {
-    padding: 12px 0 20px;
+    padding: 0;
+    animation: none;
   }
   .screen {
-    border-radius: 12px;
-    margin: 0 8px;
+    border-radius: 0;
+    border: none;
+    margin: 0;
+    background: none;
+    overflow: visible;
   }
 }

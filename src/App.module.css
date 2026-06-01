@@ -39,3 +39,26 @@
     padding-bottom: calc(var(--tab-bar-h, 60px) + env(safe-area-inset-bottom) + 8px);
   }
 }
+
+
+/* ── Mobile ambient glow (fixed behind everything) ── */
+@media (max-width: 768px) {
+  .shell::before {
+    content: '';
+    position: fixed;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 440px;
+    height: 440px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(93,202,165,0.11) 0%, transparent 62%);
+    pointer-events: none;
+    z-index: 0;
+    animation: mob-glow 4s ease-in-out infinite;
+  }
+  @keyframes mob-glow {
+    0%,100% { opacity: 0.7; }
+    50%      { opacity: 1; }
+  }
+}

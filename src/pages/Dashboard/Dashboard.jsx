@@ -12,6 +12,7 @@ import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
 import styles from './Dashboard.module.css'
+import PaycheckAllocation from '../../components/PaycheckAllocation/PaycheckAllocation'
 
 function fmt(n) {
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -218,7 +219,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Phase I: Health Score ── */}
+      {/* ── Paycheck Allocation — shown on both mobile and desktop ── */}
+      <PaycheckAllocation />
+
+      {/* ── Desktop only: Health Score + Zones + Body ── */}
+      <div className={styles.desktopOnly}>
       <HealthScore />
 
       {/* ── Four Principle Zones ── */}
@@ -308,6 +313,8 @@ export default function Dashboard() {
           />
         </div>
       </div>
+      </div>{/* end desktopOnly */}
+
       {/* ══ MOBILE ONLY: Budget ledger + recent transactions ══ */}
       <div className={styles.mobileOnly}>
 

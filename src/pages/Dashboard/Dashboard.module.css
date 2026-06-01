@@ -275,62 +275,62 @@
 @media (max-width: 768px) {
   /* ── Mobile hero: orb left + vertical line + number right ── */
   .hero {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 56px 22px 0;
-    background: none;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    padding: 60px 22px 16px !important;
+    background: none !important;
+    border-bottom: none !important;
+    animation: none !important;
   }
 
-  /* dotCol: show orb with vertical connector line below */
+  /* dotCol: show on mobile with vertical connector */
   .dotCol {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0;
-    padding-top: 3px;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    padding-top: 3px !important;
+    gap: 0 !important;
   }
   .dotCol::after {
     content: '';
     display: block;
     width: 1px;
-    height: 56px;
-    background: linear-gradient(to bottom, rgba(93,202,165,0.28), transparent);
-    margin-top: 6px;
+    height: 52px;
+    background: linear-gradient(to bottom, rgba(93,202,165,0.3), transparent);
+    margin-top: 8px;
   }
-  .dotMeta { display: none; }
+  .dotMeta { display: none !important; }
 
-  /* balanceCol: big number + prose */
+  /* balanceCol: fills right of orb */
   .balanceCol {
-    flex: 1;
-    min-width: 0;
+    flex: 1 !important;
+    min-width: 0 !important;
   }
   .pre {
-    font-size: 7px;
-    letter-spacing: 2.5px;
+    font-size: 7px !important;
+    letter-spacing: 2px !important;
+    margin-bottom: 6px !important;
   }
   .amount {
-    font-style: italic;
-    font-size: 52px;
-    letter-spacing: -1px;
-    line-height: 1;
+    font-style: italic !important;
+    font-size: 50px !important;
+    letter-spacing: -1px !important;
+    line-height: 1 !important;
   }
   .prose {
-    font-size: 12.5px;
-    margin-top: 8px;
-    line-height: 1.75;
+    font-size: 12.5px !important;
+    margin-top: 10px !important;
+    line-height: 1.8 !important;
   }
 
-  /* rightCol: hide PressureGauge + stat stack on mobile */
-  .rightCol { display: none; }
+  /* rightCol: hide */
+  .rightCol { display: none !important; }
 
-  /* Hide desktop-only sections */
-  .zones  { display: none; }
-  .body   { display: none; }
-
-  /* HealthScore — hide on mobile (it's in More) */
-  /* keep for now, can hide later */
+  /* Hide desktop sections via wrapper */
+  .desktopOnly { display: none !important; }
 
   .zone { padding: 18px 16px; }
   .zoneVal { font-size: 28px; }
@@ -440,13 +440,13 @@
   }
   .mobileBudgetBar {
     flex: 1;
+    flex-shrink: 1;
     height: 3px;
     background: rgba(255,255,255,0.06);
     border-radius: 2px;
     margin: 0 10px;
     position: relative;
     overflow: hidden;
-    flex-shrink: 0;
   }
   .mobileBudgetFill {
     position: absolute;

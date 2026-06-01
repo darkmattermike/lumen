@@ -75,6 +75,9 @@ export const api = {
 
   // Plaid
   getLinkToken:  ()     => request('/api/plaid/link-token', { method: 'POST' }),
+
+  // Paycheck allocation
+  paycheckAllocation: () => request('/api/paycheck/allocation'),
   exchangeToken: (body) => request('/api/plaid/exchange',   { method: 'POST', body: JSON.stringify(body) }),
   syncPlaid:     ()     => request('/api/plaid/sync',       { method: 'POST' }),
 
