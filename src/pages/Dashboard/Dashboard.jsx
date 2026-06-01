@@ -44,8 +44,10 @@ export default function Dashboard() {
     orange:'#f07a3a', sky:'#5bc4e8', lime:'#8ecf4a', gold:'#d4a017',
   }
 
-  const topBudgets  = (budgetData?.categories || []).filter(c => !c.completed).slice(0, 3)
-  const recentTxns  = (txData?.transactions  || []).slice(0, 8)
+  // api.budgets() returns { budgets: [...] }
+  // api.transactions() returns { currentMonth: [...] }
+  const topBudgets  = (budgetData?.budgets || []).slice(0, 3)
+  const recentTxns  = (txData?.currentMonth || []).slice(0, 8)
 
   const {
     balance, freeToSpend, balanceAfterBills, balanceAfterPlans,
@@ -176,8 +178,8 @@ export default function Dashboard() {
           <LumenDot
             size={56}
             rings
-            mood={pressureLabel === 'CRITICAL' ? 'alert' : pressureLabel === 'TIGHT' ? 'thinking' : pressureLabel === 'SAFE' ? 'happy' : 'idle'}
-            tooltip={pressureLabel === 'CRITICAL' ? 'This is tight. Look at me.' : pressureLabel === 'SAFE' ? "Looking good 👀" : null}
+            mood={pressureLabel === 'CRITICAL' ? 'thinking' : pressureLabel === 'TIGHT' ? 'thinking' : pressureLabel === 'SAFE' ? 'happy' : 'idle'}
+            tooltip={pressureLabel === 'CRITICAL' ? 'This is tight. Watch spending.' : pressureLabel === 'SAFE' ? "Looking good 👀" : null}
           />
           <div className={styles.dotMeta}>
             <div className={styles.dotLabel}>Lumen</div>
@@ -323,12 +325,14 @@ export default function Dashboard() {
           <div className={styles.mobileBudgets}>
             <div className={styles.mobileSectionLabel}>Month so far</div>
             {topBudgets.map(cat => {
-              const pct    = Math.min(Number(cat.pct) || 0, 100)
+              const spent  = Number(cat.spent || 0)
+              const cap    = Number(cat.cap   || 0)
+              const pct    = cap > 0 ? Math.min((spent / cap) * 100, 100) : 0
               const color  = COLOR_MAP[cat.color] || 'var(--safe)'
-              const isOver = Number(cat.pct) > 100
+              const isOver = cap > 0 && spent > cap
               const val    = isOver
-                ? `$${fmt(cat.spent - cat.cap)} over`
-                : `$${fmt(cat.cap - cat.spent)} left`
+                ? `$${fmt(spent - cap)} over`
+                : `$${fmt(cap - spent)} left`
               return (
                 <div key={cat.id} className={styles.mobileBudgetRow}>
                   <span className={styles.mobileBudgetName}>{cat.icon} {cat.name}</span>
@@ -355,14 +359,14 @@ export default function Dashboard() {
           <div className={styles.mobileTxns}>
             <div className={styles.mobileSectionLabel}>Activity</div>
             {recentTxns.map(tx => {
-              const isIncome  = tx.type === 'income' || Number(tx.amount) > 0
+              const isIncome  = tx.tx_type === 'income' || Number(tx.amount) > 0
               const amtColor  = isIncome ? 'var(--safe)' : 'var(--ink-1)'
               const prefix    = isIncome ? '+' : '−'
               return (
                 <div key={tx.id} className={styles.mobileTxRow}>
-                  <span className={styles.mobileTxIcon}>{tx.emoji || '💳'}</span>
+                  <span className={styles.mobileTxIcon}>{tx.icon || '💳'}</span>
                   <span className={styles.mobileTxBody}>
-                    <span className={styles.mobileTxName}>{tx.merchant_name || tx.name}</span>
+                    <span className={styles.mobileTxName}>{tx.cleaned_name || tx.name}</span>
                     <span className={styles.mobileTxDate}>{fmtDate(tx.date)}</span>
                   </span>
                   <span className={styles.mobileTxAmt} style={{ color: amtColor }}>

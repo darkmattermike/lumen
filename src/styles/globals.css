@@ -379,7 +379,7 @@ body {
     --rail-w:   0px;
     --pad-x:    16px;
     --pad-y:    20px;
-    --tab-bar-h: 82px;  /* taller for floating orb nav */
+    --tab-bar-h: 72px;
   }
 
   /* Push page content above the bottom tab bar */
@@ -525,11 +525,11 @@ select option {
 /* ── ALERT — urgent red-shifted danger pulse ── */
 .dot-alert {
   animation: dot-alert 0.75s ease-in-out infinite !important;
-  filter: hue-rotate(110deg) saturate(1.6) brightness(1.05);
+  /* No hue-rotate — keep the orb green, use red glow to signal alert */
 }
 @keyframes dot-alert {
-  0%,100% { transform: scale(1);     box-shadow: 0 0 0 1px rgba(232,115,99,.3), 0 0 14px rgba(232,115,99,.5), 0 0 35px rgba(232,115,99,.2); }
-  50%      { transform: scale(1.12); box-shadow: 0 0 0 2px rgba(232,115,99,.6), 0 0 30px rgba(232,115,99,.95), 0 0 80px rgba(232,115,99,.45); }
+  0%,100% { transform: scale(1);     box-shadow: 0 0 0 2px rgba(232,115,99,.5), 0 0 18px rgba(232,115,99,.6), 0 0 40px rgba(232,115,99,.25); }
+  50%      { transform: scale(1.12); box-shadow: 0 0 0 3px rgba(232,115,99,.8), 0 0 36px rgba(232,115,99,.95), 0 0 90px rgba(232,115,99,.5); }
 }
 
 /* ── EXCITED — spring bounce with rotation flash ── */
