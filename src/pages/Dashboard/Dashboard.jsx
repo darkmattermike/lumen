@@ -22,7 +22,10 @@ function fmtD(n) {
 }
 function fmtDate(isoStr) {
   if (!isoStr) return ''
-  const [y, m, d] = isoStr.split('-').map(Number)
+  // Handle both "YYYY-MM-DD" and full ISO "2026-06-01T00:00:00.000Z"
+  const dateOnly = String(isoStr).slice(0, 10) // always take first 10 chars
+  const [y, m, d] = dateOnly.split('-').map(Number)
+  if (!y || !m || !d) return ''
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
@@ -47,7 +50,14 @@ export default function Dashboard() {
   // api.budgets() returns { budgets: [...] }
   // api.transactions() returns { currentMonth: [...] }
   const topBudgets  = (budgetData?.budgets || []).slice(0, 3)
-  const recentTxns  = (txData?.currentMonth || []).slice(0, 8)
+  // Combine current month + historical, dedupe by id, take 5 most recent
+  const allTxns    = [...(txData?.currentMonth || []), ...(txData?.historical || [])]
+  const seenIds    = new Set()
+  const recentTxns = allTxns.filter(tx => {
+    if (seenIds.has(tx.id)) return false
+    seenIds.add(tx.id)
+    return true
+  }).slice(0, 5)
 
   const {
     balance, freeToSpend, balanceAfterBills, balanceAfterPlans,
@@ -358,12 +368,12 @@ export default function Dashboard() {
         {recentTxns.length > 0 && (
           <div className={styles.mobileTxns}>
             <div className={styles.mobileSectionLabel}>Activity</div>
-            {recentTxns.map(tx => {
+            {recentTxns.map((tx, i) => {
               const isIncome  = tx.tx_type === 'income' || Number(tx.amount) > 0
               const amtColor  = isIncome ? 'var(--safe)' : 'var(--ink-1)'
               const prefix    = isIncome ? '+' : '−'
               return (
-                <div key={tx.id} className={styles.mobileTxRow}>
+                <div key={tx.id} className={styles.mobileTxRow} style={{ animationDelay: `${i * 0.06}s` }}>
                   <span className={styles.mobileTxIcon}>{tx.icon || '💳'}</span>
                   <span className={styles.mobileTxBody}>
                     <span className={styles.mobileTxName}>{tx.cleaned_name || tx.name}</span>

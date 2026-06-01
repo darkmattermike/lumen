@@ -79,9 +79,10 @@ function MobileHomeOrb({ navigate, pathname }) {
         aria-label="Home"
       >
         <LumenDot
-          size={54}
-          rings={isHome}
-          mood={isHome ? 'happy' : 'idle'}
+          size={28}
+          rings={false}
+          mood='idle'
+          spirit={false}
         />
       </button>
       <span className={styles.mobileOrbLabel}>Home</span>
