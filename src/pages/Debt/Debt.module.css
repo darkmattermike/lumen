@@ -180,6 +180,46 @@
 .debtMinCancel:hover { border-color:var(--ink-2);color:var(--ink-1); }
 .minNote { font-family:var(--font-mono);font-size:9px;color:var(--ink-4);margin-top:12px;line-height:1.6; }
 
+/* ── Card Paydown panel ── */
+.paydown {
+  background:rgba(255,255,255,.02);border:1px solid var(--ink-5);
+  border-radius:12px;padding:18px;margin-bottom:16px;
+}
+.paydownHead { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px; }
+.paydownTitle { font-family:var(--font-mono);font-size:9px;color:var(--ink-3);letter-spacing:1.5px;text-transform:uppercase; }
+.paydownTarget { font-size:12px;color:var(--ink-1); }
+.paydownTargetName { color:var(--ink-0); }
+
+.paydownRingWrap { position:relative;width:140px;height:140px;margin:4px auto 18px; }
+.paydownRing { width:100%;height:100%;transform:rotate(-90deg); }
+.paydownRingTrack { fill:none;stroke:var(--ink-5);stroke-width:8; }
+.paydownRingFill  { fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dasharray .9s cubic-bezier(.22,1,.36,1),stroke .4s ease; }
+.paydownRingCenter { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center; }
+.paydownUtilNum { font-family:var(--font-serif);font-size:34px;font-weight:300;line-height:1; }
+.paydownUtilSub { font-family:var(--font-mono);font-size:9px;color:var(--ink-3);margin-top:6px; }
+
+.paydownChips { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px; }
+.paydownChip { padding:11px 13px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--ink-5);border-left:3px solid var(--sc,var(--calm)); }
+.paydownChipLabel { font-family:var(--font-mono);font-size:9px;color:var(--ink-3);letter-spacing:1px;text-transform:uppercase; }
+.paydownChipDate { display:block;font-family:var(--font-serif);font-size:15px;font-weight:300;color:var(--ink-0);margin-top:4px; }
+
+.paydownAction { padding:14px 16px;border-radius:10px;background:rgba(93,202,165,.05);border:1px solid rgba(93,202,165,.2);margin-bottom:14px; }
+.paydownActionTop { display:flex;justify-content:space-between;align-items:baseline; }
+.paydownActionLabel { font-family:var(--font-mono);font-size:9px;color:var(--ink-3);letter-spacing:1px;text-transform:uppercase; }
+.paydownActionAmt { font-family:var(--font-serif);font-size:22px;font-weight:300;color:var(--ink-0); }
+.paydownDeadline { margin-top:8px;font-size:11.5px;color:var(--ink-2);line-height:1.5; }
+.paydownDeadline strong { color:var(--ink-0); }
+.paydownDeadline.missed,.paydownDeadline.missed strong { color:var(--warn); }
+
+.paydownGuard { display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-3);padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.02);margin-bottom:14px; }
+.paydownGuard strong { color:var(--ink-1); }
+
+.paydownSetClose { display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:11px;color:var(--ink-2); }
+.paydownCloseInput { width:60px;background:rgba(255,255,255,.04);border:1px solid var(--ink-4);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--ink-0);outline:none; }
+.paydownCloseInput:focus { border-color:rgba(93,202,165,.4); }
+.paydownCloseSave { background:var(--safe);color:#040608;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px; }
+.paydownNote { font-family:var(--font-mono);font-size:9px;color:var(--ink-4);margin-top:12px;line-height:1.6; }
+
 @media (max-width:768px) {
   .header { padding:20px 16px; }
   .title  { font-size:36px; }

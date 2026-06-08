@@ -116,6 +116,7 @@ export const api = {
   debtExtraPayment:        (body)  => request('/api/debt/extra-payment',        { method: 'POST', body: JSON.stringify(body) }),
   debtPayoffOpportunities: ()      => request('/api/debt/payoff-opportunities', { method: 'POST' }),
   debtSetMinPayment:       (id, body) => request(`/api/debt/${id}/minimum-payment`, { method: 'PATCH', body: JSON.stringify(body) }),
+  debtSetStatementDay:     (id, body) => request(`/api/debt/${id}/statement-close-day`, { method: 'PATCH', body: JSON.stringify(body) }),
 
   // Phase H: Document Intelligence
   uploadDocument:      (formData)    => requestForm('/api/documents/upload', formData),

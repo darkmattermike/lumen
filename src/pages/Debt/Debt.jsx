@@ -3,6 +3,7 @@ import ScreenWrap from '../../components/ScreenWrap/ScreenWrap'
 import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../data/api'
+import CardPaydownPanel from './CardPaydownPanel'
 import styles from './Debt.module.css'
 
 function fmt(n)  { return Number(n||0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
@@ -179,6 +180,7 @@ function ExtraPaymentCalc({ debts }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Debt() {
   const { data, loading, error, refresh } = useApi(api.debt)
+  const { data: allocation }              = useApi(api.paycheckAllocation)
   const [extra, setExtra]                 = useState(0)
   const [strategies, setStrategies]       = useState(null)
   const [comparing, setComparing]         = useState(false)
@@ -206,6 +208,12 @@ export default function Debt() {
 
   const { debts = [], totalDebt = 0, totalMinPayment = 0, weightedAvgRate = 0 } = data || {}
   const hasDebts = debts.length > 0
+
+  // Auto-select the highest-utilization revolving card (has a limit) for paydown.
+  const paydownTarget = debts
+    .filter(d => d.limit > 0)
+    .sort((a, b) => (b.balance / b.limit) - (a.balance / a.limit))[0] || null
+  const paycheckSurplus = Math.max(0, Number(allocation?.surplus || 0))
 
   return (
     <ScreenWrap>
@@ -264,6 +272,15 @@ export default function Debt() {
             <div className={styles.body}>
               {/* Left column */}
               <div className={styles.leftCol}>
+                {/* Card paydown — auto-targets highest-utilization card */}
+                {paydownTarget && (
+                  <CardPaydownPanel
+                    target={paydownTarget}
+                    surplus={paycheckSurplus}
+                    onSaved={refresh}
+                  />
+                )}
+
                 {/* Extra payment slider */}
                 <div className={styles.extraCard}>
                   <div className={styles.extraLabel}>
