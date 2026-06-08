@@ -1,18 +1,20 @@
-/* App shell — centers the max-width container */
+/* App shell — full-width nav on top, centered content below */
 .shell {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   flex: 1;
   overflow-y: auto;
   height: 100vh;
   background: var(--bg-0);
 }
 
-/* Inner wrapper: rail + content, capped at design width */
+/* Inner wrapper: centered content, capped at design width */
 .inner {
   display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: var(--max-w);
+  margin: 0 auto;
   position: relative;
 }
 

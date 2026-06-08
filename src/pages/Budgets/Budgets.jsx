@@ -318,12 +318,7 @@ function CategoryCard({ cat, index = 0, onDelete, onToggleComplete, onRefresh })
         <div className={styles.catRowInner} onClick={toggle}>
           <div className={styles.catRowLeft}>
             <span className={styles.catRowIcon} style={isDone ? { opacity: 0.4 } : {}}>{cat.icon || '📦'}</span>
-            <div>
-              <div className={styles.catRowName}>{cat.name}</div>
-              <div className={styles.catRowSub}>
-                {isDone ? '✓ Completed' : cat.pct === 0 ? `${cat.period} · nothing yet` : `${cat.period} · ${cat.pct}% used`}
-              </div>
-            </div>
+            <span className={styles.catRowName}>{cat.name}</span>
           </div>
 
           <div className={styles.catRowBar}>
@@ -336,11 +331,11 @@ function CategoryCard({ cat, index = 0, onDelete, onToggleComplete, onRefresh })
             <div className={styles.catRowSpent} style={{ color: spentColor }}>${fmt(cat.spent)}</div>
             <div className={styles.catRowCap}>of ${fmtK(cat.cap)}</div>
           </div>
-        </div>
 
-        <div className={styles.catRowActions} onClick={e => e.stopPropagation()}>
-          <button className={`${styles.completeBtn} ${isDone ? styles.completeBtnOn : ''}`} onClick={handleComplete} disabled={toggling} title={isDone ? 'Mark incomplete' : 'Mark complete'}>✓</button>
-          <button className={styles.deleteBtn} onClick={() => onDelete(cat.id)} title="Delete">✕</button>
+          <div className={styles.catRowActions} onClick={e => e.stopPropagation()}>
+            <button className={`${styles.completeBtn} ${isDone ? styles.completeBtnOn : ''}`} onClick={handleComplete} disabled={toggling} title={isDone ? 'Mark incomplete' : 'Mark complete'}>✓</button>
+            <button className={styles.deleteBtn} onClick={() => onDelete(cat.id)} title="Delete">✕</button>
+          </div>
         </div>
       </div>
 
@@ -687,45 +682,42 @@ export default function Budgets() {
         />
       )}
       <ScreenWrap>
-        <div className={styles.header}>
-          <div>
-            <div className={styles.pre}>◎ Where I Am · What Happened</div>
-            <div className={styles.title}>Budgets</div>
-            <div className={styles.sub}>
-              Click any category to see its transactions. Check it off when everything expected for the month is covered.
-            </div>
-          </div>
-          <div className={styles.headerRight}>
-            <div className={styles.monthTotal}>
-              <div className={styles.mtLabel}>Total Budgeted · {monthName}</div>
-              <div className={styles.mtAmt}>${fmtK(totalBudgeted)}</div>
-              <div className={styles.mtSub}>${fmtK(totalSpent)} spent · {totalPct}% used · {daysLeft} days left</div>
-            </div>
-            <div className={styles.headerBtns}>
-              <button className={styles.aiLimitsBtn} onClick={()=>setShowAiLimits(true)} disabled={budgets.length===0}>
-                ✦ AI Limits
-              </button>
-              <button className={styles.addBtn} onClick={()=>setShowModal(true)}>+ Add Category</button>
-            </div>
-          </div>
-        </div>
+        <div className={styles.page}>
 
-        <div className={styles.body}>
-          <div>
-            {/* Phase I: Adaptive Budget Suggestions */}
+          {/* Standard header */}
+          <div className={styles.header}>
+            <div>
+              <div className={styles.pre}>◎ Where I Am · What Happened</div>
+              <div className={styles.title}>Budgets</div>
+            </div>
+          </div>
+
+          {/* Status bar */}
+          <div className={styles.bar}>
+            <div className={styles.barL}>
+              <span className={styles.blink} />
+              <span className={styles.grn}>Budgets · {monthName}</span>
+              <span>{daysLeft} days left</span>
+            </div>
+            <div>{totalPct}% of budget used</div>
+          </div>
+
+          <div className={styles.body}>
+            <div className={styles.listCol}>
+            {/* Adaptive suggestions */}
             {adaptiveSuggestions.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
+              <div className={styles.suggestWrap}>
                 {adaptiveSuggestions.slice(0, 3).map(s => (
-                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 10, padding: '10px 12px', marginBottom: 6 }}>
-                    <span style={{ fontSize: 16 }}>{s.budget_icon || '📅'}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-1)' }}>{s.budget_name} seasonal suggestion</div>
-                      <div style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 1 }}>{s.reason}</div>
+                  <div key={s.id} className={styles.suggestRow}>
+                    <span className={styles.suggestIcon}>{s.budget_icon || '📅'}</span>
+                    <div className={styles.suggestBody}>
+                      <div className={styles.suggestName}>{s.budget_name} seasonal suggestion</div>
+                      <div className={styles.suggestReason}>{s.reason}</div>
                     </div>
-                    <button onClick={() => applyAdaptive(s.id)} style={{ fontSize: 10, padding: '4px 10px', background: 'var(--calm)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', flexShrink: 0 }}>
+                    <button className={styles.suggestApply} onClick={() => applyAdaptive(s.id)}>
                       Apply ${Number(s.suggested_cap).toLocaleString()}
                     </button>
-                    <button onClick={() => setAdaptiveSuggestions(prev => prev.filter(x => x.id !== s.id))} style={{ fontSize: 14, color: 'var(--ink-3)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px' }}>×</button>
+                    <button className={styles.suggestX} onClick={() => setAdaptiveSuggestions(prev => prev.filter(x => x.id !== s.id))}>✕</button>
                   </div>
                 ))}
               </div>
@@ -737,33 +729,30 @@ export default function Budgets() {
                 <div className={styles.emptySub}>Click <strong>+ Add Category</strong> to start tracking.</div>
               </div>
             ) : (
-              <>
-                {renderSection('Overspent', overspent, 'var(--debt)')}
+              <div className={styles.listPanel}>
+                <div className={styles.stats}>
+                  <div className={styles.stat}><div className={styles.statL}>Total budgeted</div><div className={styles.statV}>${fmtK(totalBudgeted)}</div></div>
+                  <div className={styles.stat}><div className={styles.statL}>Spent so far</div><div className={styles.statV} style={{color:'var(--warn)'}}>${fmtK(totalSpent)}</div></div>
+                  <div className={styles.stat}><div className={styles.statL}>Remaining</div><div className={styles.statV} style={{color:'var(--safe)'}}>${fmtK(Math.max(totalBudgeted-totalSpent,0))}</div></div>
+                  <div className={styles.stat}><div className={styles.statL}>Over budget</div><div className={styles.statV} style={{color:overspent.length?'var(--debt)':'var(--ink-0)'}}>{overspent.length}</div></div>
+                </div>
+                <div className={styles.toolbar}>
+                  <button className={styles.aiLimitsBtn} onClick={()=>setShowAiLimits(true)} disabled={budgets.length===0}>✦ AI Limits</button>
+                  <button className={styles.addBtn} onClick={()=>setShowModal(true)}>+ Add Category</button>
+                </div>
+                <div className={styles.colHead}>
+                  <span className={styles.colHeadName}>Category</span>
+                  <span className={styles.colHeadBar}>Progress</span>
+                  <span className={styles.colHeadAmt}>Spent / Cap</span>
+                  <span />
+                </div>
+                {renderSection('Over Budget', overspent, 'var(--debt)')}
                 {renderSection('In Progress', inProgress, 'var(--warn)')}
                 {renderSection('Completed', completed, 'var(--safe)')}
-              </>
+              </div>
             )}
           </div>
-
-          <div>
-            {/* Phase C: Month-End Forecast */}
-            <ForecastPanel />
-
-            <div className="section-label" style={{marginBottom:12,marginTop:20}}>Lumen Analysis</div>
-            <LumenInsight
-              label="Budget Pulse"
-              contextType="budgets"
-              prompt="What is the single most important thing about my budget right now — overspent category, cap at risk, or a pattern that stands out."
-              color="amber"
-            />
-            <LumenInsight
-              label="Spending Pattern"
-              contextType="budgets"
-              prompt="One spending pattern across my budget categories over the last 3 months that I should know about."
-              color="blue"
-            />
-
-          </div>
+        </div>
         </div>
       </ScreenWrap>
     </>

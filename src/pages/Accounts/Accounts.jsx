@@ -30,7 +30,7 @@ function typeIcon(acct) {
 }
 
 // ── Single account row inside an institution block ────────────────────────────
-function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, isNew }) {
+function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, onSetRole, isNew }) {
   const [toggling, setToggling]     = useState(false)
   const [togglingDebt, setTogglingDebt] = useState(false)
   const [expanded, setExpanded]     = useState(false)
@@ -148,6 +148,27 @@ function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, isNew })
                 </div>
               </div>
             )}
+            <div className={styles.detailCell} style={{ gridColumn: '1/-1' }}>
+              <div className={styles.detailLabel}>Cash-flow role</div>
+              <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                {['source', 'protected', 'ignore'].map(r => (
+                  <button
+                    key={r}
+                    onClick={(e) => { e.stopPropagation(); onSetRole && onSetRole(acct.id, r) }}
+                    style={{
+                      fontFamily: 'var(--font-mono)', fontSize: 13, padding: '5px 10px', cursor: 'pointer',
+                      textTransform: 'capitalize',
+                      border: '1px solid ' + ((acct.forecast_role || 'ignore') === r ? 'var(--safe)' : 'var(--ink-5)'),
+                      background: (acct.forecast_role || 'ignore') === r ? 'var(--safe)' : 'transparent',
+                      color: (acct.forecast_role || 'ignore') === r ? 'var(--bg-0)' : 'var(--ink-2)',
+                    }}
+                  >{r}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 5, lineHeight: 1.5 }}>
+                Source = paychecks land / funds transfers · Protected = must stay funded · Ignore = excluded from forecast
+              </div>
+            </div>
           </div>
           <div className={styles.detailActions}>
             <button
@@ -172,7 +193,7 @@ function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, isNew })
 }
 
 // ── Institution group card ────────────────────────────────────────────────────
-function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDebt, newAccountIds, isDebtGroup }) {
+function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDebt, onSetRole, newAccountIds, isDebtGroup }) {
   const groupTotal = accounts.reduce((s, a) => {
     return s + (a.is_debt ? -Number(a.balance) : Number(a.balance))
   }, 0)
@@ -214,6 +235,7 @@ function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDe
             index={i}
             onToggleDashboard={onToggleDashboard}
             onToggleDebt={onToggleDebt}
+            onSetRole={onSetRole}
             isNew={newAccountIds.has(a.id)}
           />
         ))}
@@ -410,6 +432,15 @@ export default function Accounts() {
     catch { load() }
   }
 
+  async function handleSetRole(id, role) {
+    setData(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => a.id === id ? { ...a, forecast_role: role } : a),
+    }))
+    try { await api.updateAccount(id, { forecast_role: role }) }
+    catch { load() }
+  }
+
   const accounts   = data?.accounts || []
   const netWorth   = data?.netWorth || 0
   const lastSynced = data?.lastSynced
@@ -510,6 +541,7 @@ export default function Accounts() {
                 accounts={accts}
                 onToggleDashboard={handleToggleDashboard}
                 onToggleDebt={handleToggleDebt}
+                onSetRole={handleSetRole}
                 newAccountIds={newAccountIds}
                 isDebtGroup={accts.every(a => a.is_debt)}
               />

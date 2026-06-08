@@ -30,7 +30,27 @@ const ICONS = {
   insights: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
 }
 
-// Desktop sidebar items
+// Desktop primary tabs (shown in the top bar)
+const NAV_PRIMARY = [
+  { path: '/dashboard',    label: 'Dashboard'    },
+  { path: '/transactions', label: 'Transactions' },
+  { path: '/budgets',      label: 'Budgets'      },
+  { path: '/calendar',     label: 'Calendar'     },
+  { path: '/analytics',    label: 'Analytics'    },
+]
+// Under "More" dropdown
+const NAV_MORE = [
+  { path: '/accounts', label: 'Accounts'  },
+  { path: '/goals',    label: 'Goals'     },
+  { path: '/insights', label: 'Insights'  },
+  { path: '/debt',     label: 'Debt'      },
+  { path: '/rules',    label: 'Rules'     },
+  { path: '/chat',     label: 'Ask Lumen' },
+  { path: '/gmail',    label: 'Gmail'     },
+  { path: '/settings', label: 'Settings'  },
+]
+
+// Desktop sidebar items (legacy — kept for mobile icon lookups)
 const NAV_ITEMS = [
   { path: '/dashboard',    icon: 'home',     label: 'Overview'     },
   { path: '/transactions', icon: 'txns',     label: 'Transactions' },
@@ -97,12 +117,15 @@ export default function Rail() {
   const isOwner           = user?.role === 'owner'
   const [moreOpen, setMoreOpen] = useState(false)
   const drawerRef         = useRef(null)
+  const moreWrapRef       = useRef(null)
 
   // Close "More" drawer on outside tap
   useEffect(() => {
     if (!moreOpen) return
     function handler(e) {
-      if (drawerRef.current && !drawerRef.current.contains(e.target)) setMoreOpen(false)
+      if (drawerRef.current && !drawerRef.current.contains(e.target) &&
+          moreWrapRef.current && !moreWrapRef.current.contains(e.target)) setMoreOpen(false)
+      else if (!drawerRef.current && moreWrapRef.current && !moreWrapRef.current.contains(e.target)) setMoreOpen(false)
     }
     document.addEventListener('mousedown', handler)
     document.addEventListener('touchstart', handler)
@@ -122,43 +145,56 @@ export default function Rail() {
 
   return (
     <>
-      {/* ── Desktop side rail ── */}
+      {/* ── Desktop top nav ── */}
       <nav className={styles.rail}>
-        {NAV_ITEMS.map(({ path, icon, label }, i) => (
+        <span className={styles.brand}>
+          <span className={styles.brandDot} />
+          Lumen
+        </span>
+        <div className={styles.tabs}>
+          {NAV_PRIMARY.map(({ path, label }) => (
+            <button
+              key={path}
+              className={`${styles.ptab} ${pathname === path ? styles.on : ''}`}
+              onClick={() => navigate(path)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {/* More dropdown — outside .tabs so it isn't clipped by overflow */}
+        <div className={styles.moreWrap} ref={moreWrapRef}>
           <button
-            key={path}
-            className={`${styles.rb} ${pathname === path ? styles.on : ''}`}
-            onClick={() => navigate(path)}
-            aria-label={label}
-            style={{ '--rb-delay': `${i * 35 + 50}ms` }}
+            className={`${styles.ptab} ${(moreOpen || NAV_MORE.some(m => m.path === pathname) || (isOwner && pathname === '/dani')) ? styles.on : ''}`}
+            onClick={() => setMoreOpen(v => !v)}
           >
-            <Icon d={ICONS[icon]} size={17} />
-            <span className={styles.tip}>{label.toUpperCase()}</span>
+            More ▾
           </button>
-        ))}
-        <div className={styles.sep} />
-        <div style={{ padding: '0 8px 4px' }}>
+          {moreOpen && (
+            <div className={styles.moreMenu}>
+              {NAV_MORE.map(({ path, label }) => (
+                <button
+                  key={path}
+                  className={`${styles.moreLink} ${pathname === path ? styles.moreLinkOn : ''}`}
+                  onClick={() => { navigate(path); setMoreOpen(false) }}
+                >
+                  {label}
+                </button>
+              ))}
+              {isOwner && (
+                <button
+                  className={`${styles.moreLink} ${pathname === '/dani' ? styles.moreLinkOn : ''}`}
+                  onClick={() => { navigate('/dani'); setMoreOpen(false) }}
+                >
+                  Dani
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        <div className={styles.navRight}>
           <NotificationBell />
         </div>
-        {isOwner && (
-          <button
-            className={`${styles.rb} ${pathname === '/dani' ? styles.on : ''}`}
-            onClick={() => navigate('/dani')}
-            aria-label="Dani"
-            style={pathname === '/dani' ? { color: 'var(--warn)' } : {}}
-          >
-            <Icon d={ICONS.dani} size={17} />
-            <span className={styles.tip}>DANI</span>
-          </button>
-        )}
-        <button
-          className={`${styles.rb} ${styles.bottom} ${pathname === '/settings' ? styles.on : ''}`}
-          onClick={() => navigate('/settings')}
-          aria-label="Settings"
-        >
-          <Icon d={ICONS.settings} size={17} />
-          <span className={styles.tip}>SETTINGS</span>
-        </button>
       </nav>
 
       {/* ── Mobile bottom tab bar ── */}

@@ -195,27 +195,21 @@ function TxRow({ tx, index = 0, budgets, rules, onSaved, onRuleSuggestion, onLea
 
   return (
     <div className={`${styles.txWrap} ${open ? styles.txWrapOpen : ''} ${isBlurred ? styles.txWrapBlurred : ''}`} style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
-      {/* ── Main row ── */}
+      {/* ── Main row (single line, aligned columns) ── */}
       <div className={styles.txRow} onClick={() => !isBlurred && setOpen(o => !o)}>
         <div className={styles.txIcon}>{tx.icon || (isIncome ? '💰' : '💳')}</div>
-        <div className={styles.txInfo}>
-          <div className={styles.txName}>
-            {isBlurred
-              ? <span className={styles.blurredText}>{'●'.repeat(Math.min((tx.cleaned_name || form.name).length, 12))}</span>
-              : <>{tx.cleaned_name || form.name}{tx.status === 'pending' && <span className={styles.pendingBadge}>pending</span>}</>
-            }
-          </div>
-          {tx.cleaned_name && tx.cleaned_name !== tx.name && (
-            <div className={styles.txRawName}>{tx.name}</div>
-          )}
-          <div className={styles.txCat}>
-            {isTransfer
-              ? <span style={{color:'var(--calm)'}}>↔ Transfer — excluded from totals</span>
-              : <span style={catColor ? {color: catColor} : {}}>{(form.category || 'Uncategorized').replace(/_/g, ' ')}</span>
-            }
-            {!isTransfer && tx.account_name ? ` · ${tx.account_name}` : ''}
-            {form.note ? ` — ${form.note}` : ''}
-          </div>
+        <div className={styles.txName}>
+          {isBlurred
+            ? <span className={styles.blurredText}>{'●'.repeat(Math.min((tx.cleaned_name || form.name).length, 12))}</span>
+            : <>{tx.cleaned_name || form.name}{tx.status === 'pending' && <span className={styles.pendingBadge}>pending</span>}</>
+          }
+        </div>
+        <div className={styles.txCat}>
+          {isTransfer
+            ? <span style={{color:'var(--calm)'}}>Transfer</span>
+            : <span style={catColor ? {color: catColor} : {}}>{(form.category || 'Uncategorized').replace(/_/g, ' ')}</span>
+          }
+          {!isTransfer && tx.account_name ? ` · ${tx.account_name}` : ''}
         </div>
         <div className={styles.txAmt} style={{ color: amtColor }}>
           {isBlurred ? <span className={styles.blurredAmt}>$●●●</span> : <>{isTransfer ? '↔' : isIncome ? '+' : '−'}${fmt(Math.abs(amt))}</>}
@@ -720,32 +714,7 @@ export default function Transactions() {
           <div>
             <div className={styles.pre}>↕ What Happened</div>
             <div className={styles.title}>Transactions</div>
-            <div className={styles.sub}>
-              Every dollar in and out. Click any transaction to edit it. Assign a budget category to have it count toward your budget caps.
-            </div>
-            <div className={styles.stats}>
-              <div className={styles.stat}><div className={styles.statL}>This Month In</div><div className={styles.statV} style={{color:'var(--safe)'}}>${fmtK(income)}</div></div>
-              <div className={styles.stat}><div className={styles.statL}>This Month Out</div><div className={styles.statV} style={{color:'var(--debt)'}}>${fmtK(spending)}</div></div>
-              <div className={styles.stat}><div className={styles.statL}>Net</div><div className={styles.statV} style={{color:net>=0?'var(--safe)':'var(--debt)'}}>{net>=0?'+':'−'}${fmtK(Math.abs(net))}</div></div>
-              <div className={styles.stat}><div className={styles.statL}>Transactions</div><div className={styles.statV}>{count}</div></div>
-            </div>
-            <div className={styles.headerBtns}>
-              <button className={styles.aiCatBtn} onClick={() => setShowCatModal(true)}>
-                ✦ Auto-Categorize
-              </button>
-              <button className={styles.enrichBtn} onClick={handleEnrich} disabled={enriching}>
-                {enriching ? '...' : '✉ Enrich Names'}
-              </button>
-              <button className={styles.enrichBtn} onClick={() => setShowDocUpload(true)}>
-                📄 Upload PDF
-              </button>
-              <button className={styles.enrichBtn} onClick={() => setShowCsvImport(true)}>
-                ↑ Import CSV
-              </button>
-              {enrichMsg && <div className={styles.enrichMsg}>{enrichMsg}</div>}
-            </div>
           </div>
-
         </div>
 
         {showDocUpload && (
@@ -768,22 +737,39 @@ export default function Transactions() {
           <div className={styles.learnedToast}>{learnedToast}</div>
         )}
 
-        <div className={styles.filters}>
-          {FILTERS.map(f => (
-            <button key={f}
-              className={`${styles.filterChip} ${activeFilter===f?styles.filterOn:''}`}
-              onClick={() => setActiveFilter(f)}>
-              {FILTER_LABELS[f]}
-            </button>
-          ))}
-          <input className={styles.search} placeholder="🔍 Search transactions..."
-            value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-
         <div className={styles.body}>
           <div className={styles.list}>
+            <div className={styles.stats}>
+              <div className={styles.stat}><div className={styles.statL}>This Month In</div><div className={styles.statV} style={{color:'var(--safe)'}}>${fmtK(income)}</div></div>
+              <div className={styles.stat}><div className={styles.statL}>This Month Out</div><div className={styles.statV} style={{color:'var(--debt)'}}>${fmtK(spending)}</div></div>
+              <div className={styles.stat}><div className={styles.statL}>Net</div><div className={styles.statV} style={{color:net>=0?'var(--safe)':'var(--debt)'}}>{net>=0?'+':'−'}${fmtK(Math.abs(net))}</div></div>
+              <div className={styles.stat}><div className={styles.statL}>Transactions</div><div className={styles.statV}>{count}</div></div>
+            </div>
+            <div className={styles.toolbar}>
+              <button className={styles.aiCatBtn} onClick={() => setShowCatModal(true)}>✦ Auto-Categorize</button>
+              <button className={styles.enrichBtn} onClick={handleEnrich} disabled={enriching}>{enriching ? '...' : '✉ Enrich Names'}</button>
+              <button className={styles.enrichBtn} onClick={() => setShowDocUpload(true)}>📄 Upload PDF</button>
+              <button className={styles.enrichBtn} onClick={() => setShowCsvImport(true)}>↑ Import CSV</button>
+              {enrichMsg && <div className={styles.enrichMsg}>{enrichMsg}</div>}
+            </div>
+            <div className={styles.filters}>
+              {FILTERS.map(f => (
+                <button key={f}
+                  className={`${styles.filterChip} ${activeFilter===f?styles.filterOn:''}`}
+                  onClick={() => setActiveFilter(f)}>
+                  {FILTER_LABELS[f]}
+                </button>
+              ))}
+              <input className={styles.search} placeholder="🔍 Search transactions..."
+                value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <div className={styles.colHead}>
+              <span>Merchant</span>
+              <span className={styles.colHeadCat}>Category</span>
+              <span className={styles.colHeadAmt}>Amount</span>
+            </div>
             {Object.keys(filteredGrouped).length === 0 ? (
-              <div style={{padding:'40px',textAlign:'center',color:'var(--ink-3)',fontFamily:'var(--font-mono)',fontSize:11}}>
+              <div style={{padding:'40px',textAlign:'center',color:'var(--ink-3)',fontFamily:'var(--font-mono)',fontSize:13}}>
                 No transactions found
               </div>
             ) : Object.entries(filteredGrouped).map(([date, txs]) => (
@@ -811,46 +797,6 @@ export default function Transactions() {
                 <div className={styles.loadMoreSub}>50 per page · showing oldest first within each page</div>
               </div>
             )}
-          </div>
-
-          <div className={styles.aside}>
-            <div className={styles.asideLabel}>Budget Categories · This Month</div>
-            {budgetRows.length === 0 ? (
-              <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0',lineHeight:1.65}}>
-                Edit transactions and assign categories to see spending here.
-              </div>
-            ) : budgetRows.map((b, i) => {
-              const color = {debt:'var(--debt)',warn:'var(--warn)',safe:'var(--safe)',calm:'var(--calm)',goal:'var(--goal)',pink:'#e87fa3',orange:'#f07a3a',sky:'#5bc4e8',lime:'#8ecf4a',gold:'#d4a017'}[b.color] || 'var(--safe)'
-              const pct    = Math.round((b.spent / maxSpent) * 100)
-              const capPct = Number(b.cap) > 0 ? Math.round((b.spent / Number(b.cap)) * 100) : null
-              return (
-                <div key={b.id} className={styles.catRow}>
-                  <div className={styles.catMeta}>
-                    <span className={styles.catName}>{b.icon} {b.name}</span>
-                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color}}>
-                      ${fmtK(b.spent)}{capPct !== null ? ` · ${capPct}%` : ''}
-                    </span>
-                  </div>
-                  <div className={styles.catTrack}>
-                    <div className={styles.catFill} style={{'--cat-w':`${pct}%`,'--cat-delay':`${i*50}ms`,background:color,opacity:.55}}/>
-                  </div>
-                </div>
-              )
-            })}
-
-            <div className={styles.asideLabel} style={{marginTop:16}}>Lumen Watching</div>
-            <LumenInsight
-              label="This Month"
-              contextType="transactions"
-              prompt="In 2-3 sentences, give me a sharp read on how this month's transactions look — income vs spending, anything unusual, and where I should pay attention."
-              color="green"
-            />
-            <LumenInsight
-              label="Pattern Alert"
-              contextType="transactions"
-              prompt="In 2-3 sentences, identify the most important spending pattern or anomaly in my recent transactions that I should know about."
-              color="blue"
-            />
           </div>
         </div>
       </ScreenWrap>

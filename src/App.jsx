@@ -38,8 +38,8 @@ function AppShell() {
 
   return (
     <div className={styles.shell}>
+      <Rail />
       <div className={styles.inner}>
-        <Rail />
         <main className={styles.main}>
           <Routes>
             {/* / redirects into the app when logged in */}

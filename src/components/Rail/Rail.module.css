@@ -1,24 +1,72 @@
-/* ── Desktop side rail ── */
+/* ── Desktop top nav (horizontal, concept style) ── */
 .rail {
   position: sticky;
   top: 0;
-  height: 100vh;
-  width: var(--rail-w);
-  flex-shrink: 0;
-  background: var(--bg-0);
-  border-right: 1px solid var(--ink-5);
+  width: 100%;
+  background: rgba(12,13,15,.92);
+  border-bottom: 1px solid var(--ink-5);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 16px 0;
-  gap: 4px;
+  gap: 10px;
+  padding: 10px 20px;
   z-index: 99;
-  animation: rail-enter 0.45s cubic-bezier(0.34,1.05,0.64,1) both;
+  animation: rail-enter 0.4s ease both;
 }
 @keyframes rail-enter {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--safe);
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+.brandDot {
+  width: 10px;
+  height: 10px;
+  background: var(--safe);
+  flex-shrink: 0;
+  animation: brand-blink 2.5s infinite;
+}
+@keyframes brand-blink { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.ptab {
+  font-family: var(--font-mono);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 7px 12px;
+  white-space: nowrap;
+  transition: all var(--t-fast);
+}
+.ptab:hover { color: var(--ink-0); border-color: var(--ink-5); }
+.ptab.on { background: var(--safe); color: var(--bg-0); border-color: var(--safe); }
 
 .rb {
   position: relative;
@@ -151,6 +199,9 @@
 .moreBackdrop {
   display: none;
 }
+.moreDrawer {
+  display: none;
+}
 
 @media (max-width: 768px) {
   .moreBackdrop {
@@ -169,6 +220,7 @@
 
   /* ── More drawer ── */
   .moreDrawer {
+    display: block;
     position: fixed;
     bottom: calc(64px + env(safe-area-inset-bottom));
     left: 0;
@@ -279,3 +331,73 @@
   color: var(--safe);
   line-height: 1;
 }
+
+/* ════════ PIXEL CONCEPT OVERRIDES ════════ */
+.rail{
+  background: rgba(12,13,15,.85);
+  border-right: 1px solid var(--ink-5);
+}
+.rb{
+  border-radius: 0 !important;
+  border: 1px solid transparent;
+  color: var(--ink-3);
+}
+.rb:hover:not(.on){
+  background: transparent;
+  border-color: var(--ink-5);
+  color: var(--ink-1);
+  transform: none;
+}
+.on{
+  background: var(--safe) !important;
+  color: var(--bg-0) !important;
+}
+.tip{
+  border-radius: 0 !important;
+  background: var(--bg-1);
+  border: 1px solid var(--ink-5);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.mobileNav{
+  background: rgba(12,13,15,.95) !important;
+  border-top: 1px solid var(--ink-5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.mobileBtnLabel{ letter-spacing: 0 !important; }
+.moreDrawer{ background: var(--bg-1) !important; }
+.moreItem{ border-radius: 0 !important; }
+.moreItemOn{ background: var(--safe) !important; color: var(--bg-0) !important; }
+
+/* ── Desktop "More" dropdown — vertical nav list ── */
+.moreWrap { position: relative; }
+.moreMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 150px;
+  background: rgba(12,13,15,.97);
+  border: 1px solid var(--ink-5);
+  padding: 6px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: more-pop .12s ease both;
+}
+@keyframes more-pop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.moreLink {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: left;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 7px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--t-fast);
+}
+.moreLink:hover { color: var(--ink-0); border-color: var(--ink-5); }
+.moreLinkOn { background: var(--safe); color: var(--bg-0); border-color: var(--safe); }

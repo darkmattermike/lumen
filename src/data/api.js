@@ -174,6 +174,7 @@ export const api = {
   monthlyReport:   (y,m)   => request(`/api/reports/monthly?year=${y}&month=${m}`),
   monthlyReportUrl:(y,m)   => `${BASE}/api/reports/monthly/html?year=${y}&month=${m}`,
   calendar:             ()           => request('/api/calendar'),
+  accountForecast:      ()           => request('/api/calendar/forecast'),
   createRecurring:      (body)       => request('/api/calendar', { method: 'POST', body: JSON.stringify(body) }),
   updateRecurring:      (id, body)   => request(`/api/calendar/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteRecurring:      (id)         => request(`/api/calendar/${id}`, { method: 'DELETE' }),

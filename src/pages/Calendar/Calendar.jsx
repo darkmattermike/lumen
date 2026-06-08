@@ -398,6 +398,7 @@ export default function Calendar() {
   const [openSecond, setOpenSecond]   = useState(false)
   const { data, loading, error, refresh } = useApi(api.calendar)
   const { data: acctData } = useApi(api.accounts)
+  const { data: forecast } = useApi(api.accountForecast)
   const [localExpanded, setLocalExpanded] = useState(null)
 
   // Update a single item locally — no full refresh
@@ -505,25 +506,82 @@ export default function Calendar() {
 
       <ScreenWrap>
         <div className={styles.header}>
-          <div className={styles.headerTop}>
-            <div>
-              <div className={styles.pre}>◷ What's Coming</div>
-              <div className={styles.title}>Calendar</div>
-              <div className={styles.sub}>Bills, income, and subscriptions — every recurring item mapped to the day it hits.</div>
+          <div>
+            <div className={styles.pre}>◷ What's Coming</div>
+            <div className={styles.title}>Calendar</div>
+          </div>
+          <div className={styles.headerControls}>
+            <div className={styles.monthNav}>
+              <button className={styles.navBtn} onClick={prevMonth}>‹</button>
+              <span>{monthLabel}</span>
+              <button className={styles.navBtn} onClick={nextMonth}>›</button>
             </div>
-            <div className={styles.headerControls}>
-              <div className={styles.monthNav}>
-                <button className={styles.navBtn} onClick={prevMonth}>‹</button>
-                <span>{monthLabel}</span>
-                <button className={styles.navBtn} onClick={nextMonth}>›</button>
-              </div>
-              <button className={styles.addBtn} onClick={() => setShowModal(true)}>
-                + Add
-              </button>
-            </div>
+            <button className={styles.addBtn} onClick={() => setShowModal(true)}>+ Add</button>
           </div>
         </div>
+        {/* ── Cash-flow forecast ── */}
+        {forecast && !forecast.needsMigration && !forecast.unconfigured && (
+          <div className={styles.fc}>
+            <div className={styles.fcBar}>
+              <div className={styles.fcBarL}>
+                <span className={styles.fcBlink} />
+                <span className={styles.fcGrn}>Cash-flow · next {forecast.horizonDays}d</span>
+                <span>paycheck {forecast.nextPayDate}</span>
+              </div>
+              <div>safe to save ${forecast.safeToSave}</div>
+            </div>
 
+            <div className={styles.fcAccts}>
+              {forecast.accounts.map(a => (
+                <div key={a.id} className={`${styles.fcCell} ${a.safe ? styles.fcSafe : styles.fcRisk}`}>
+                  <div className={styles.fcCellName}>{a.name}{a.role === 'protected+source' ? ' ·hub' : ''}</div>
+                  <div className={styles.fcCellTrough} style={{ color: a.safe ? 'var(--safe)' : 'var(--debt)' }}>
+                    ${a.trough}
+                  </div>
+                  <div className={styles.fcCellMeta}>
+                    low {new Date(a.troughDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+                    {a.dailyPace > 0 ? ` · $${a.dailyPace}/day` : ''}
+                  </div>
+                  {a.troughCause && <div className={styles.fcCellCause}>{a.troughCause.name} ${a.troughCause.amount}</div>}
+                </div>
+              ))}
+            </div>
+
+            {forecast.recommendations.length > 0 ? (
+              <div className={styles.fcActions}>
+                <div className={styles.fcActionsHead}>Actions needed</div>
+                {forecast.recommendations.map((r, i) => (
+                  <div key={i} className={`${styles.fcAction} ${r.urgent ? styles.fcActionUrgent : ''}`}>
+                    <div className={styles.fcActionTop}>
+                      <span className={styles.fcActionTag}
+                        style={{ color: r.urgent ? 'var(--debt)' : r.kind === 'instant' ? 'var(--calm)' : 'var(--warn)' }}>
+                        {r.kind === 'instant' ? 'INSTANT' : r.urgent ? 'SEND ASAP' : 'TRANSFER'}
+                      </span>
+                      <span className={styles.fcActionMove}>
+                        ${r.amount} &nbsp;{r.from_account_name} → {r.to_account_name}
+                      </span>
+                      <span className={styles.fcActionWhen}>
+                        {r.urgent ? 'today' : (r.kind === 'instant' ? 'when ' : 'by ') +
+                          new Date(r.send_by+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+                      </span>
+                    </div>
+                    <div className={styles.fcActionReason}>{r.reason}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.fcClear}>✓ Nothing needed — all accounts stay above ${forecast.cushion} through payday.</div>
+            )}
+          </div>
+        )}
+        {forecast && forecast.needsMigration && (
+          <div className={styles.fcNote}>Run schema-phase-j.sql in Neon, then reload to see the cash-flow forecast.</div>
+        )}
+        {forecast && forecast.unconfigured && !forecast.needsMigration && (
+          <div className={styles.fcNote}>Tag your accounts (Source / Protected / Ignore) on the Accounts page to enable the cash-flow forecast.</div>
+        )}
+
+        <div className={styles.bodyWrap}>
         <div className={styles.body}>
           <div className={styles.calMain}>
             <div className={styles.dow}>
@@ -735,8 +793,10 @@ export default function Calendar() {
             )}
           </div>
         </div>
+        </div>
 
         {/* ── Agenda — Concept 1: Left-rail timeline ── */}
+        <div className={styles.bodyWrap}>
         <div className={styles.agenda}>
           {allSorted.length === 0 ? (
             <div className={styles.agendaEmpty}>
@@ -826,6 +886,7 @@ export default function Calendar() {
               </div>
             )
           })()}
+        </div>
         </div>
         <RecurringSuggestions onAccepted={refresh} />
       </ScreenWrap>

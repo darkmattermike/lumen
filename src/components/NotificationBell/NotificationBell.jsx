@@ -241,7 +241,7 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
     )
   }
 
-  // ── Desktop: orb speaks, thought cloud floats right ──────
+  // ── Desktop: pixel notification panel ──────
   return (
     <div className={styles.wrap} ref={wrapRef}>
 
@@ -249,44 +249,45 @@ export default function NotificationBell({ mobileDrawer = false, startOpen = fal
         ref={triggerRef}
         className={`${styles.trigger} ${open ? styles.triggerOpen : ''}`}
         onClick={handleOpen}
-        aria-label="Lumen notifications"
+        aria-label="Notifications"
       >
-        {/* Orb pulses in speaking mode when unread */}
-        <span className={`${styles.orbWrap} ${(hasUnread || open) ? styles.orbSpeaking : ''}`}>
-          <LumenDot size={22} rings={open} mood={open ? 'excited' : hasUnread ? 'unread' : 'idle'} />
-        </span>
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1" shapeRendering="crispEdges" style={{ color: (hasUnread || open) ? 'var(--safe)' : 'var(--ink-2)' }} aria-hidden="true">
+          <path d="M5 3h6v1h1v4h1v2h1v1H2v-1h1V8h1V4h1V3z" />
+          <path d="M6 12h4v1H6z" />
+        </svg>
         {hasUnread && !open && (
           <span className={styles.badge}>{data.unread_count > 9 ? '9+' : data.unread_count}</span>
         )}
       </button>
 
-      {open && cloudPos && (
-        <div
-          className={styles.cloudWrap}
-          style={{
-            top:  cloudPos.orbCenterY,
-            left: cloudPos.left,
-            '--cloud-max-h': `${Math.max(120, cloudPos.orbCenterY - 24)}px`,
-          }}
-        >
-          {/* Cloud — anchored to bottom of wrapper, grows upward */}
-          <div className={styles.cloudScroll} ref={cloudRef}>
+      {open && (
+        <div className={styles.notifPanel}>
+          <div className={styles.notifHead}>
+            <span>Notifications</span>
+            {notifs.length > 0 && <button className={styles.notifClear} onClick={clearAll}>Clear all</button>}
+          </div>
+          <div className={styles.notifScroll}>
             {!notifs.length ? (
-              <EmptyCloud onClose={() => setOpen(false)} />
+              <div className={styles.notifEmpty}>No notifications.</div>
             ) : (
-              <>
-                {notifs.map((n, i) => (
-                  <NotifCloud key={n.id} notif={n} animDelay={i * 60} onGotIt={handleGotIt} onDismiss={handleDismiss} />
-                ))}
-                {notifs.length > 1 && (
-                  <button className={styles.clearAllBtn} onClick={clearAll}>Dismiss all</button>
-                )}
-              </>
+              notifs.map(n => {
+                const meta = getMeta(n.type)
+                return (
+                  <div key={n.id} className={styles.notifItem}>
+                    <span className={styles.notifDot} style={{ background: meta.color }} />
+                    <div className={styles.notifBody}>
+                      <div className={styles.notifTop}>
+                        <span className={styles.notifLabel} style={{ color: meta.color }}>{meta.label}</span>
+                        <span className={styles.notifTime}>{relativeTime(n.created_at)}</span>
+                      </div>
+                      <div className={styles.notifMsg}>{n.body}</div>
+                    </div>
+                    <button className={styles.notifX} onClick={() => handleDismiss(n.id)} aria-label="Dismiss">✕</button>
+                  </div>
+                )
+              })
             )}
           </div>
-
-          {/* Trail dots — sit between cloud bottom and orb */}
-          <Trail />
         </div>
       )}
     </div>
