@@ -228,6 +228,11 @@ export default function Dashboard() {
     }
   }, [data, txData, forecast])
 
+  // canvas effects must re-init once the UI (and its <canvas>) actually mounts
+  // after the loading gate — otherwise the empty-deps effect runs while the
+  // canvas does not exist yet and never draws.
+  const hasData = !!data
+
   /* ── aurora canvas + parallax ── */
   const heroRef = useRef(null)
   const auroraRef = useRef(null)
@@ -265,7 +270,7 @@ export default function Dashboard() {
     }
     raf = requestAnimationFrame(draw)
     return () => { cancelAnimationFrame(raf); ro.disconnect() }
-  }, [])
+  }, [hasData])
 
   useEffect(() => {
     const hero = heroRef.current, cv = auroraRef.current, bl = bloomRef.current
@@ -279,7 +284,7 @@ export default function Dashboard() {
     const leave = () => { if (cv) cv.style.transform = ''; if (bl) bl.style.transform = '' }
     hero.addEventListener('mousemove', move); hero.addEventListener('mouseleave', leave)
     return () => { hero.removeEventListener('mousemove', move); hero.removeEventListener('mouseleave', leave) }
-  }, [])
+  }, [hasData])
 
   /* ── runway SVG paths in true pixel space (round strokes, no distortion) ── */
   const chartBoxRef = useRef(null)
