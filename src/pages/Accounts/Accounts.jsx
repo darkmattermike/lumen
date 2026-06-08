@@ -30,12 +30,40 @@ function typeIcon(acct) {
 }
 
 // ── Single account row inside an institution block ────────────────────────────
-function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, onSetRole, isNew }) {
+const editInputStyle = {
+  background: 'rgba(255,255,255,.04)', border: '1px solid var(--ink-4)',
+  borderRadius: 7, padding: '8px 10px', fontSize: 14, color: 'var(--ink-0)',
+  outline: 'none', colorScheme: 'dark', fontFamily: 'var(--font-sans)',
+}
+
+function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, onSetRole, onSaveDetails, isNew }) {
   const [toggling, setToggling]     = useState(false)
   const [togglingDebt, setTogglingDebt] = useState(false)
   const [expanded, setExpanded]     = useState(false)
   const [justToggled, setJustToggled] = useState(false)
+  const [editing, setEditing]       = useState(false)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [form, setForm]             = useState({
+    balance:         acct.balance ?? '',
+    interest_rate:   acct.interest_rate ?? '',
+    limit_amt:       acct.limit_amt ?? '',
+    minimum_payment: acct.minimum_payment ?? '',
+  })
   const color = typeColor(acct)
+
+  async function saveDetails(e) {
+    e.stopPropagation()
+    setSavingEdit(true)
+    const payload = {
+      balance:         Number(form.balance),
+      interest_rate:   Number(form.interest_rate),
+    }
+    if (form.limit_amt !== '')       payload.limit_amt = Number(form.limit_amt)
+    if (form.minimum_payment !== '') payload.minimum_payment = Number(form.minimum_payment)
+    await onSaveDetails?.(acct.id, payload)
+    setSavingEdit(false)
+    setEditing(false)
+  }
 
   async function handleToggle(e) {
     e.stopPropagation()
@@ -170,13 +198,56 @@ function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, onSetRol
               </div>
             </div>
           </div>
+          {editing && (
+            <div style={{ gridColumn: '1/-1', marginTop: 10, padding: 14, border: '1px solid var(--ink-5)', borderRadius: 10, background: 'rgba(255,255,255,.02)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Balance
+                  <input type="number" value={form.balance} onClick={e => e.stopPropagation()}
+                    onChange={e => setForm(f => ({ ...f, balance: e.target.value }))}
+                    style={editInputStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  {acct.is_debt ? 'APR %' : 'APY %'}
+                  <input type="number" value={form.interest_rate} onClick={e => e.stopPropagation()}
+                    onChange={e => setForm(f => ({ ...f, interest_rate: e.target.value }))}
+                    style={editInputStyle} />
+                </label>
+                {acct.is_debt && (
+                  <>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Credit Limit
+                      <input type="number" value={form.limit_amt} onClick={e => e.stopPropagation()}
+                        onChange={e => setForm(f => ({ ...f, limit_amt: e.target.value }))}
+                        style={editInputStyle} />
+                    </label>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Min Payment
+                      <input type="number" value={form.minimum_payment} onClick={e => e.stopPropagation()}
+                        onChange={e => setForm(f => ({ ...f, minimum_payment: e.target.value }))}
+                        style={editInputStyle} />
+                    </label>
+                  </>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button onClick={saveDetails} disabled={savingEdit}
+                  style={{ background: 'var(--safe)', color: '#040608', border: 'none', borderRadius: 7, padding: '7px 16px', cursor: 'pointer', fontSize: 13, fontFamily: 'var(--font-sans)' }}>
+                  {savingEdit ? 'Saving…' : 'Save'}
+                </button>
+                <button onClick={e => { e.stopPropagation(); setEditing(false) }}
+                  style={{ background: 'transparent', color: 'var(--ink-3)', border: '1px solid var(--ink-5)', borderRadius: 7, padding: '7px 16px', cursor: 'pointer', fontSize: 13 }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
           <div className={styles.detailActions}>
             <button
-              className={`${styles.detailBtn} ${included ? styles.detailBtnOn : ''}`}
-              onClick={handleToggle}
-              disabled={toggling}
+              className={styles.detailBtn}
+              onClick={e => { e.stopPropagation(); setEditing(v => !v) }}
             >
-              {toggling ? '…' : included ? '✓ Included in Balance' : 'Include in Balance'}
+              ✎ Edit Details
             </button>
             <button
               className={`${styles.detailBtn} ${acct.is_debt ? styles.detailBtnDebt : ''}`}
@@ -193,7 +264,7 @@ function AccountRow({ acct, index = 0, onToggleDashboard, onToggleDebt, onSetRol
 }
 
 // ── Institution group card ────────────────────────────────────────────────────
-function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDebt, onSetRole, newAccountIds, isDebtGroup }) {
+function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDebt, onSetRole, onSaveDetails, newAccountIds, isDebtGroup }) {
   const groupTotal = accounts.reduce((s, a) => {
     return s + (a.is_debt ? -Number(a.balance) : Number(a.balance))
   }, 0)
@@ -236,6 +307,7 @@ function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDe
             onToggleDashboard={onToggleDashboard}
             onToggleDebt={onToggleDebt}
             onSetRole={onSetRole}
+            onSaveDetails={onSaveDetails}
             isNew={newAccountIds.has(a.id)}
           />
         ))}
@@ -441,6 +513,15 @@ export default function Accounts() {
     catch { load() }
   }
 
+  async function handleSaveDetails(id, fields) {
+    setData(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => a.id === id ? { ...a, ...fields } : a),
+    }))
+    try { await api.updateAccount(id, fields) }
+    catch { load() }
+  }
+
   const accounts   = data?.accounts || []
   const netWorth   = data?.netWorth || 0
   const lastSynced = data?.lastSynced
@@ -542,6 +623,7 @@ export default function Accounts() {
                 onToggleDashboard={handleToggleDashboard}
                 onToggleDebt={handleToggleDebt}
                 onSetRole={handleSetRole}
+                onSaveDetails={handleSaveDetails}
                 newAccountIds={newAccountIds}
                 isDebtGroup={accts.every(a => a.is_debt)}
               />
