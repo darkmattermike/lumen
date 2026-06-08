@@ -50,21 +50,22 @@ export default function Budgets() {
       {loading && !data && <div className={s.state}>Loading budgets…</div>}
       {error && <div className={s.state}>Couldn’t load budgets. {error}</div>}
 
-      <div className={s.grid}>
+      <div className={s.list}>
         {budgets.map(b => {
           const pct = Math.min(100, Math.max(0, b.pct || 0))
           const over = (b.pct || 0) > 100
           const tone = over ? 'rose' : (b.pct || 0) >= 80 ? 'amber' : 'teal'
           const left = Number(b.cap) - Number(b.spent)
           return (
-            <div key={b.id} className={s.card}>
-              <div className={s.cardTop}>
-                <span className={s.icon}>{b.icon || '📦'}</span>
-                <div className={s.bname}>{b.name}</div>
-                <button className={s.del} onClick={() => remove(b)} title="Delete budget" aria-label="Delete">×</button>
+            <div key={b.id} className={s.row}>
+              <span className={s.icon}>{b.icon || '📦'}</span>
+              <div className={s.name}>{b.name}</div>
+
+              <div className={s.barWrap}>
+                <div className={s.bar}><span className={`${s.fill} ${s[tone]}`} style={{ width: `${pct}%` }} /></div>
               </div>
 
-              <div className={s.numbers}>
+              <div className={s.nums}>
                 <span className={s.spent}>{money(b.spent)}</span>
                 <span className={s.sep}>/</span>
                 {editing === b.id ? (
@@ -76,34 +77,26 @@ export default function Budgets() {
                 )}
               </div>
 
-              <div className={s.bar}><span className={`${s.fill} ${s[tone]}`} style={{ width: `${pct}%` }} /></div>
-              <div className={s.meta}>
-                <span className={`${s.pctL} ${s[tone + 'T']}`}>{b.pct || 0}%</span>
-                <span className={s.left}>{left >= 0 ? `${money(left)} left` : `${money(-left)} over`}</span>
-              </div>
+              <div className={`${s.pctL} ${s[tone + 'T']}`}>{b.pct || 0}%</div>
+              <div className={s.left}>{left >= 0 ? `${money0(left)} left` : `${money0(-left)} over`}</div>
+              <button className={s.del} onClick={() => remove(b)} title="Delete budget" aria-label="Delete">×</button>
             </div>
           )
         })}
 
         {adding ? (
-          <div className={`${s.card} ${s.addCard}`}>
-            <input className={s.inName} placeholder="Name (matches category)" value={form.name} autoFocus
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-            <div className={s.addRow}>
-              <input className={s.inIcon} value={form.icon} maxLength={2} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} />
-              <input className={s.inCap} placeholder="Cap" inputMode="decimal" value={form.cap}
-                onChange={e => setForm(f => ({ ...f, cap: e.target.value }))}
-                onKeyDown={e => { if (e.key === 'Enter') createBudget() }} />
-            </div>
-            <div className={s.addBtns}>
-              <button className={s.cancel} onClick={() => { setAdding(false); setForm({ name: '', cap: '', icon: '📦' }) }}>Cancel</button>
-              <button className={s.save} onClick={createBudget}>Add</button>
-            </div>
+          <div className={`${s.row} ${s.addRow}`}>
+            <input className={s.inIcon} value={form.icon} maxLength={2} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} />
+            <input className={s.inName} placeholder="Name (matches category)" value={form.name} autoFocus onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+            <input className={s.inCap} placeholder="Cap" inputMode="decimal" value={form.cap}
+              onChange={e => setForm(f => ({ ...f, cap: e.target.value }))}
+              onKeyDown={e => { if (e.key === 'Enter') createBudget() }} />
+            <button className={s.cancel} onClick={() => { setAdding(false); setForm({ name: '', cap: '', icon: '📦' }) }}>Cancel</button>
+            <button className={s.save} onClick={createBudget}>Add</button>
           </div>
         ) : (
-          <button className={`${s.card} ${s.newCard}`} onClick={() => setAdding(true)}>
-            <span className={s.plus}>+</span>
-            <span>New budget</span>
+          <button className={s.newRow} onClick={() => setAdding(true)}>
+            <span className={s.plus}>+</span> New budget
           </button>
         )}
       </div>

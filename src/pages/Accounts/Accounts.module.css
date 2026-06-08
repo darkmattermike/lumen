@@ -1,7 +1,7 @@
-.page { max-width: 1180px; margin: 0 auto; padding: 40px 30px 80px; font-family: var(--lum-ui); color: var(--lum-txt); }
+.page { max-width: 1180px; margin: 0 auto; padding: 32px 14px 90px; font-family: var(--lum-ui); color: var(--lum-txt); }
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 30px; }
 .eyebrow { font-family: var(--lum-mono); font-size: 10.5px; letter-spacing: .26em; text-transform: uppercase; color: var(--lum-teal); opacity: .85; }
-.title { font-family: var(--lum-serif); font-style: italic; font-weight: 300; font-size: 38px; line-height: 1; margin-top: 10px; }
+.title { font-family: var(--lum-serif); font-style: italic; font-weight: 300; font-size: 32px; line-height: 1; margin-top: 8px; }
 
 .summary { display: flex; gap: 28px; align-items: flex-end; }
 .stat { text-align: right; }

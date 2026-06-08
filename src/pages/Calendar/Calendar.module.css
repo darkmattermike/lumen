@@ -1,14 +1,14 @@
-.page { max-width: 1180px; margin: 0 auto; padding: 40px 30px 80px; font-family: var(--lum-ui); color: var(--lum-txt); }
+.page { max-width: 1180px; margin: 0 auto; padding: 32px 14px 90px; font-family: var(--lum-ui); color: var(--lum-txt); }
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 30px; }
 .eyebrow { font-family: var(--lum-mono); font-size: 10.5px; letter-spacing: .26em; text-transform: uppercase; color: var(--lum-teal); opacity: .85; }
-.title { font-family: var(--lum-serif); font-style: italic; font-weight: 300; font-size: 38px; line-height: 1; margin-top: 10px; }
+.title { font-family: var(--lum-serif); font-style: italic; font-weight: 300; font-size: 32px; line-height: 1; margin-top: 8px; }
 .summary { display: flex; gap: 28px; }
 .stat { text-align: right; }
 .statL { font-family: var(--lum-mono); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--lum-dim); }
 .statV { font-family: var(--lum-disp); font-weight: 500; font-size: 22px; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .mint { color: var(--lum-mint); } .rose { color: var(--lum-rose); } .teal { color: var(--lum-teal); }
 
-.layout { display: grid; grid-template-columns: 1fr 360px; gap: 18px; align-items: start; }
+.layout { display: flex; flex-direction: column; gap: 16px; }
 
 /* calendar grid */
 .calCard { border: 1px solid var(--lum-line); border-radius: 18px; padding: 20px; background: var(--lum-panel); }
@@ -16,12 +16,12 @@
 .weekRow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 8px; }
 .weekRow span { font-family: var(--lum-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--lum-dim); text-align: center; }
 .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-.blank { aspect-ratio: 1 / .92; }
-.cell { aspect-ratio: 1 / .92; border: 1px solid var(--lum-line-soft); border-radius: 10px; padding: 6px; overflow: hidden; display: flex; flex-direction: column; gap: 3px; background: rgba(255,255,255,.012); }
+.blank { aspect-ratio: 1 / .58; }
+.cell { aspect-ratio: 1 / .58; border: 1px solid var(--lum-line-soft); border-radius: 10px; padding: 6px; overflow: hidden; display: flex; flex-direction: column; gap: 3px; background: rgba(255,255,255,.012); }
 .today { border-color: rgba(94,240,214,.5); box-shadow: inset 0 0 0 1px rgba(94,240,214,.25), 0 0 18px rgba(94,240,214,.12); }
 .dnum { font-family: var(--lum-mono); font-size: 11px; color: var(--lum-mut); }
 .today .dnum { color: var(--lum-teal); }
-.pills { display: flex; flex-direction: column; gap: 2px; min-height: 0; }
+.pills { display: flex; flex-direction: column; gap: 3px; min-height: 0; }
 .pill { font-size: 9px; line-height: 1.25; padding: 2px 4px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--lum-mono); letter-spacing: .01em; }
 .pOut { background: rgba(255,155,176,.12); color: #ffc2cf; }
 .pIn { background: rgba(127,227,176,.14); color: #b6f0d2; }
@@ -46,7 +46,7 @@
 .inDay { width: 46px; text-align: center; font-family: var(--lum-mono); }
 .save { margin-top: 2px; background: linear-gradient(145deg, #cdfff0, #7ce0d6); color: #08121a; border: none; border-radius: 9px; padding: 9px; font-family: var(--lum-mono); font-size: 12px; font-weight: 500; cursor: pointer; }
 
-.items { display: flex; flex-direction: column; }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); column-gap: 30px; }
 .item { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 11px; padding: 11px 4px; border-bottom: 1px solid var(--lum-line-soft); }
 .item:last-child { border-bottom: none; }
 .itemIcon { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; font-size: 15px; background: rgba(255,255,255,.04); border: 1px solid var(--lum-line); }
@@ -67,9 +67,6 @@
 
 .state { padding: 40px; text-align: center; color: var(--lum-mut); font-family: var(--lum-mono); font-size: 12px; }
 
-@media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
-}
 @media (max-width: 640px) {
   .page { padding: 28px 16px 90px; }
   .title { font-size: 30px; } .summary { gap: 16px; } .statV { font-size: 18px; }
