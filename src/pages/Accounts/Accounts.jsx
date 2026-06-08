@@ -246,13 +246,13 @@ function InstitutionGroup({ institution, accounts, onToggleDashboard, onToggleDe
 
 // ── Plaid connect button — tier-gated ────────────────────────────────────────
 function AddAccountButton({ onSuccess }) {
-  const { user } = useAuth()
+  const { isPaid } = useAuth()
   const navigate = useNavigate()
   const [linkToken, setLinkToken] = useState(null)
   const [loading, setLoading]     = useState(false)
   const [showBlock, setShowBlock] = useState(false)
 
-  const isFree = !user?.tier || user.tier === 'free'
+  const isFree = !isPaid
 
   useEffect(() => {
     if (isFree) return  // Don't fetch link token for free users

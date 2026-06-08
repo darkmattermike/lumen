@@ -170,9 +170,15 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  // ── Entitlement: owners always have full access, regardless of tier ──
+  // Single source of truth for paywall checks. Never gate on tier alone.
+  const isOwner = user?.role === 'owner'
+  const isPaid  = isOwner || (user?.tier && user.tier !== 'free')
+
   return (
     <AuthContext.Provider value={{ user, loading, login, googleLogin, register,
-      logout, logoutAll, silentRefresh: doRefresh, completeOnboarding }}>
+      logout, logoutAll, silentRefresh: doRefresh, completeOnboarding,
+      isOwner, isPaid }}>
       {children}
     </AuthContext.Provider>
   )
