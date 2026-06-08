@@ -142,6 +142,14 @@ export default function Dashboard() {
       })
   }, [txData])
 
+  /* ── hero starfield ── */
+  const stars = useMemo(() => Array.from({ length: 46 }, () => ({
+    left: (Math.random() * 100).toFixed(2) + '%',
+    top: (Math.random() * 100).toFixed(2) + '%',
+    size: (Math.random() * 1.6 + 0.5).toFixed(2) + 'px',
+    delay: (Math.random() * 4).toFixed(2) + 's',
+  })), [])
+
   /* ── cash-flow runway: reconstruct past actual + projected future ── */
   const runway = useMemo(() => {
     const today = new Date()
@@ -383,8 +391,6 @@ export default function Dashboard() {
 
   return (
     <div className={styles.dash}>
-      <div className={styles.grain} />
-      <div className={styles.vignette} />
 
       {/* ── top bar ── */}
       <div className={styles.topbar}>
@@ -411,6 +417,11 @@ export default function Dashboard() {
         {/* HERO */}
         <section className={styles.hero} ref={heroRef}>
           <canvas className={styles.heroCanvas} ref={auroraRef} />
+          <div className={styles.stars}>
+            {stars.map((st, i) => (
+              <span key={i} className={styles.star} style={{ left: st.left, top: st.top, width: st.size, height: st.size, animationDelay: st.delay }} />
+            ))}
+          </div>
           <div className={styles.bloom} ref={bloomRef} />
           <div className={styles.edge} />
           <div className={styles.textscrim} />
