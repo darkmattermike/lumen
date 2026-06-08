@@ -114,8 +114,3 @@
   .giOn { color: #5ef0d6; border-color: rgba(94,240,214,.3); background: rgba(94,240,214,.06); }
   .giIcon { display: grid; place-items: center; }
 }
-
-/* inline notification bell button */
-.bellBtn { width: 46px; height: 46px; border: none; background: transparent; display: grid; place-items: center; color: var(--lum-mut); cursor: pointer; border-radius: 14px; transition: color .2s, background .2s; }
-.bellBtn:hover { color: var(--lum-txt2); background: rgba(255,255,255,.04); }
-.bellBtn svg { stroke: currentColor; fill: none; }

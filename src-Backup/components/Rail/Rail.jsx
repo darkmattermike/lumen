@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import styles from './Rail.module.css'
+import NotificationBell from '../NotificationBell/NotificationBell'
 import LumenDot from '../LumenDot/LumenDot'
 
 /* ──────────────────────────────────────────────────────────────
@@ -121,11 +122,7 @@ export default function Rail() {
             <RailButton item={{ icon: 'dani', label: 'Dani', path: '/dani' }}
               active={pathname === '/dani'} onClick={() => navigate('/dani')} />
           )}
-          <button className={styles.bellBtn} aria-label="Notifications">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" />
-            </svg>
-          </button>
+          <div className={styles.bell}><NotificationBell /></div>
           <button className={styles.avatar} onClick={() => navigate('/settings')} aria-label="Account">
             {initial}
           </button>

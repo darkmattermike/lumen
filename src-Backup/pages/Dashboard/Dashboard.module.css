@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300;1,9..144,400&family=Hanken+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
 /* ============================================================
    Lumen — Nocturne dashboard
@@ -169,5 +170,3 @@
   .dash { min-height: 0; padding: 12px; }
   .hi { font-size: 24px; }
 }
-
-.state { display: grid; place-items: center; min-height: 60vh; color: var(--lum-mut, #7e83a3); font-family: var(--lum-mono, monospace); font-size: 13px; letter-spacing: .04em; }

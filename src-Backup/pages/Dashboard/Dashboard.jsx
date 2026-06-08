@@ -4,6 +4,7 @@ import { useApi } from '../../hooks/useApi'
 import { useCountUp } from '../../hooks/useCountUp'
 import { useAuth } from '../../context/AuthContext'
 import { api } from '../../data/api'
+import { LoadingShell, ErrorShell } from '../../components/PageShell/PageShell'
 import styles from './Dashboard.module.css'
 
 /* ──────────────────────────────────────────────────────────────
@@ -371,8 +372,8 @@ export default function Dashboard() {
   const heroDollars = useCountUp(dollars, { duration: 1200, easing: 'cubic' }).display
   const meterFill = hero.dailyAllowance > 0 ? Math.min(100, Math.round((hero.spentToday / hero.dailyAllowance) * 100)) : 0
 
-  if (loading && !data) return <div className={styles.dash}><div className={styles.state}>Loading your dashboard…</div></div>
-  if (error) return <div className={styles.dash}><div className={styles.state}>Couldn’t load the dashboard. {error}</div></div>
+  if (loading && !data) return <LoadingShell />
+  if (error) return <ErrorShell message={error} />
 
   const firstName = (user?.name || '').trim().split(' ')[0]
 

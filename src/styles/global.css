@@ -1,0 +1,31 @@
+/* ============================================================
+   Lumen — global base (Nocturne)
+   Clean slate: no pixel theme. Per-surface styling lives in
+   each component's CSS module; this just sets the foundation.
+   ============================================================ */
+:root {
+  --bg-0: #04050a;
+  --max-w: 1400px;
+  --tab-bar-h: 60px;
+
+  --font-sans: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+  --font-disp: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+
+body {
+  background: var(--bg-0);
+  color: #eef0fb;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+
+::selection { background: rgba(94, 240, 214, 0.25); }
