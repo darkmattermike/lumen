@@ -1,44 +1,38 @@
-/* App shell — left rail + scrollable content (Nocturne layout) */
+/* App shell — full-width nav on top, centered content below */
 .shell {
   display: flex;
-  flex-direction: row;       /* rail on the left, content on the right */
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
   height: 100vh;
-  overflow: hidden;          /* the rail stays fixed; .inner scrolls */
   background: var(--bg-0);
 }
 
-/* Inner wrapper: scrollable content column, capped at design width and centered */
+/* Inner wrapper: centered content, capped at design width */
 .inner {
-  flex: 1;
-  min-width: 0;
-  max-width: var(--max-w);
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow-y: auto;
+  width: 100%;
+  max-width: var(--max-w);
+  margin: 0 auto;
   position: relative;
 }
 
-/* Main content area */
+/* Main scrollable content area */
 .main {
   flex: 1;
   min-width: 0;
   background: var(--bg-0);
 }
 
-/* ── Mobile: stack vertically, rail becomes a fixed bottom bar ── */
 @media (max-width: 768px) {
   .shell {
-    flex-direction: column;
     height: auto;
     min-height: 100dvh;
-    overflow: visible;
+    overflow-y: visible;
   }
   .inner {
-    height: auto;
-    overflow: visible;
-    max-width: 100%;
+    flex-direction: column;
   }
   .main {
     width: 100%;
@@ -46,8 +40,11 @@
     /* Push content above the fixed bottom nav + iPhone home indicator */
     padding-bottom: calc(var(--tab-bar-h, 60px) + env(safe-area-inset-bottom) + 8px);
   }
+}
 
-  /* Ambient glow behind everything */
+
+/* ── Mobile ambient glow (fixed behind everything) ── */
+@media (max-width: 768px) {
   .shell::before {
     content: '';
     position: fixed;
