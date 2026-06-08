@@ -103,7 +103,7 @@ export default function Rail() {
       {/* ── Desktop left rail ── */}
       <nav className={styles.rail}>
         <button className={styles.logo} onClick={() => navigate('/dashboard')} aria-label="Lumen home">
-          <LumenDot size={26} rings={false} mood="idle" spirit={false} />
+          <LumenDot size={18} />
         </button>
 
         <div className={styles.nav}>
@@ -143,7 +143,7 @@ export default function Rail() {
 
         <div className={styles.orbWrap}>
           <button className={styles.orbBtn} onClick={() => navigate('/dashboard')} aria-label="Home">
-            <LumenDot size={28} rings={false} mood="idle" spirit={false} />
+            <LumenDot size={24} />
           </button>
           <span className={styles.orbLabel}>Home</span>
         </div>

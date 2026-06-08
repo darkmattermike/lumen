@@ -12,6 +12,16 @@
   --font-disp: "Bricolage Grotesque", system-ui, sans-serif;
   --font-serif: "Fraunces", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Shared Nocturne palette — every page draws from these */
+  --lum-txt: #eef0fb; --lum-txt2: #b7bcd6; --lum-mut: #7e83a3; --lum-dim: #565a78;
+  --lum-line: rgba(170,185,255,.09); --lum-line-soft: rgba(170,185,255,.055);
+  --lum-teal: #5ef0d6; --lum-violet: #a78bff; --lum-blue: #5aa6ff; --lum-mint: #7fe3b0; --lum-rose: #ff9bb0; --lum-amber: #ffce85;
+  --lum-panel: linear-gradient(180deg, rgba(20,22,38,.55), rgba(10,11,22,.5));
+  --lum-disp: "Bricolage Grotesque", system-ui, sans-serif;
+  --lum-serif: "Fraunces", Georgia, serif;
+  --lum-ui: "Hanken Grotesk", system-ui, sans-serif;
+  --lum-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

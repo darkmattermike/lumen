@@ -1,7 +1,13 @@
-import { mockDashboard, mockTransactions, mockForecast } from './mock'
+import {
+  mockDashboard, mockTransactions, mockForecast,
+  mockAccounts, mockBudgets, mockCalendar,
+  mockUpdateTransaction, mockUpdateAccount,
+  mockCreateBudget, mockUpdateBudget, mockDeleteBudget,
+  mockCreateRecurring, mockUpdateRecurring, mockDeleteRecurring,
+} from './mock'
 
-/* If VITE_API_URL is set we hit the real Lumen backend; otherwise we
-   serve mock data so the dashboard runs standalone (npm run dev). */
+/* With VITE_API_URL set we hit the real Lumen backend; otherwise we serve
+   (and mutate) an in-memory mock so every page runs standalone. */
 const BASE = import.meta.env.VITE_API_URL || ''
 const USE_MOCK = !BASE
 
@@ -19,6 +25,7 @@ async function request(path, options = {}) {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
+    ...(options.body ? { body: JSON.stringify(options.body) } : {}),
   })
   let data
   try { data = await res.json() } catch { data = {} }
@@ -30,8 +37,30 @@ async function request(path, options = {}) {
   return data
 }
 
+const mock = (fn) => Promise.resolve(fn())
+
 export const api = {
-  dashboard:    ()       => USE_MOCK ? Promise.resolve(mockDashboard())     : request('/api/dashboard'),
-  transactions: (q = '') => USE_MOCK ? Promise.resolve(mockTransactions())  : request(`/api/transactions${q}`),
-  forecast:     (days)   => USE_MOCK ? Promise.resolve(mockForecast(days))  : request(`/api/forecast?days=${days || 90}`),
+  // ── dashboard / forecast ──
+  dashboard: ()     => USE_MOCK ? mock(mockDashboard) : request('/api/dashboard'),
+  forecast:  (days) => USE_MOCK ? mock(() => mockForecast(days)) : request(`/api/forecast?days=${days || 90}`),
+
+  // ── transactions ──
+  transactions:      (q = '')   => USE_MOCK ? mock(mockTransactions) : request(`/api/transactions${q}`),
+  updateTransaction: (id, body) => USE_MOCK ? mock(() => mockUpdateTransaction(id, body)) : request(`/api/transactions/${id}`, { method: 'PATCH', body }),
+
+  // ── accounts ──
+  accounts:      ()         => USE_MOCK ? mock(mockAccounts) : request('/api/accounts'),
+  updateAccount: (id, body) => USE_MOCK ? mock(() => mockUpdateAccount(id, body)) : request(`/api/accounts/${id}`, { method: 'PATCH', body }),
+
+  // ── budgets ──
+  budgets:      ()         => USE_MOCK ? mock(mockBudgets) : request('/api/budgets'),
+  createBudget: (body)     => USE_MOCK ? mock(() => mockCreateBudget(body)) : request('/api/budgets', { method: 'POST', body }),
+  updateBudget: (id, body) => USE_MOCK ? mock(() => mockUpdateBudget(id, body)) : request(`/api/budgets/${id}`, { method: 'PATCH', body }),
+  deleteBudget: (id)       => USE_MOCK ? mock(() => mockDeleteBudget(id)) : request(`/api/budgets/${id}`, { method: 'DELETE' }),
+
+  // ── calendar / recurring ──
+  calendar:        ()         => USE_MOCK ? mock(mockCalendar) : request('/api/calendar'),
+  createRecurring: (body)     => USE_MOCK ? mock(() => mockCreateRecurring(body)) : request('/api/calendar', { method: 'POST', body }),
+  updateRecurring: (id, body) => USE_MOCK ? mock(() => mockUpdateRecurring(id, body)) : request(`/api/calendar/${id}`, { method: 'PATCH', body }),
+  deleteRecurring: (id)       => USE_MOCK ? mock(() => mockDeleteRecurring(id)) : request(`/api/calendar/${id}`, { method: 'DELETE' }),
 }
