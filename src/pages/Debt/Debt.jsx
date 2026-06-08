@@ -181,6 +181,7 @@ function ExtraPaymentCalc({ debts }) {
 export default function Debt() {
   const { data, loading, error, refresh } = useApi(api.debt)
   const { data: allocation }              = useApi(api.paycheckAllocation)
+  const { data: forecast }                = useApi(api.accountForecast)
   const [extra, setExtra]                 = useState(0)
   const [strategies, setStrategies]       = useState(null)
   const [comparing, setComparing]         = useState(false)
@@ -213,7 +214,14 @@ export default function Debt() {
   const paydownTarget = debts
     .filter(d => d.limit > 0)
     .sort((a, b) => (b.balance / b.limit) - (a.balance / a.limit))[0] || null
-  const paycheckSurplus = Math.max(0, Number(allocation?.surplus || 0))
+
+  // Surplus that would normally flow to savings, from the cash-flow forecast.
+  // This is the amount we can redirect to debt payoff. Fall back to paycheck
+  // allocation surplus if the forecast isn't configured yet.
+  const forecastSafeToSave = Math.max(0, Number(forecast?.safeToSave || 0))
+  const allocationSurplus  = Math.max(0, Number(allocation?.surplus || 0))
+  const redirectable       = forecastSafeToSave > 0 ? forecastSafeToSave : allocationSurplus
+  const surplusSource      = forecastSafeToSave > 0 ? 'forecast' : 'allocation'
 
   return (
     <ScreenWrap>
@@ -276,7 +284,8 @@ export default function Debt() {
                 {paydownTarget && (
                   <CardPaydownPanel
                     target={paydownTarget}
-                    surplus={paycheckSurplus}
+                    surplus={redirectable}
+                    surplusSource={surplusSource}
                     onSaved={refresh}
                   />
                 )}

@@ -8,11 +8,12 @@ function fmtDate(d) { return d ? d.toLocaleDateString('en-US', { month: 'short',
 
 /**
  * Card Paydown panel.
- * @param target   debt object (highest-util revolving card), from the debt summary
- * @param surplus  per-paycheck safe-to-send, from /api/paycheck/allocation
- * @param onSaved  callback to refresh debt data after saving close day
+ * @param target         debt object (highest-util revolving card), from the debt summary
+ * @param surplus        monthly amount that would normally go to savings (forecast safeToSave)
+ * @param surplusSource  'forecast' | 'allocation' — where the surplus number came from
+ * @param onSaved        callback to refresh debt data after saving close day
  */
-export default function CardPaydownPanel({ target, surplus = 0, onSaved }) {
+export default function CardPaydownPanel({ target, surplus = 0, surplusSource = 'forecast', onSaved }) {
   const [closeDay, setCloseDay]   = useState(target?.statementCloseDay || '')
   const [editing, setEditing]     = useState(!target?.statementCloseDay)
   const [saving, setSaving]       = useState(false)
@@ -28,11 +29,11 @@ export default function CardPaydownPanel({ target, surplus = 0, onSaved }) {
     return buildPaydownSummary({
       balance:           target.balance,
       creditLimit:       target.limit,
-      perPaycheck:       surplus,
+      perPaycheck:       surplus,         // monthly surplus
       aprPct:            target.rate || 25,
       statementCloseDay: target.statementCloseDay || null,
-      payPeriodsPerYear: 24,   // twice-monthly
-      paydays:           [1, 15],
+      payPeriodsPerYear: 12,              // surplus is a MONTHLY figure
+      paydays:           [1],             // project month-by-month
     })
   }, [target, surplus])
 
@@ -94,22 +95,41 @@ export default function CardPaydownPanel({ target, surplus = 0, onSaved }) {
         </div>
       </div>
 
-      {/* this cycle's action */}
+      {/* the plan */}
       <div className={styles.paydownAction}>
-        <div className={styles.paydownActionTop}>
-          <span className={styles.paydownActionLabel}>This cycle — send</span>
-          <span className={styles.paydownActionAmt}>${fmt(surplus)}</span>
-        </div>
-        {summary.timing ? (
-          <div className={`${styles.paydownDeadline} ${summary.timing.willReportThisCycle ? '' : styles.missed}`}>
-            {summary.timing.willReportThisCycle ? (
-              <>Pay by <strong>{fmtDate(summary.timing.reportSafeDeadline)}</strong> ({summary.timing.daysUntilDeadline}d) so it reports this cycle</>
-            ) : (
-              <>Statement closed — a payment now reports <strong>next cycle</strong></>
+        {surplus > 0 ? (
+          <>
+            <div className={styles.paydownActionTop}>
+              <span className={styles.paydownActionLabel}>Redirect to this card / month</span>
+              <span className={styles.paydownActionAmt}>${fmt(surplus)}</span>
+            </div>
+            <div className={styles.paydownDeadline}>
+              {summary.to30.reachable ? (
+                <>Putting your <strong>${fmt(surplus)}/mo</strong> savings surplus here gets you under <strong>30%</strong> by <strong>{fmtDate(summary.date30)}</strong>{summary.to10.reachable && <> and under 10% by <strong>{fmtDate(summary.date10)}</strong></>}.</>
+              ) : (
+                <>${fmt(surplus)}/mo barely covers interest at {target.rate || 25}% APR — you'll need more than the savings surplus to make real progress.</>
+              )}
+            </div>
+            {summary.timing && (
+              <div className={`${styles.paydownDeadline} ${summary.timing.willReportThisCycle ? '' : styles.missed}`} style={{ marginTop: 6 }}>
+                {summary.timing.willReportThisCycle ? (
+                  <>This month, pay by <strong>{fmtDate(summary.timing.reportSafeDeadline)}</strong> ({summary.timing.daysUntilDeadline}d) so the lower balance reports to the bureaus.</>
+                ) : (
+                  <>Statement already closed this month — a payment now reports <strong>next cycle</strong>.</>
+                )}
+              </div>
             )}
-          </div>
+          </>
         ) : (
-          <div className={styles.paydownDeadline}>Set your statement close day below for payment timing.</div>
+          <>
+            <div className={styles.paydownActionTop}>
+              <span className={styles.paydownActionLabel}>Savings surplus available</span>
+              <span className={styles.paydownActionAmt}>$0</span>
+            </div>
+            <div className={styles.paydownDeadline}>
+              Your cash-flow forecast doesn't show any surplus heading to savings right now, so there's nothing extra to redirect. Set up your income and bills in the Calendar/forecast so Lumen can find your monthly surplus — or pay whatever you can spare manually.
+            </div>
+          </>
         )}
       </div>
 
@@ -143,7 +163,11 @@ export default function CardPaydownPanel({ target, surplus = 0, onSaved }) {
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
         </svg>
-        <span>Per-cycle amount comes from your paycheck <strong>surplus</strong> — emergency fund untouched</span>
+        <span>
+          {surplusSource === 'forecast'
+            ? <>This is money your forecast would move to <strong>savings</strong> — your emergency fund and bills stay covered first.</>
+            : <>From your paycheck <strong>surplus</strong> — emergency fund untouched.</>}
+        </span>
       </div>
 
       {summary.to30.reachable && summary.to30.totalInterestPaid > 0 && (
