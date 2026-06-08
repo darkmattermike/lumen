@@ -38,6 +38,22 @@ export default function Calendar() {
     return out
   }, [y, m])
 
+  const agenda = useMemo(() => (
+    [...recurring].sort((a, b) => a.day_of_month - b.day_of_month).map(r => {
+      const day = r.day_of_month
+      const date = new Date(y, m, Math.min(day, 28))
+      const wd = WD[date.getDay()]
+      const paid = day < todayDate
+      const isToday = day === todayDate
+      const diff = day - todayDate
+      const when = paid ? `${wd} ${day} · Paid`
+        : isToday ? 'Today'
+        : diff === 1 ? `Tomorrow · ${wd}`
+        : `In ${diff} days · ${wd}`
+      return { ...r, when, paid, income: r.type === 'income' }
+    })
+  ), [recurring, y, m, todayDate])
+
   async function createItem() {
     const amount = Number(form.amount)
     const day = Number(form.day_of_month)
@@ -86,8 +102,9 @@ export default function Calendar() {
             {cells.map((d, i) => {
               if (d === null) return <div key={`b${i}`} className={s.blank} />
               const items = byDay[d] || []
+              const past = d < todayDate
               return (
-                <div key={d} className={`${s.cell} ${d === todayDate ? s.today : ''}`}>
+                <div key={d} className={`${s.cell} ${d === todayDate ? s.today : ''} ${past ? s.pastCell : ''}`}>
                   <span className={s.dnum}>{d}</span>
                   <div className={s.pills}>
                     {items.slice(0, 3).map((it, k) => (
@@ -103,7 +120,7 @@ export default function Calendar() {
           </div>
         </div>
 
-        {/* recurring list + add */}
+        {/* recurring — timeline agenda */}
         <div className={s.side}>
           <div className={s.sideHead}>
             <h2>Recurring</h2>
@@ -116,8 +133,6 @@ export default function Calendar() {
               <div className={s.formRow}>
                 <input className={s.inIcon} value={form.icon} maxLength={2} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} />
                 <input className={s.inAmt} placeholder="Amount" inputMode="decimal" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} />
-              </div>
-              <div className={s.formRow}>
                 <select className={s.sel} value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
                   <option value="expense">Bill</option>
                   <option value="income">Income</option>
@@ -131,32 +146,32 @@ export default function Calendar() {
             </div>
           )}
 
-          <div className={s.items}>
-            {recurring.sort((a, b) => a.day_of_month - b.day_of_month).map(r => (
-              <div key={r.id} className={s.item}>
-                <span className={s.itemIcon}>{r.icon || (r.type === 'income' ? '💰' : '📌')}</span>
-                <div className={s.itemMeta}>
-                  <div className={s.itemName}>{r.name}</div>
+          <div className={s.tl}>
+            {agenda.length ? agenda.map(r => (
+              <div key={r.id} className={`${s.ev} ${r.income ? s.pay : ''} ${r.paid ? s.paid : ''}`}>
+                <span className={s.node} />
+                <div className={s.when}>{r.when}</div>
+                <div className={s.line}>
+                  <span className={s.nm}>{r.icon ? `${r.icon} ` : ''}{r.name}</span>
                   {editId === r.id ? (
-                    <div className={s.editRow}>
-                      <span className={s.dayL}>Day</span>
-                      <input className={s.miniDay} defaultValue={r.day_of_month} onChange={e => setEdit(p => ({ ...p, day_of_month: e.target.value }))} />
-                      <input className={s.miniAmt} defaultValue={Number(r.amount).toFixed(2)} onChange={e => setEdit(p => ({ ...p, amount: e.target.value }))} />
+                    <span className={s.editInline}>
+                      <input className={s.miniDay} defaultValue={r.day_of_month} title="Day" onChange={e => setEdit(p => ({ ...p, day_of_month: e.target.value }))} />
+                      <input className={s.miniAmt} defaultValue={Number(r.amount).toFixed(2)} title="Amount" onChange={e => setEdit(p => ({ ...p, amount: e.target.value }))} />
                       <button className={s.ok} onClick={() => saveEdit(r)}>✓</button>
-                    </div>
+                    </span>
                   ) : (
-                    <div className={s.itemDay}>Day {r.day_of_month} · monthly</div>
+                    <span className={s.evAmt}>{r.income ? money(r.amount, { sign: true }) : money(-Math.abs(r.amount))}</span>
                   )}
                 </div>
-                <div className={s.itemRight}>
-                  <span className={`${s.itemAmt} ${r.type === 'income' ? s.incomeAmt : ''}`}>{r.type === 'income' ? money(r.amount, { sign: true }) : money(-Math.abs(r.amount))}</span>
-                  <div className={s.itemActions}>
-                    <button onClick={() => { setEditId(editId === r.id ? null : r.id); setEdit({ amount: r.amount, day_of_month: r.day_of_month }) }} title="Edit">✎</button>
-                    <button onClick={() => remove(r)} title="Delete" className={s.delBtn}>×</button>
-                  </div>
+                <div className={s.catRow}>
+                  <span className={s.cat}>{r.category || 'Recurring'}</span>
+                  <span className={s.acts}>
+                    <button title="Edit" onClick={() => { setEditId(editId === r.id ? null : r.id); setEdit({ amount: r.amount, day_of_month: r.day_of_month }) }}>✎</button>
+                    <button title="Delete" className={s.delBtn} onClick={() => remove(r)}>×</button>
+                  </span>
                 </div>
               </div>
-            ))}
+            )) : <div className={s.empty}>No recurring items yet.</div>}
           </div>
         </div>
       </div>
