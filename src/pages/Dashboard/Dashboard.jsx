@@ -16,6 +16,7 @@ const PAST_DAYS   = 8       // actual days shown left of "now"
 const FUTURE_DAYS = 22      // projected days shown right of "now"
 const SPAN        = PAST_DAYS + FUTURE_DAYS          // 30-day window
 const PADX = 4, TOP = 10, BOT = 82                   // chart % insets
+const MARK_MIN = 100        // only label events at/above this $ amount (declutter)
 
 /* ---- formatting helpers ---- */
 const n0   = (n) => Math.round(Number(n) || 0).toLocaleString('en-US')
@@ -194,29 +195,33 @@ export default function Dashboard() {
     const X = (i) => PADX + (i / SPAN) * (100 - 2 * PADX)
     const Y = (v) => TOP + (1 - (v - min) / rng) * (BOT - TOP)
 
-    // markers — past actuals + future events (income AND bills)
+    // markers — past actuals + future events (income AND bills), only those >= MARK_MIN
     const markers = []
+    // anchor labels by horizontal position so they never bleed off the chart edges
+    const labAlign = (x) => (x >= 72 ? 'r' : x <= 16 ? 'l' : 'c')
 
-    // PAST: largest movements per day (income or spend), top 2
+    // PAST: largest movement per day
     const pastSorted = all
       .filter(t => { const k = String(t.date).slice(0, 10); return k <= dayStr(today) && k > dayStr(addDays(today, -PAST_DAYS)) })
       .sort((a, b) => Math.abs(Number(b.amount)) - Math.abs(Number(a.amount)))
     const usedPast = new Set()
     for (const t of pastSorted) {
+      const amt = Number(t.amount) || 0
+      if (Math.abs(amt) < MARK_MIN) continue
       const k = String(t.date).slice(0, 10)
       if (usedPast.has(k)) continue
       const idx = series.findIndex(s => s.key === k)
       if (idx < 0) continue
       usedPast.add(k)
-      const amt = Number(t.amount) || 0
       const income = t.tx_type === 'income' || amt > 0
+      const x = X(idx)
       markers.push({
-        x: X(idx), y: Y(series[idx].value),
+        x, y: Y(series[idx].value),
         name: t.cleaned_name || t.name || (income ? 'Deposit' : 'Spend'),
         amt: `${income ? '+' : '−'}$${n2(Math.abs(amt))}`,
-        cls: income ? 'pos' : '', below: !income,
+        cls: income ? 'pos' : '', below: !income, align: labAlign(x),
       })
-      if (markers.length >= 2) break
+      if (markers.length >= 4) break
     }
 
     // named lookup for future days from every source that carries income/bill names
@@ -233,7 +238,7 @@ export default function Dashboard() {
     if (data?.nextPaycheck) addNamed(data.nextPaycheck.daysUntil, 'Paycheck', data.nextPaycheck.amount, true)
     for (const w of (data?.windows || [])) if (w?.nextPay) addNamed(w.nextPay.daysUntil, 'Paycheck', w.nextPay.amount, true)
 
-    // FUTURE: mark every income / bill day from the forecast so each move in the line is explained.
+    // FUTURE: mark income / bill days from the forecast so each move in the line is explained.
     // Real forecast points carry hasIncome/hasBill flags; mock points carry an events[] array.
     const incomeMarks = [], billMarks = []
     for (const p of (forecast?.points || [])) {
@@ -255,19 +260,20 @@ export default function Dashboard() {
         billMarks.push({ idx, name: evBill?.name || (named && !named.income ? named.name : 'Bills'), amount, income: false })
       }
     }
-    // keep every income marker (these explain the upward moves) + the largest bills, capped for clarity
-    const futureChosen = [
-      ...incomeMarks,
-      ...billMarks.sort((a, b) => (b.amount || 0) - (a.amount || 0)).slice(0, Math.max(0, 5 - incomeMarks.length)),
-    ].sort((a, b) => a.idx - b.idx)
+    // only label events at/above the threshold (keep unknown-amount events); thinning declutters
+    const futureChosen = [...incomeMarks, ...billMarks]
+      .filter(m => m.amount == null || Math.abs(m.amount) >= MARK_MIN)
+      .sort((a, b) => a.idx - b.idx)
+      .slice(0, 12)
     const usedFuture = new Set()
     for (const fm of futureChosen) {
       const key = `${fm.idx}:${fm.income}`
       if (usedFuture.has(key)) continue
       usedFuture.add(key)
       const v = series[fm.idx]?.value ?? startBalance
+      const x = X(fm.idx)
       const amt = fm.amount != null ? `${fm.income ? '+' : '−'}$${n0(fm.amount)}` : (fm.income ? 'Income' : 'Bill')
-      markers.push({ x: X(fm.idx), y: Y(v), name: fm.name, amt, cls: fm.income ? 'pos' : 'bill', below: !fm.income })
+      markers.push({ x, y: Y(v), name: fm.name, amt, cls: fm.income ? 'pos' : 'bill', below: !fm.income, align: labAlign(x) })
     }
 
     // axis ticks
@@ -533,7 +539,7 @@ export default function Dashboard() {
                     style={{ left: `${m.x}%`, top: `${m.y}%`, animationDelay: `${.7 + i * .1}s` }}
                   />
                   <div
-                    className={`${styles.lab} ${m.cls === 'pos' ? styles.labPos : ''}`}
+                    className={`${styles.lab} ${m.cls === 'pos' ? styles.labPos : ''} ${m.align === 'r' ? styles.labR : ''} ${m.align === 'l' ? styles.labL : ''}`}
                     style={{ left: `${m.x}%`, top: `${m.below ? m.y + 5 : m.y - 15}%`, animationDelay: `${.8 + i * .1}s` }}
                   >
                     <div className={styles.labLine}>{m.name}</div>

@@ -76,6 +76,7 @@
 .fill { height: 100%; width: 0; border-radius: 4px; background: linear-gradient(90deg, var(--lum-teal), var(--lum-blue) 70%, var(--lum-violet)); box-shadow: 0 0 14px rgba(94,240,214,.6); animation: lum-grow 1.4s .6s cubic-bezier(.2,.8,.2,1) forwards; }
 
 @keyframes lum-grow { to { width: var(--fill, 0%); } }
+@keyframes lum-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lum-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes lum-pop { from { opacity: 0; transform: translate(-50%,-50%) scale(.4); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
 @keyframes lum-pulseNow { 0%,100% { box-shadow: 0 0 0 0 rgba(94,240,214,.5); } 50% { box-shadow: 0 0 0 8px rgba(94,240,214,0); } }
@@ -98,10 +99,12 @@
 .bill { border-color: var(--lum-blue); box-shadow: 0 0 9px rgba(90,166,255,.7); }
 .pos { border-color: var(--lum-mint); box-shadow: 0 0 9px rgba(127,227,176,.7); }
 .now { width: 13px; height: 13px; background: var(--lum-teal); border-color: #fff; animation: lum-pulseNow 2.6s ease-in-out infinite, lum-pop .5s ease forwards; }
-.lab { position: absolute; transform: translate(-50%,0); white-space: nowrap; opacity: 0; animation: lum-rise .5s ease forwards; }
+.lab { position: absolute; transform: translateX(-50%); white-space: nowrap; opacity: 0; animation: lum-fade .5s ease forwards; }
 .labLine { font-size: 10.5px; color: var(--lum-txt2); font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,.6); }
 .labVal { font-family: var(--lum-mono); font-size: 10px; color: var(--lum-mut); margin-top: 1px; text-shadow: 0 1px 5px rgba(0,0,0,.6); }
 .labPos .labVal { color: var(--lum-mint); }
+.labL { transform: translateX(0); text-align: left; }
+.labR { transform: translateX(-100%); text-align: right; }
 .axis { position: absolute; left: 0; right: 0; bottom: 0; height: 14%; }
 .axtick { position: absolute; bottom: 0; transform: translateX(-50%); font-family: var(--lum-mono); font-size: 9px; color: var(--lum-dim); letter-spacing: .05em; }
 .axtickNow { color: var(--lum-teal); }
