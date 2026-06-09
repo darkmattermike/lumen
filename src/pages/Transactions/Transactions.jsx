@@ -40,8 +40,19 @@ export default function Transactions() {
     return Array.from(map.entries()).sort((a, b) => new Date(b[0]) - new Date(a[0]))
   }, [filtered])
 
-  const totals = data?.totals || { income: 0, spending: 0, count: 0 }
-  const net = (Number(totals.income) || 0) - (Number(totals.spending) || 0)
+  // Summary computed from the current month's transactions so it always matches
+  // the inflows/outflows shown below (the backend's totals field can under-count income).
+  const totals = useMemo(() => {
+    const month = data?.currentMonth || []
+    let income = 0, spending = 0
+    for (const t of month) {
+      const amt = Number(t.amount) || 0
+      if (amt > 0 || t.tx_type === 'income') income += Math.abs(amt)
+      else spending += Math.abs(amt)
+    }
+    return { income, spending, count: month.length }
+  }, [data])
+  const net = totals.income - totals.spending
 
   async function saveCategory(t, value) {
     setEditing(null)

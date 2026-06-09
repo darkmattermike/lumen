@@ -194,33 +194,80 @@ export default function Dashboard() {
     const X = (i) => PADX + (i / SPAN) * (100 - 2 * PADX)
     const Y = (v) => TOP + (1 - (v - min) / rng) * (BOT - TOP)
 
-    // markers — recent (past) + upcoming (future)
+    // markers — past actuals + future events (income AND bills)
     const markers = []
-    const past = all
-      .filter(t => { const amt = Number(t.amount) || 0; return (t.tx_type !== 'income') && amt < 0 })
+
+    // PAST: largest movements per day (income or spend), top 2
+    const pastSorted = all
       .filter(t => { const k = String(t.date).slice(0, 10); return k <= dayStr(today) && k > dayStr(addDays(today, -PAST_DAYS)) })
       .sort((a, b) => Math.abs(Number(b.amount)) - Math.abs(Number(a.amount)))
-    const usedDays = new Set()
-    for (const t of past) {
+    const usedPast = new Set()
+    for (const t of pastSorted) {
       const k = String(t.date).slice(0, 10)
-      if (usedDays.has(k)) continue
+      if (usedPast.has(k)) continue
       const idx = series.findIndex(s => s.key === k)
       if (idx < 0) continue
-      usedDays.add(k)
-      const nm = t.cleaned_name || t.name || 'Spend'
-      markers.push({ x: X(idx), y: Y(series[idx].value), name: nm, amt: `−$${n2(Math.abs(Number(t.amount)))}`, cls: '', below: true })
+      usedPast.add(k)
+      const amt = Number(t.amount) || 0
+      const income = t.tx_type === 'income' || amt > 0
+      markers.push({
+        x: X(idx), y: Y(series[idx].value),
+        name: t.cleaned_name || t.name || (income ? 'Deposit' : 'Spend'),
+        amt: `${income ? '+' : '−'}$${n2(Math.abs(amt))}`,
+        cls: income ? 'pos' : '', below: !income,
+      })
       if (markers.length >= 2) break
     }
-    for (const b of (data?.upcomingBills || []).slice(0, 4)) {
-      const di = b.daysUntil ?? -1
-      if (di < 1 || di > FUTURE_DAYS) continue
+
+    // named lookup for future days from every source that carries income/bill names
+    const namedByIdx = {}
+    const addNamed = (daysUntil, name, amount, income) => {
+      const di = Number(daysUntil)
+      if (!Number.isFinite(di) || di < 1 || di > FUTURE_DAYS) return
       const idx = PAST_DAYS + di
-      const income = b.type === 'income'
-      markers.push({
-        x: X(idx), y: Y(series[idx]?.value ?? startBalance),
-        name: b.name, amt: `${income ? '+' : '−'}$${n0(b.amount)}`,
-        cls: income ? 'pos' : 'bill', below: !income,
-      })
+      const cand = { name, amount: Math.abs(Number(amount) || 0), income }
+      const prev = namedByIdx[idx]
+      if (!prev || (income && !prev.income) || (income === prev.income && cand.amount > prev.amount)) namedByIdx[idx] = cand
+    }
+    for (const b of (data?.upcomingBills || [])) addNamed(b.daysUntil, b.name, b.amount, b.type === 'income')
+    if (data?.nextPaycheck) addNamed(data.nextPaycheck.daysUntil, 'Paycheck', data.nextPaycheck.amount, true)
+    for (const w of (data?.windows || [])) if (w?.nextPay) addNamed(w.nextPay.daysUntil, 'Paycheck', w.nextPay.amount, true)
+
+    // FUTURE: mark every income / bill day from the forecast so each move in the line is explained.
+    // Real forecast points carry hasIncome/hasBill flags; mock points carry an events[] array.
+    const incomeMarks = [], billMarks = []
+    for (const p of (forecast?.points || [])) {
+      const k = String(p.date).slice(0, 10)
+      const idx = series.findIndex(s => s.key === k)
+      if (idx <= PAST_DAYS || idx > SPAN) continue
+      const evIncome = Array.isArray(p.events) ? p.events.find(e => e.type === 'income') : null
+      const evBill = Array.isArray(p.events) ? p.events.find(e => e.type !== 'income') : null
+      const named = namedByIdx[idx]
+      const jump = (series[idx]?.value ?? 0) - (series[idx - 1]?.value ?? series[idx]?.value ?? 0)
+      if (evIncome || p.hasIncome) {
+        let amount = evIncome?.amount ?? (named?.income ? named.amount : null)
+        if (amount == null && jump > 0) amount = jump            // infer from the line's rise
+        incomeMarks.push({ idx, name: evIncome?.name || (named?.income ? named.name : 'Income'), amount, income: true })
+      }
+      if (evBill || p.hasBill) {
+        let amount = evBill?.amount ?? (named && !named.income ? named.amount : null)
+        if (amount == null && jump < 0) amount = -jump
+        billMarks.push({ idx, name: evBill?.name || (named && !named.income ? named.name : 'Bills'), amount, income: false })
+      }
+    }
+    // keep every income marker (these explain the upward moves) + the largest bills, capped for clarity
+    const futureChosen = [
+      ...incomeMarks,
+      ...billMarks.sort((a, b) => (b.amount || 0) - (a.amount || 0)).slice(0, Math.max(0, 5 - incomeMarks.length)),
+    ].sort((a, b) => a.idx - b.idx)
+    const usedFuture = new Set()
+    for (const fm of futureChosen) {
+      const key = `${fm.idx}:${fm.income}`
+      if (usedFuture.has(key)) continue
+      usedFuture.add(key)
+      const v = series[fm.idx]?.value ?? startBalance
+      const amt = fm.amount != null ? `${fm.income ? '+' : '−'}$${n0(fm.amount)}` : (fm.income ? 'Income' : 'Bill')
+      markers.push({ x: X(fm.idx), y: Y(v), name: fm.name, amt, cls: fm.income ? 'pos' : 'bill', below: !fm.income })
     }
 
     // axis ticks
