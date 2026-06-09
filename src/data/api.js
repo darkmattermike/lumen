@@ -4,6 +4,7 @@ import {
   mockUpdateTransaction, mockUpdateAccount,
   mockCreateBudget, mockUpdateBudget, mockDeleteBudget,
   mockCreateRecurring, mockUpdateRecurring, mockDeleteRecurring,
+  mockAccountForecast,
 } from './mock'
 
 /* With VITE_API_URL set we hit the real Lumen backend; otherwise we serve
@@ -60,6 +61,7 @@ export const api = {
 
   // ── calendar / recurring ──
   calendar:        ()         => USE_MOCK ? mock(mockCalendar) : request('/api/calendar'),
+  accountForecast: ()         => USE_MOCK ? mock(mockAccountForecast) : request('/api/calendar/forecast'),
   createRecurring: (body)     => USE_MOCK ? mock(() => mockCreateRecurring(body)) : request('/api/calendar', { method: 'POST', body }),
   updateRecurring: (id, body) => USE_MOCK ? mock(() => mockUpdateRecurring(id, body)) : request(`/api/calendar/${id}`, { method: 'PATCH', body }),
   deleteRecurring: (id)       => USE_MOCK ? mock(() => mockDeleteRecurring(id)) : request(`/api/calendar/${id}`, { method: 'DELETE' }),

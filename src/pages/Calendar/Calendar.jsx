@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
-import { money } from '../../lib/format'
+import { money, money0, fmtDate } from '../../lib/format'
 import s from './Calendar.module.css'
 
 const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -10,6 +10,7 @@ const blankForm = { name: '', amount: '', type: 'expense', day_of_month: '1', ic
 
 export default function Calendar() {
   const { data, loading, error, refresh } = useApi(() => api.calendar(), [])
+  const { data: forecast } = useApi(() => api.accountForecast(), [])
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState(blankForm)
   const [editId, setEditId] = useState(null)
@@ -92,6 +93,57 @@ export default function Calendar() {
 
       {loading && !data && <div className={s.state}>Loading calendar…</div>}
       {error && <div className={s.state}>Couldn’t load calendar. {error}</div>}
+
+      {/* ── cash-flow forecast: are accounts covered through payday? ── */}
+      {forecast && !forecast.unconfigured && !forecast.needsMigration && (
+        <div className={s.fc}>
+          <div className={s.fcBar}>
+            <div className={s.fcBarL}>
+              <span className={s.fcBlink} />
+              <span className={s.fcGrn}>Cash-flow · next {forecast.horizonDays}d</span>
+              {forecast.nextPayDate && <span className={s.fcPay}>paycheck {fmtDate(forecast.nextPayDate)}</span>}
+            </div>
+            {forecast.safeToSave > 0 && <div className={s.fcSave}>safe to save <b>{money0(forecast.safeToSave)}</b></div>}
+          </div>
+
+          <div className={s.fcAccts}>
+            {forecast.accounts.map(a => (
+              <div key={a.id} className={`${s.fcCell} ${a.safe ? s.fcSafe : s.fcRisk}`}>
+                <div className={s.fcCellName}>{a.name}{a.role === 'protected+source' ? ' · hub' : ''}</div>
+                <div className={s.fcCellTrough}>{a.trough < 0 ? '−' : ''}{money(Math.abs(a.trough))}</div>
+                <div className={s.fcCellMeta}>low {fmtDate(a.troughDate)}{a.dailyPace > 0 ? ` · ${money0(a.dailyPace)}/day` : ''}</div>
+                {a.troughCause && <div className={s.fcCellCause}>{a.troughCause.name} {money(a.troughCause.amount)}</div>}
+              </div>
+            ))}
+          </div>
+
+          {forecast.recommendations.length > 0 ? (
+            <div className={s.fcActions}>
+              <div className={s.fcActionsHead}>Actions needed</div>
+              {forecast.recommendations.map((r, i) => (
+                <div key={i} className={`${s.fcAction} ${r.urgent ? s.fcActionUrgent : ''}`}>
+                  <div className={s.fcActionTop}>
+                    <span className={`${s.fcTag} ${r.urgent ? s.fcTagUrgent : r.kind === 'instant' ? s.fcTagInstant : s.fcTagTransfer}`}>
+                      {r.kind === 'instant' ? 'INSTANT' : r.urgent ? 'SEND ASAP' : 'TRANSFER'}
+                    </span>
+                    <span className={s.fcMove}>{money0(r.amount)} · {r.from_account_name} → {r.to_account_name}</span>
+                    <span className={s.fcWhen}>{r.urgent ? 'today' : (r.kind === 'instant' ? 'when ' : 'by ') + fmtDate(r.send_by)}</span>
+                  </div>
+                  <div className={s.fcReason}>{r.reason}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={s.fcClear}>✓ Nothing needed — all accounts stay above {money0(forecast.cushion)} through payday.</div>
+          )}
+        </div>
+      )}
+      {forecast && forecast.unconfigured && !forecast.needsMigration && (
+        <div className={s.fcNote}>Tag your accounts (Source / Protected / Ignore) on the Accounts page to enable the cash-flow forecast.</div>
+      )}
+      {forecast && forecast.needsMigration && (
+        <div className={s.fcNote}>Run the cash-flow schema migration in your database, then reload to see the forecast.</div>
+      )}
 
       <div className={s.layout}>
         {/* month grid */}
