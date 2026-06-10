@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
 import SwShell from '../../components/SwShell/SwShell'
@@ -176,13 +177,14 @@ export default function Transactions() {
         ))}
       </div>
 
-      {editingTx && (
+      {editingTx && createPortal(
         <TxEditor
           tx={editingTx}
           budgetNames={budgetNames}
           onClose={() => setEditingTx(null)}
           onSave={handleSave}
-        />
+        />,
+        document.body
       )}
     </SwShell>
   )
