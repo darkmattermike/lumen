@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
@@ -8,8 +8,8 @@ import s from './Transactions.module.css'
 
 /* ──────────────────────────────────────────────────────────────
    Lumen — Activity (Stillwater · Dark)
-   Full transaction editing: name, category (with budget picker),
-   amount, date, type, note. Glass drawer modal.
+   Initial load: rolling 60 days. Older pages load on demand
+   at 100 rows each via a "Load more" sentinel at the bottom.
    ────────────────────────────────────────────────────────────── */
 
 const AV_TINTS = [
@@ -29,21 +29,40 @@ const avTint = (name = '') => {
 const TX_TYPES = ['expense', 'income', 'transfer']
 
 export default function Transactions() {
-  const { data, loading, error, refresh } = useApi(() => api.transactions('?page=0'), [])
+  // Initial page load — rolling 60 days + first historical page
+  const { data: initialData, loading, error, refresh: refreshInitial } = useApi(
+    () => api.transactions('?page=0&days=60'), []
+  )
   const { data: budgetsData } = useApi(() => api.budgets(), [])
-  const [query, setQuery] = useState('')
-  const [cat, setCat] = useState('All')
-  const [editingTx, setEditingTx] = useState(null) // full tx object being edited
+
+  // Accumulated historical pages beyond page 0
+  const [extraPages, setExtraPages]   = useState([])   // array of rows arrays
+  const [nextPage, setNextPage]       = useState(1)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore]         = useState(false)
+  const sentinelRef = useRef(null)
+
+  // Sync hasMore from initial load
+  useEffect(() => {
+    if (initialData?.pagination) setHasMore(initialData.pagination.hasMore)
+  }, [initialData])
+
+  const [query, setQuery]       = useState('')
+  const [cat, setCat]           = useState('All')
+  const [editingTx, setEditingTx] = useState(null)
 
   const budgetNames = useMemo(() => {
     if (!budgetsData?.budgets) return []
     return budgetsData.budgets.map(b => ({ name: b.name, icon: b.icon || '📦' }))
   }, [budgetsData])
 
+  // All rows: initial + any extra pages appended
   const all = useMemo(() => {
-    if (!data) return []
-    return [...(data.currentMonth || []), ...(data.historical || [])]
-  }, [data])
+    if (!initialData) return []
+    const base = [...(initialData.currentMonth || []), ...(initialData.historical || [])]
+    for (const page of extraPages) base.push(...page)
+    return base
+  }, [initialData, extraPages])
 
   const categories = useMemo(() => {
     const set = new Set(all.map(t => t.category).filter(Boolean))
@@ -55,14 +74,15 @@ export default function Transactions() {
     return all.filter(t => {
       if (cat !== 'All' && t.category !== cat) return false
       if (!q) return true
-      return (t.cleaned_name || t.name || '').toLowerCase().includes(q) || (t.category || '').toLowerCase().includes(q)
+      return (t.cleaned_name || t.name || '').toLowerCase().includes(q) ||
+             (t.category || '').toLowerCase().includes(q)
     })
   }, [all, query, cat])
 
   const groups = useMemo(() => {
     const map = new Map()
     for (const t of filtered) {
-      const k = t.date
+      const k = String(t.date).slice(0, 10)
       if (!map.has(k)) map.set(k, [])
       map.get(k).push(t)
     }
@@ -70,7 +90,7 @@ export default function Transactions() {
   }, [filtered])
 
   const totals = useMemo(() => {
-    const month = data?.currentMonth || []
+    const month = initialData?.currentMonth || []
     let income = 0, spending = 0
     for (const t of month) {
       const amt = Number(t.amount) || 0
@@ -78,11 +98,39 @@ export default function Transactions() {
       else spending += Math.abs(amt)
     }
     return { income, spending, count: month.length }
-  }, [data])
+  }, [initialData])
   const net = totals.income - totals.spending
 
-  function openEdit(t) {
-    setEditingTx(t)
+  // Load the next historical page
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    try {
+      const res = await api.transactions(`?page=${nextPage}&days=60`)
+      const rows = res.historical || []
+      setExtraPages(prev => [...prev, rows])
+      setNextPage(p => p + 1)
+      setHasMore(res.pagination?.hasMore ?? false)
+    } catch { /* silently ignore — user can retry */ }
+    finally { setLoadingMore(false) }
+  }, [loadingMore, hasMore, nextPage])
+
+  // IntersectionObserver on the sentinel div — auto-load when it scrolls into view
+  useEffect(() => {
+    if (!sentinelRef.current) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMore() },
+      { rootMargin: '200px' }
+    )
+    obs.observe(sentinelRef.current)
+    return () => obs.disconnect()
+  }, [loadMore])
+
+  function refresh() {
+    setExtraPages([])
+    setNextPage(1)
+    setHasMore(false)
+    refreshInitial()
   }
 
   async function handleSave(t, updates) {
@@ -90,16 +138,19 @@ export default function Transactions() {
     try {
       await api.updateTransaction(t.id, updates)
       refresh()
-    } catch { /* surfaced on next load */ }
+    } catch { /* */ }
   }
 
   return (
     <SwShell>
+      {/* ── page head ── */}
       <div className={s.head}>
         <div>
           <div className={s.eyebrow}>Activity</div>
           <h1 className={s.title}>Every dollar, in and out</h1>
-          <div className={s.subtitle}>{new Date().toLocaleDateString('en-US', { month: 'long' })} · {totals.count} transaction{totals.count === 1 ? '' : 's'}</div>
+          <div className={s.subtitle}>
+            {new Date().toLocaleDateString('en-US', { month: 'long' })} · {totals.count} transaction{totals.count === 1 ? '' : 's'}
+          </div>
         </div>
         <div className={s.summary}>
           <div className={s.stat}>
@@ -119,6 +170,7 @@ export default function Transactions() {
         </div>
       </div>
 
+      {/* ── search + category pills ── */}
       <div className={s.controls}>
         <div className={s.searchWrap}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -139,22 +191,26 @@ export default function Transactions() {
         </div>
       </div>
 
-      {loading && !data && <div className={s.state}>Loading transactions…</div>}
-      {error && <div className={s.state}>Couldn't load transactions. <b>{error}</b></div>}
-      {data && groups.length === 0 && <div className={s.state}>No transactions match — try a different search or category.</div>}
+      {loading && !initialData && <div className={s.state}>Loading transactions…</div>}
+      {error   && <div className={s.state}>Couldn't load transactions. <b>{error}</b></div>}
+      {initialData && groups.length === 0 && (
+        <div className={s.state}>No transactions match — try a different search or category.</div>
+      )}
 
+      {/* ── date-grouped ledger ── */}
       <div className={s.list} key={`${cat}|${query.trim().toLowerCase()}`}>
         {groups.map(([date, rows], gi) => (
-          <section key={date} className={s.group} style={{ '--d': `${0.12 + gi * 0.07}s` }}>
+          <section key={date} className={s.group} style={{ '--d': `${0.12 + Math.min(gi, 8) * 0.06}s` }}>
             <div className={s.groupDate}>{fmtDate(date)}</div>
             <div className={s.groupCard}>
               {rows.map((t, ri) => {
                 const income = t.amount > 0 || t.tx_type === 'income'
                 const nm = t.cleaned_name || t.name
                 return (
-                  <div key={t.id} className={s.row} style={{ '--d': `${0.18 + gi * 0.07 + ri * 0.05}s` }}
-                    onClick={() => openEdit(t)} role="button" tabIndex={0}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') openEdit(t) }}>
+                  <div key={t.id} className={s.row}
+                    style={{ '--d': `${0.18 + Math.min(gi, 8) * 0.06 + ri * 0.04}s` }}
+                    onClick={() => setEditingTx(t)} role="button" tabIndex={0}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingTx(t) }}>
                     <span className={s.av} style={{ background: avTint(nm) }}>{initial(nm)}</span>
                     <div className={s.meta}>
                       <div className={s.name}>{nm}</div>
@@ -175,6 +231,18 @@ export default function Transactions() {
             </div>
           </section>
         ))}
+
+        {/* ── pagination sentinel ── */}
+        {hasMore && (
+          <div ref={sentinelRef} className={s.sentinel}>
+            {loadingMore
+              ? <span className={s.loadingMore}>Loading more…</span>
+              : <button className={s.loadMoreBtn} onClick={loadMore}>Load more</button>}
+          </div>
+        )}
+        {!hasMore && all.length > 0 && !loading && (
+          <div className={s.endNote}>All {all.length} transactions loaded</div>
+        )}
       </div>
 
       {editingTx && createPortal(
@@ -194,16 +262,16 @@ export default function Transactions() {
 function TxEditor({ tx, budgetNames, onClose, onSave }) {
   const nm = tx.cleaned_name || tx.name
   const [form, setForm] = useState({
-    name: nm || '',
+    name:     nm || '',
     category: tx.category || '',
-    amount: String(Math.abs(Number(tx.amount) || 0)),
-    date: tx.date ? String(tx.date).slice(0, 10) : '',
-    tx_type: tx.tx_type || (Number(tx.amount) > 0 ? 'income' : 'expense'),
-    note: tx.note || '',
+    amount:   String(Math.abs(Number(tx.amount) || 0)),
+    date:     tx.date ? String(tx.date).slice(0, 10) : '',
+    tx_type:  tx.tx_type || (Number(tx.amount) > 0 ? 'income' : 'expense'),
+    note:     tx.note || '',
   })
-  const [catOpen, setCatOpen] = useState(false)
+  const [catOpen, setCatOpen]   = useState(false)
   const [catTyping, setCatTyping] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy]         = useState(false)
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
@@ -218,12 +286,12 @@ function TxEditor({ tx, budgetNames, onClose, onSave }) {
     const amt = Number(form.amount)
     const signedAmt = form.tx_type === 'income' ? Math.abs(amt) : -Math.abs(amt)
     await onSave(tx, {
-      name: form.name.trim() || undefined,
-      category: form.category || null,
-      amount: signedAmt,
-      date: form.date || undefined,
-      tx_type: form.tx_type,
-      note: form.note || null,
+      name:               form.name.trim() || undefined,
+      category:           form.category || null,
+      amount:             signedAmt,
+      date:               form.date || undefined,
+      tx_type:            form.tx_type,
+      note:               form.note || null,
       _original_category: tx.category,
     })
     setBusy(false)
@@ -237,7 +305,6 @@ function TxEditor({ tx, budgetNames, onClose, onSave }) {
           <button className={s.drawerX} onClick={onClose} aria-label="Close">×</button>
         </div>
 
-        {/* Type selector */}
         <div className={s.fld}>
           <label className={s.flabel}>Type</label>
           <div className={s.typeRow}>
@@ -251,13 +318,11 @@ function TxEditor({ tx, budgetNames, onClose, onSave }) {
           </div>
         </div>
 
-        {/* Name */}
         <div className={s.fld}>
           <label className={s.flabel}>Name</label>
           <input className={s.fin} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Merchant name" />
         </div>
 
-        {/* Category with budget picker */}
         <div className={s.fld}>
           <label className={s.flabel}>Category</label>
           <div className={s.catField}>
@@ -284,20 +349,17 @@ function TxEditor({ tx, budgetNames, onClose, onSave }) {
         </div>
 
         <div className={s.frow}>
-          {/* Amount */}
           <div className={s.fld}>
             <label className={s.flabel}>Amount</label>
             <input className={s.fin} inputMode="decimal" value={form.amount}
               onChange={e => set('amount', e.target.value)} placeholder="0.00" />
           </div>
-          {/* Date */}
           <div className={s.fld}>
             <label className={s.flabel}>Date</label>
             <input className={s.fin} type="date" value={form.date} onChange={e => set('date', e.target.value)} />
           </div>
         </div>
 
-        {/* Note */}
         <div className={s.fld}>
           <label className={s.flabel}>Note</label>
           <input className={s.fin} value={form.note} onChange={e => set('note', e.target.value)} placeholder="Optional note" />

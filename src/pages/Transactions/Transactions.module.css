@@ -343,3 +343,43 @@
   color: #08121a; font-family: var(--font-mono); font-size: 12px; font-weight: 600; cursor: pointer;
 }
 .drawerSave:disabled, .drawerCancel:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── pagination sentinel + load more ── */
+.sentinel {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 8px;
+}
+.loadingMore {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: var(--sw-dim);
+  animation: txPulse 1.4s ease-in-out infinite;
+}
+@keyframes txPulse { 0%,100% { opacity:.4 } 50% { opacity:1 } }
+.loadMoreBtn {
+  background: transparent;
+  border: 1px solid var(--sw-line);
+  border-radius: 10px;
+  padding: 9px 22px;
+  color: var(--sw-mut);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.loadMoreBtn:hover {
+  border-color: rgba(98,224,181,.35);
+  color: var(--sw-mint);
+}
+.endNote {
+  text-align: center;
+  padding: 20px 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: var(--sw-dim);
+  opacity: .6;
+}
