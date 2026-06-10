@@ -202,6 +202,7 @@ function TxEditor({ tx, budgetNames, onClose, onSave }) {
     note: tx.note || '',
   })
   const [catOpen, setCatOpen] = useState(false)
+  const [catTyping, setCatTyping] = useState(false)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -260,16 +261,18 @@ function TxEditor({ tx, budgetNames, onClose, onSave }) {
         <div className={s.fld}>
           <label className={s.flabel}>Category</label>
           <div className={s.catField}>
-            <input className={s.fin} value={form.category} onChange={e => { set('category', e.target.value); setCatOpen(true) }}
-              onFocus={() => setCatOpen(true)} placeholder="Category" />
+            <input className={s.fin} value={form.category}
+              onChange={e => { set('category', e.target.value); setCatOpen(true); setCatTyping(true) }}
+              onFocus={() => { setCatOpen(true); setCatTyping(false) }}
+              placeholder="Category" />
             {catOpen && budgetNames.length > 0 && (
               <div className={s.catDrop}>
                 <div className={s.catDropHead}>Budget categories</div>
                 {budgetNames
-                  .filter(b => !form.category || b.name.toLowerCase().includes(form.category.toLowerCase()))
+                  .filter(b => !catTyping || !form.category || b.name.toLowerCase().includes(form.category.toLowerCase()))
                   .map(b => (
                     <button key={b.name} className={s.catOpt} type="button"
-                      onClick={() => { set('category', b.name); setCatOpen(false) }}>
+                      onClick={() => { set('category', b.name); setCatOpen(false); setCatTyping(false) }}>
                       <span className={s.catOptIcon}>{b.icon}</span>
                       {b.name}
                     </button>
