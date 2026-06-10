@@ -1,0 +1,133 @@
+/* Stillwater · Dark — shared shell chrome (frame, card, top nav) */
+
+.frame {
+  max-width: 1100px;
+  margin: 34px auto 70px;
+  padding: 0 22px;
+}
+
+.sw {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #091317 0%, #0a181c 50%, #0c2026 100%);
+  border: 1px solid var(--sw-line);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(180, 255, 225, .05);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 28px;
+  position: relative;
+  z-index: 3;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-disp);
+  font-weight: 700;
+  font-size: 16px;
+  color: #d8f5e8;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.brand:focus-visible { outline: 2px solid var(--sw-mint); outline-offset: 3px; border-radius: 6px; }
+
+.brandOrb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #c9fbe6, #62e0b5 60%, #1f7a59);
+  box-shadow: 0 0 14px rgba(98, 224, 181, .5);
+  animation: swPulse 4.5s ease-in-out infinite;
+  transition: transform .3s cubic-bezier(.3, 1.4, .4, 1);
+}
+.brand:hover .brandOrb { transform: scale(1.18) rotate(8deg); }
+@keyframes swPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(98, 224, 181, .35); }
+  50%      { box-shadow: 0 0 20px rgba(98, 224, 181, .65); }
+}
+
+.nav {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  background: rgba(10, 26, 28, .65);
+  border: 1px solid rgba(120, 200, 175, .14);
+  border-radius: 99px;
+  padding: 4px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.navItem {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--sw-mut);
+  padding: 7px 14px;
+  border-radius: 99px;
+  transition: .2s;
+  background: none;
+  border: none;
+}
+.navItem:hover { color: #d8f5e8; }
+.navItemActive {
+  composes: navItem;
+  background: var(--sw-mint);
+  color: #06281c;
+  position: relative;
+  z-index: 1;
+  transition: color .25s;
+}
+.navReady .navItemActive { background: transparent; }
+.navInd {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  border-radius: 99px;
+  background: var(--sw-mint);
+  box-shadow: 0 0 18px rgba(98, 224, 181, .35);
+  transition: transform .45s cubic-bezier(.3, 1.2, .3, 1), width .45s cubic-bezier(.3, 1.2, .3, 1);
+  will-change: transform, width;
+}
+.navItemActive:hover { color: #06281c; }
+.navItem:focus-visible, .navItemActive:focus-visible {
+  outline: 2px solid var(--sw-mint);
+  outline-offset: 2px;
+}
+
+.date {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  color: var(--sw-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 780px) {
+  .frame { margin: 18px auto 50px; padding: 0 14px; }
+  .nav { display: none; }
+}
+
+
+/* ── motion: chrome entrance + route transition ── */
+.top {
+  animation: swSink .55s cubic-bezier(.22, 1, .36, 1) both;
+}
+.pageIn {
+  animation: swSurface .6s cubic-bezier(.22, 1, .36, 1) both;
+}
+@keyframes swSink {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes swSurface {
+  from { opacity: 0; transform: translateY(16px); filter: blur(3px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}

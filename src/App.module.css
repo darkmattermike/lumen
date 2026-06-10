@@ -1,35 +1,10 @@
 .shell {
-  display: flex;
-  flex-direction: row;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
   background: transparent;
-}
-
-.inner {
-  flex: 1;
-  min-width: 0;
-  max-width: var(--max-w);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow-y: auto;
-  position: relative;
 }
 
 .main {
-  flex: 1;
   min-width: 0;
+  width: 100%;
   background: transparent;
-}
-
-@media (max-width: 768px) {
-  .shell { flex-direction: column; height: auto; min-height: 100dvh; overflow: visible; }
-  .inner { height: auto; overflow: visible; max-width: 100%; }
-  .main {
-    width: 100%;
-    overflow-x: hidden;
-    padding-bottom: calc(var(--tab-bar-h, 60px) + env(safe-area-inset-bottom) + 8px);
-  }
 }

@@ -1,8 +1,31 @@
 import { useState, useMemo } from 'react'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
+import SwShell from '../../components/SwShell/SwShell'
 import { money, initial, fmtDate } from '../../lib/format'
 import s from './Transactions.module.css'
+
+/* ──────────────────────────────────────────────────────────────
+   Lumen — Activity (Stillwater · Dark)
+   The ledger under the water: month summary strip, glass search
+   and category pills, date-grouped rows with inline category
+   editing. All previous functionality preserved.
+   ────────────────────────────────────────────────────────────── */
+
+// mint-family avatar tints so every merchant sits in the palette
+const AV_TINTS = [
+  'linear-gradient(150deg,#1f5a48,#123a2e)',
+  'linear-gradient(150deg,#1c4f54,#10333a)',
+  'linear-gradient(150deg,#2a5a3a,#16331f)',
+  'linear-gradient(150deg,#1f4a5e,#102a3a)',
+  'linear-gradient(150deg,#3a5a2a,#1f3316)',
+  'linear-gradient(150deg,#1d5550,#0f322e)',
+]
+const avTint = (name = '') => {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % AV_TINTS.length
+  return AV_TINTS[h]
+}
 
 export default function Transactions() {
   const { data, loading, error, refresh } = useApi(() => api.transactions('?page=0'), [])
@@ -65,48 +88,72 @@ export default function Transactions() {
   }
 
   return (
-    <div className={s.page}>
-      <header className={s.head}>
+    <SwShell>
+      {/* ── page head: title + month summary ── */}
+      <div className={s.head}>
         <div>
-          <div className={s.eyebrow}>Ledger</div>
-          <h1 className={s.title}>Transactions</h1>
+          <div className={s.eyebrow}>Activity</div>
+          <h1 className={s.title}>Every dollar, in and out</h1>
+          <div className={s.subtitle}>{new Date().toLocaleDateString('en-US', { month: 'long' })} · {totals.count} transaction{totals.count === 1 ? '' : 's'}</div>
         </div>
         <div className={s.summary}>
-          <Stat label="Income" value={money(totals.income)} tone="mint" />
-          <Stat label="Spent" value={money(totals.spending)} tone="rose" />
-          <Stat label="Net" value={money(net, { sign: true })} tone={net >= 0 ? 'teal' : 'rose'} />
+          <div className={s.stat}>
+            <div className={s.statKey}>In</div>
+            <div className={`${s.statValIn} ${s.tabnum}`}>+{money(totals.income).slice(1)}</div>
+          </div>
+          <div className={s.stat}>
+            <div className={s.statKey}>Out</div>
+            <div className={`${s.statVal} ${s.tabnum}`}>−{money(totals.spending).slice(1)}</div>
+          </div>
+          <div className={s.stat}>
+            <div className={s.statKey}>Net</div>
+            <div className={`${net >= 0 ? s.statValIn : s.statValDebt} ${s.tabnum}`}>
+              {net >= 0 ? '+' : '−'}{money(Math.abs(net)).slice(1)}
+            </div>
+          </div>
         </div>
-      </header>
+      </div>
 
+      {/* ── controls: glass search + category pills ── */}
       <div className={s.controls}>
         <div className={s.searchWrap}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-          <input className={s.search} placeholder="Search transactions" value={query} onChange={e => setQuery(e.target.value)} />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            className={s.search}
+            placeholder="Search transactions"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            aria-label="Search transactions"
+          />
         </div>
         <div className={s.chips}>
           {categories.slice(0, 9).map(c => (
-            <button key={c} className={`${s.chip} ${cat === c ? s.chipOn : ''}`} onClick={() => setCat(c)}>{c}</button>
+            <button key={c} className={cat === c ? s.chipOn : s.chip} onClick={() => setCat(c)}>{c}</button>
           ))}
         </div>
       </div>
 
       {loading && !data && <div className={s.state}>Loading transactions…</div>}
-      {error && <div className={s.state}>Couldn’t load transactions. {error}</div>}
+      {error && <div className={s.state}>Couldn't load transactions. <b>{error}</b></div>}
+      {data && groups.length === 0 && <div className={s.state}>No transactions match — try a different search or category.</div>}
 
-      {data && groups.length === 0 && <div className={s.state}>No transactions match.</div>}
-
-      <div className={s.list}>
-        {groups.map(([date, rows]) => (
-          <section key={date} className={s.group}>
+      {/* ── date-grouped ledger ── */}
+      {/* keyed by filter so the cascade replays when results change */}
+      <div className={s.list} key={`${cat}|${query.trim().toLowerCase()}`}>
+        {groups.map(([date, rows], gi) => (
+          <section key={date} className={s.group} style={{ '--d': `${0.12 + gi * 0.07}s` }}>
             <div className={s.groupDate}>{fmtDate(date)}</div>
-            <div className={s.rows}>
-              {rows.map(t => {
+            <div className={s.groupCard}>
+              {rows.map((t, ri) => {
                 const income = t.amount > 0 || t.tx_type === 'income'
+                const nm = t.cleaned_name || t.name
                 return (
-                  <div key={t.id} className={s.row}>
-                    <span className={s.av} style={{ background: avatarColor(t.cleaned_name || t.name) }}>{initial(t.cleaned_name || t.name)}</span>
+                  <div key={t.id} className={s.row} style={{ '--d': `${0.18 + gi * 0.07 + ri * 0.05}s` }}>
+                    <span className={s.av} style={{ background: avTint(nm) }}>{initial(nm)}</span>
                     <div className={s.meta}>
-                      <div className={s.name}>{t.cleaned_name || t.name}</div>
+                      <div className={s.name}>{nm}</div>
                       {editing === t.id ? (
                         <input
                           className={s.catEdit}
@@ -114,16 +161,20 @@ export default function Transactions() {
                           autoFocus
                           onBlur={e => saveCategory(t, e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') setEditing(null) }}
+                          aria-label="Edit category"
                         />
                       ) : (
                         <button className={s.cat} onClick={() => setEditing(t.id)} title="Edit category">
                           {t.category || 'Uncategorized'}
-                          {t.account_mask ? <span className={s.dot}> · </span> : null}
-                          {t.account_mask ? <span className={s.acct}>{t.account_institution || t.account_name} ••{t.account_mask}</span> : null}
+                          {t.account_mask && (
+                            <span className={s.acct}> · {t.account_institution || t.account_name} ··{t.account_mask}</span>
+                          )}
                         </button>
                       )}
                     </div>
-                    <div className={`${s.amt} ${income ? s.pos : ''}`}>{income ? money(Math.abs(t.amount), { sign: true }) : money(-Math.abs(t.amount))}</div>
+                    <div className={`${income ? s.amtIn : s.amt} ${s.tabnum}`}>
+                      {income ? `+${money(Math.abs(t.amount)).slice(1)}` : `−${money(Math.abs(t.amount)).slice(1)}`}
+                    </div>
                   </div>
                 )
               })}
@@ -131,22 +182,6 @@ export default function Transactions() {
           </section>
         ))}
       </div>
-    </div>
+    </SwShell>
   )
-}
-
-function Stat({ label, value, tone }) {
-  return (
-    <div className={s.stat}>
-      <div className={s.statL}>{label}</div>
-      <div className={`${s.statV} ${s[tone] || ''}`}>{value}</div>
-    </div>
-  )
-}
-
-function avatarColor(name = '') {
-  const palette = ['#3a8fd8', '#7c5cff', '#2fb3a0', '#d8743a', '#c0497e', '#5a9e3a', '#b0852f']
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % palette.length
-  return palette[h]
 }

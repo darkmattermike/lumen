@@ -1,57 +1,57 @@
 /* ============================================================
-   Lumen — global base (Nocturne)
-   Clean slate: no pixel theme. Per-surface styling lives in
-   each component's CSS module; this just sets the foundation.
+   Lumen — global base (Stillwater · Dark)
+   Night water: deep teal-black gradient, mint #62e0b5 accent.
+   Per-surface styling lives in each component's CSS module.
    ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300..800&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=JetBrains+Mono:wght@300..700&display=swap');
+
 :root {
-  --bg-0: #04050a;
+  --bg-0: #05090b;
   --max-w: 1400px;
   --tab-bar-h: 60px;
 
   --font-sans: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
   --font-disp: "Bricolage Grotesque", system-ui, sans-serif;
-  --font-serif: "Fraunces", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* Shared Nocturne palette — every page draws from these */
-  --lum-txt: #eef0fb; --lum-txt2: #b7bcd6; --lum-mut: #7e83a3; --lum-dim: #565a78;
-  --lum-line: rgba(170,185,255,.09); --lum-line-soft: rgba(170,185,255,.055);
-  --lum-teal: #5ef0d6; --lum-violet: #a78bff; --lum-blue: #5aa6ff; --lum-mint: #7fe3b0; --lum-rose: #ff9bb0; --lum-amber: #ffce85;
-  --lum-panel: linear-gradient(180deg, rgba(20,22,38,.55), rgba(10,11,22,.5));
-  --lum-disp: "Bricolage Grotesque", system-ui, sans-serif;
-  --lum-serif: "Fraunces", Georgia, serif;
-  --lum-ui: "Hanken Grotesk", system-ui, sans-serif;
-  --lum-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Stillwater Dark palette — every page draws from these */
+  --sw-txt:    #dce8e3;   /* primary text                */
+  --sw-txt2:   #d9e8e1;   /* row names                   */
+  --sw-mut:    #7e9a90;   /* secondary text              */
+  --sw-dim:    #5d7a70;   /* labels / faint text         */
+  --sw-mint:   #62e0b5;   /* the orb / brand accent      */
+  --sw-mint-2: #7fe3b0;   /* income green                */
+  --sw-amber:  #ffce85;   /* warning amounts             */
+  --sw-rose:   #e8a896;   /* debt amounts                */
+  --sw-line:   rgba(120, 200, 175, .12);
+  --sw-line-soft: rgba(120, 200, 175, .08);
+  --sw-glass:  rgba(9, 24, 26, .72);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { height: 100%; }
 
 body {
-  color: #eef0fb;
+  color: var(--sw-txt);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  /* full-bleed Nocturne atmosphere — fills the entire viewport */
+  /* full-bleed Stillwater night atmosphere */
   background:
-    radial-gradient(140% 120% at 78% -10%, #14132e 0%, transparent 42%),
-    radial-gradient(120% 120% at -8% 110%, #0a1c26 0%, transparent 46%),
-    linear-gradient(180deg, #070812, #040509);
+    radial-gradient(110% 80% at 50% -10%, #0c1f1d 0%, transparent 55%),
+    linear-gradient(180deg, #05090b 0%, #071013 45%, #08161a 75%, #0a1c20 100%);
   background-attachment: fixed;
 }
 
-/* grain + vignette over the whole app (matches the concept) */
-body::before {
-  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 99;
-  opacity: .045; mix-blend-mode: overlay;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-body::after {
-  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 98;
-  background: radial-gradient(120% 100% at 50% 42%, transparent 56%, rgba(2,3,8,.5) 100%);
-}
-
-button { font-family: inherit; }
+button { font-family: inherit; cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 
-::selection { background: rgba(94, 240, 214, 0.25); }
+::selection { background: rgba(98, 224, 181, 0.25); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

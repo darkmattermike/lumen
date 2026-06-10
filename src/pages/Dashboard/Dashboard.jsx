@@ -2,70 +2,50 @@ import { useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApi } from '../../hooks/useApi'
 import { useCountUp } from '../../hooks/useCountUp'
-import { useAuth } from '../../context/AuthContext'
+import SwShell from '../../components/SwShell/SwShell'
 import { api } from '../../data/api'
-import styles from './Dashboard.module.css'
+import s from './Dashboard.module.css'
 
 /* ──────────────────────────────────────────────────────────────
-   Lumen — Nocturne dashboard
-   Aurora hero ("safe to spend today") + cash-flow runway +
-   upcoming horizon + recent activity, wired to the live backend.
+   Lumen — Stillwater · Dark dashboard
+   Night water: the orb is the centerpiece, the tide is the cash
+   flow, glass cards rest on the waterline. Wired to the live
+   backend (or the in-memory mock when VITE_API_URL is unset).
    ────────────────────────────────────────────────────────────── */
 
-const PAST_DAYS   = 8       // actual days shown left of "now"
-const FUTURE_DAYS = 22      // projected days shown right of "now"
-const SPAN        = PAST_DAYS + FUTURE_DAYS          // 30-day window
-const PADX = 4, TOP = 10, BOT = 82                   // chart % insets
-const MARK_MIN = 100        // only label events at/above this $ amount (declutter)
-
 /* ---- formatting helpers ---- */
-const n0   = (n) => Math.round(Number(n) || 0).toLocaleString('en-US')
-const n2   = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const dayStr = (d) => {                              // local YYYY-MM-DD
+const n2 = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const dayStr = (d) => {
   const z = new Date(d)
   return `${z.getFullYear()}-${String(z.getMonth() + 1).padStart(2, '0')}-${String(z.getDate()).padStart(2, '0')}`
 }
 const addDays = (base, n) => { const d = new Date(base); d.setDate(d.getDate() + n); return d }
 const shortDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-const weekday   = (d) => new Date(d).toLocaleDateString('en-US', { weekday: 'short' })
 
 // split a money value into animated integer dollars + static cents
 function centsPair(v) {
   let dollars = Math.floor(Math.abs(Number(v) || 0))
-  let cents   = Math.round((Math.abs(Number(v) || 0) - dollars) * 100)
+  let cents = Math.round((Math.abs(Number(v) || 0) - dollars) * 100)
   if (cents === 100) { dollars += 1; cents = 0 }
   return { dollars, cc: String(cents).padStart(2, '0') }
 }
 
-// deterministic gradient avatar from a merchant name
-const AV_GRADS = [
-  'linear-gradient(150deg,#3a8f5e,#1f6b3e)', 'linear-gradient(150deg,#3f6bd8,#2746a0)',
-  'linear-gradient(150deg,#c0407a,#8a2856)', 'linear-gradient(150deg,#3aa089,#1f6f5e)',
-  'linear-gradient(150deg,#8a6bd8,#5a3aa0)', 'linear-gradient(150deg,#c98a3a,#8a5a1f)',
-]
-const avGrad = (s) => AV_GRADS[[...String(s || '?')].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_GRADS.length]
-
-/* ---- greeting ---- */
-function greeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 18) return 'Good afternoon'
-  return 'Good evening'
-}
+const WARN_BILL_MIN = 100   // expenses at/above this glow amber in "Coming up"
+const BUDGET_WARN_PCT = 80  // budget bars at/above this % turn amber
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const { data, loading, error } = useApi(api.dashboard)
-  const { data: txData }         = useApi(() => api.transactions('?limit=40'))
-  const { data: forecast }       = useApi(() => api.forecast(FUTURE_DAYS + 4))
+  const { data: txData }   = useApi(() => api.transactions('?limit=40'))
+  const { data: budData }  = useApi(api.budgets)
+  const { data: acctData } = useApi(api.accounts)
 
-  /* ── derive hero figures from live data (safe-to-spend = plug point) ── */
+  /* ── hero figures (safe-to-spend = plug point) ── */
   const hero = useMemo(() => {
     const d = data || {}
-    const windows  = d.windows || []
-    const w0       = windows[0] || null
-    const nextPay  = w0?.nextPay || d.nextPaycheck || null
+    const windows = d.windows || []
+    const w0 = windows[0] || null
+    const nextPay = w0?.nextPay || d.nextPaycheck || null
     const daysToPay = nextPay?.daysUntil ?? null
     const heroBalance = (Array.isArray(d.activePlans) && d.activePlans.length)
       ? (d.balanceAfterPlans ?? d.freeToSpend ?? 0)
@@ -76,542 +56,256 @@ export default function Dashboard() {
     // spent today (today's expenses)
     const all = [...(txData?.currentMonth || []), ...(txData?.historical || [])]
     const todayKey = dayStr(new Date())
-    const spentToday = all.reduce((s, t) => {
+    let spentToday = 0
+    for (const t of all) {
       const amt = Number(t.amount) || 0
       const isExpense = (t.tx_type !== 'income') && amt < 0
-      return (String(t.date).slice(0, 10) === todayKey && isExpense) ? s + Math.abs(amt) : s
-    }, 0)
+      if (String(t.date).slice(0, 10) === todayKey && isExpense) spentToday += Math.abs(amt)
+    }
 
     // ▶▶ FUTURE CUSTOM ALGORITHM PLUGS IN HERE ◀◀
     // For now: a day's slice of remaining free-to-spend, minus what's already spent today.
     const safeToday = Math.max(0, dailyAllowance - spentToday)
 
     const label = d.pressureLabel || 'SAFE'
-    const tag = label === 'CRITICAL' ? 'Pressure is high'
-      : label === 'TIGHT' ? 'Spending is tight'
-      : label === 'WATCH' ? 'On track'
-      : "You're ahead of plan"
+    const tag = label === 'CRITICAL' ? 'pressure is high'
+      : label === 'TIGHT' ? 'spending is tight'
+      : label === 'WATCH' ? 'on track'
+      : 'ahead of plan'
 
-    return {
-      safeToday, dailyAllowance, spentToday, heroBalance,
-      daysToPay, nextPay, balance: d.balance ?? 0, tag, label,
-      monthSpent: d.monthSpent ?? 0, monthIncome: d.monthIncome ?? 0,
-    }
+    const payDate = daysToPay != null ? addDays(new Date(), daysToPay) : null
+    const payDateStr = payDate
+      ? payDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      : null
+
+    return { safeToday, heroBalance, daysToPay, payDateStr, tag }
   }, [data, txData])
 
-  /* ── upcoming horizon (already curated by the API) ── */
+  /* ── animated hero amount ── */
+  const { dollars: heroDollars, cc: heroCents } = centsPair(hero.safeToday)
+  const { display: heroDisplay } = useCountUp(heroDollars, { duration: 1100 })
+
+  /* ── coming up (already curated by the API) ── */
   const upcoming = useMemo(() => {
-    const bills = (data?.upcomingBills || []).slice(0, 4)
-    return bills.map(b => {
-      const when = b.daysUntil === 0 ? 'Today' : `In ${b.daysUntil} day${b.daysUntil === 1 ? '' : 's'}`
-      const dt   = addDays(new Date(), b.daysUntil || 0)
+    return (data?.upcomingBills || []).slice(0, 4).map((b) => {
       const income = b.type === 'income'
+      const amt = Number(b.amount) || 0
       return {
-        id: b.id, name: b.name, income,
-        when: `${when} · ${weekday(dt)}`,
-        cat: income ? 'Income' : (b.category || 'Bill'),
-        amt: `${income ? '+' : '−'}$${n2(b.amount)}`,
+        id: b.id,
+        name: b.name,
+        when: b.daysUntil === 0 ? 'Today' : `${b.daysUntil} day${b.daysUntil === 1 ? '' : 's'}`,
+        amt: `${income ? '+' : '−'}${n2(amt)}`,
+        cls: income ? s.rowAmtIn : (amt >= WARN_BILL_MIN ? s.rowAmtWarn : s.rowAmt),
       }
     })
   }, [data])
 
-  const netBeforePay = useMemo(() => {
-    const dtp = hero.daysToPay
-    if (dtp == null) return null
-    const bills = (data?.upcomingBills || []).filter(b => (b.daysUntil ?? 99) <= dtp)
-    return bills.reduce((s, b) => s + (b.type === 'income' ? Number(b.amount) : -Number(b.amount)), 0)
-  }, [data, hero.daysToPay])
-
   /* ── recent activity ── */
   const recent = useMemo(() => {
     const all = [...(txData?.currentMonth || []), ...(txData?.historical || [])]
+    const todayKey = dayStr(new Date())
+    const yesterdayKey = dayStr(addDays(new Date(), -1))
     const seen = new Set()
     return all
-      .filter(t => { if (seen.has(t.id)) return false; seen.add(t.id); return true })
+      .filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true })
       .sort((a, b) => String(b.date).localeCompare(String(a.date)))
       .slice(0, 4)
-      .map(t => {
+      .map((t) => {
         const amt = Number(t.amount) || 0
         const income = t.tx_type === 'income' || amt > 0
-        const nm = t.cleaned_name || t.name || 'Transaction'
+        const key = String(t.date).slice(0, 10)
         return {
-          id: t.id, nm, income,
-          cat: `${t.category || (income ? 'Income' : 'Spending')} · ${shortDate(t.date)}`,
-          amt: `${income ? '+' : '−'}$${n2(Math.abs(amt))}`,
-          grad: avGrad(nm), initial: nm[0]?.toUpperCase() || '•',
+          id: t.id,
+          name: t.cleaned_name || t.name || 'Transaction',
+          when: key === todayKey ? 'Today' : key === yesterdayKey ? 'Yesterday' : shortDate(t.date),
+          amt: `${income ? '+' : '−'}${n2(Math.abs(amt))}`,
+          cls: income ? s.rowAmtIn : s.rowAmt,
         }
       })
   }, [txData])
 
-  /* ── hero starfield ── */
-  const stars = useMemo(() => Array.from({ length: 46 }, () => ({
-    left: (Math.random() * 100).toFixed(2) + '%',
-    top: (Math.random() * 100).toFixed(2) + '%',
-    size: (Math.random() * 1.6 + 0.5).toFixed(2) + 'px',
-    delay: (Math.random() * 4).toFixed(2) + 's',
-  })), [])
-
-  /* ── cash-flow runway: reconstruct past actual + projected future ── */
-  const runway = useMemo(() => {
-    const today = new Date()
-    const startBalance = (forecast?.startBalance != null ? forecast.startBalance : (data?.balance ?? 0))
-
-    // net change per day from transactions (signed)
-    const all = [...(txData?.currentMonth || []), ...(txData?.historical || [])]
-    const netByDay = {}
-    for (const t of all) {
-      const k = String(t.date).slice(0, 10)
-      netByDay[k] = (netByDay[k] || 0) + (Number(t.amount) || 0)
-    }
-    // projected balance per future date
-    const fcByDay = {}
-    for (const p of (forecast?.points || [])) fcByDay[String(p.date).slice(0, 10)] = Number(p.balance)
-
-    // walk past: value(today)=startBalance, value(d-1)=value(d)-net(d)
-    const valueAt = {}
-    valueAt[dayStr(today)] = startBalance
-    let bal = startBalance
-    for (let i = 1; i <= PAST_DAYS; i++) {
-      const laterKey = dayStr(addDays(today, -(i - 1)))
-      bal = bal - (netByDay[laterKey] || 0)
-      valueAt[dayStr(addDays(today, -i))] = bal
-    }
-    // future from forecast (carry forward if a day is missing)
-    let last = startBalance
-    for (let i = 1; i <= FUTURE_DAYS; i++) {
-      const k = dayStr(addDays(today, i))
-      last = (fcByDay[k] != null) ? fcByDay[k] : last
-      valueAt[k] = last
-    }
-
-    // assemble series index 0..SPAN  (index PAST_DAYS = today)
-    const series = []
-    for (let i = 0; i <= SPAN; i++) {
-      const dt = addDays(today, i - PAST_DAYS)
-      series.push({ i, key: dayStr(dt), date: dt, value: valueAt[dayStr(dt)] ?? startBalance, future: i > PAST_DAYS })
-    }
-    const vals = series.map(s => s.value)
-    const min = Math.min(...vals), max = Math.max(...vals), rng = (max - min) || 1
-    const X = (i) => PADX + (i / SPAN) * (100 - 2 * PADX)
-    const Y = (v) => TOP + (1 - (v - min) / rng) * (BOT - TOP)
-
-    // markers — past actuals + future events (income AND bills), only those >= MARK_MIN
-    const markers = []
-    // anchor labels by horizontal position so they never bleed off the chart edges
-    const labAlign = (x) => (x >= 72 ? 'r' : x <= 16 ? 'l' : 'c')
-
-    // PAST: largest movement per day
-    const pastSorted = all
-      .filter(t => { const k = String(t.date).slice(0, 10); return k <= dayStr(today) && k > dayStr(addDays(today, -PAST_DAYS)) })
-      .sort((a, b) => Math.abs(Number(b.amount)) - Math.abs(Number(a.amount)))
-    const usedPast = new Set()
-    for (const t of pastSorted) {
-      const amt = Number(t.amount) || 0
-      if (Math.abs(amt) < MARK_MIN) continue
-      const k = String(t.date).slice(0, 10)
-      if (usedPast.has(k)) continue
-      const idx = series.findIndex(s => s.key === k)
-      if (idx < 0) continue
-      usedPast.add(k)
-      const income = t.tx_type === 'income' || amt > 0
-      const x = X(idx)
-      markers.push({
-        x, y: Y(series[idx].value),
-        name: t.cleaned_name || t.name || (income ? 'Deposit' : 'Spend'),
-        amt: `${income ? '+' : '−'}$${n2(Math.abs(amt))}`,
-        cls: income ? 'pos' : '', below: !income, align: labAlign(x),
-      })
-      if (markers.length >= 4) break
-    }
-
-    // named lookup for future days from every source that carries income/bill names
-    const namedByIdx = {}
-    const addNamed = (daysUntil, name, amount, income) => {
-      const di = Number(daysUntil)
-      if (!Number.isFinite(di) || di < 1 || di > FUTURE_DAYS) return
-      const idx = PAST_DAYS + di
-      const cand = { name, amount: Math.abs(Number(amount) || 0), income }
-      const prev = namedByIdx[idx]
-      if (!prev || (income && !prev.income) || (income === prev.income && cand.amount > prev.amount)) namedByIdx[idx] = cand
-    }
-    for (const b of (data?.upcomingBills || [])) addNamed(b.daysUntil, b.name, b.amount, b.type === 'income')
-    if (data?.nextPaycheck) addNamed(data.nextPaycheck.daysUntil, 'Paycheck', data.nextPaycheck.amount, true)
-    for (const w of (data?.windows || [])) if (w?.nextPay) addNamed(w.nextPay.daysUntil, 'Paycheck', w.nextPay.amount, true)
-
-    // FUTURE: mark income / bill days from the forecast so each move in the line is explained.
-    // Real forecast points carry hasIncome/hasBill flags; mock points carry an events[] array.
-    const incomeMarks = [], billMarks = []
-    for (const p of (forecast?.points || [])) {
-      const k = String(p.date).slice(0, 10)
-      const idx = series.findIndex(s => s.key === k)
-      if (idx <= PAST_DAYS || idx > SPAN) continue
-      const evIncome = Array.isArray(p.events) ? p.events.find(e => e.type === 'income') : null
-      const evBill = Array.isArray(p.events) ? p.events.find(e => e.type !== 'income') : null
-      const named = namedByIdx[idx]
-      const jump = (series[idx]?.value ?? 0) - (series[idx - 1]?.value ?? series[idx]?.value ?? 0)
-      if (evIncome || p.hasIncome) {
-        let amount = evIncome?.amount ?? (named?.income ? named.amount : null)
-        if (amount == null && jump > 0) amount = jump            // infer from the line's rise
-        incomeMarks.push({ idx, name: evIncome?.name || (named?.income ? named.name : 'Income'), amount, income: true })
+  /* ── budgets (top 3) ── */
+  const budgets = useMemo(() => {
+    return (budData?.budgets || []).slice(0, 3).map((b) => {
+      const pct = Math.min(100, Math.round(b.pct ?? ((b.spent / Math.max(1, b.cap)) * 100)))
+      return {
+        id: b.id,
+        name: b.name,
+        fig: `$${Math.round(b.spent).toLocaleString('en-US')} / ${Math.round(b.cap).toLocaleString('en-US')}`,
+        pct,
+        warn: pct >= BUDGET_WARN_PCT,
       }
-      if (evBill || p.hasBill) {
-        let amount = evBill?.amount ?? (named && !named.income ? named.amount : null)
-        if (amount == null && jump < 0) amount = -jump
-        billMarks.push({ idx, name: evBill?.name || (named && !named.income ? named.name : 'Bills'), amount, income: false })
-      }
+    })
+  }, [budData])
+
+  /* ── accounts strip + net before payday ── */
+  const strip = useMemo(() => {
+    const accts = acctData?.accounts || []
+    const cash = accts.filter((a) => !a.is_debt)
+    const checking = cash.find((a) => /check/i.test(a.name)) || cash[0] || null
+    const savings = cash.find((a) => a !== checking && /sav/i.test(a.name)) || cash.find((a) => a !== checking) || null
+    const debt = accts.find((a) => a.is_debt) || null
+
+    // net before payday = income − bills among upcoming items inside the pay window
+    const dtp = hero.daysToPay
+    let net = null
+    if (dtp != null) {
+      net = (data?.upcomingBills || [])
+        .filter((b) => (b.daysUntil ?? 99) <= dtp)
+        .reduce((sum, b) => sum + (b.type === 'income' ? Number(b.amount) : -Number(b.amount)), 0)
+      net = Math.round(net * 100) / 100
     }
-    // only label events at/above the threshold (keep unknown-amount events); thinning declutters
-    const futureChosen = [...incomeMarks, ...billMarks]
-      .filter(m => m.amount == null || Math.abs(m.amount) >= MARK_MIN)
-      .sort((a, b) => a.idx - b.idx)
-      .slice(0, 12)
-    const usedFuture = new Set()
-    for (const fm of futureChosen) {
-      const key = `${fm.idx}:${fm.income}`
-      if (usedFuture.has(key)) continue
-      usedFuture.add(key)
-      const v = series[fm.idx]?.value ?? startBalance
-      const x = X(fm.idx)
-      const amt = fm.amount != null ? `${fm.income ? '+' : '−'}$${n0(fm.amount)}` : (fm.income ? 'Income' : 'Bill')
-      markers.push({ x, y: Y(v), name: fm.name, amt, cls: fm.income ? 'pos' : 'bill', below: !fm.income, align: labAlign(x) })
-    }
+    return { checking, savings, debt, net }
+  }, [acctData, data, hero.daysToPay])
 
-    // axis ticks
-    const tickIdx = [0, PAST_DAYS, Math.min(SPAN, PAST_DAYS + 7), Math.min(SPAN, PAST_DAYS + 14), SPAN]
-    const ticks = [...new Set(tickIdx)].map(i => ({
-      x: X(i), label: i === PAST_DAYS ? shortDate(today) : shortDate(series[i].date), now: i === PAST_DAYS,
-    }))
-
-    return {
-      series, markers, ticks,
-      nowX: X(PAST_DAYS), nowY: Y(series[PAST_DAYS].value),
-      min, max, X, Y,
-    }
-  }, [data, txData, forecast])
-
-  // canvas effects must re-init once the UI (and its <canvas>) actually mounts
-  // after the loading gate — otherwise the empty-deps effect runs while the
-  // canvas does not exist yet and never draws.
-  const hasData = !!data
-
-  /* ── aurora canvas + parallax ── */
-  const heroRef = useRef(null)
-  const auroraRef = useRef(null)
-  const bloomRef = useRef(null)
+  /* ── tide drift + crest glow breathing (respects reduced motion) ── */
+  const w1 = useRef(null), w2 = useRef(null), w3 = useRef(null), crest = useRef(null)
   useEffect(() => {
-    const cv = auroraRef.current
-    if (!cv) return
-    const ctx = cv.getContext('2d')
-    let raf, w = 0, h = 0
-    const dpr = Math.min(2, window.devicePixelRatio || 1)
-    const size = () => { const r = cv.getBoundingClientRect(); w = cv.width = Math.max(1, r.width * dpr); h = cv.height = Math.max(1, r.height * dpr) }
-    size()
-    const ro = new ResizeObserver(size); ro.observe(cv)
-    const ribbons = [
-      { base: .46, amp: .10, wl: .0042, sp: .00020, ph: 0,   th: .34, c: ['rgba(94,240,214,0)', 'rgba(94,240,214,.9)', 'rgba(70,180,230,0)'] },
-      { base: .52, amp: .13, wl: .0031, sp: -.00015, ph: 2.1, th: .40, c: ['rgba(120,150,255,0)', 'rgba(140,150,255,.8)', 'rgba(90,200,255,0)'] },
-      { base: .50, amp: .085, wl: .0055, sp: .00027, ph: 4.0, th: .26, c: ['rgba(167,139,255,0)', 'rgba(180,150,255,.75)', 'rgba(255,150,210,0)'] },
-      { base: .58, amp: .16, wl: .0024, sp: .00012, ph: 1.0, th: .30, c: ['rgba(60,200,180,0)', 'rgba(70,210,200,.55)', 'rgba(120,160,255,0)'] },
-    ]
-    const wave = (r, x, t) => (r.base + Math.sin(x * r.wl + t * r.sp + r.ph) * r.amp + Math.sin(x * r.wl * .5 + t * r.sp * 1.7 + r.ph * 1.3) * r.amp * .45) * h
-    const draw = (t) => {
-      ctx.clearRect(0, 0, w, h); ctx.globalCompositeOperation = 'lighter'
-      for (const r of ribbons) {
-        const th = r.th * h, step = Math.max(8, w / 120)
-        ctx.beginPath(); ctx.moveTo(0, wave(r, 0, t) - th / 2)
-        for (let x = 0; x <= w; x += step) ctx.lineTo(x, wave(r, x, t) - th / 2)
-        for (let x = w; x >= 0; x -= step) ctx.lineTo(x, wave(r, x, t) + th / 2)
-        ctx.closePath()
-        const g = ctx.createLinearGradient(0, 0, w, 0)
-        g.addColorStop(0, r.c[0]); g.addColorStop(.5, r.c[1]); g.addColorStop(1, r.c[2])
-        ctx.fillStyle = g; ctx.fill()
-      }
-      ctx.globalCompositeOperation = 'source-over'
-      raf = requestAnimationFrame(draw)
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let raf, t = 0
+    const tick = () => {
+      t += 0.011
+      w1.current?.setAttribute('transform', `translate(${Math.sin(t) * 14} ${Math.sin(t * 0.7) * 2})`)
+      w2.current?.setAttribute('transform', `translate(${Math.cos(t * 0.8) * 18} ${Math.cos(t * 0.5) * 2.5})`)
+      const t3 = `translate(${Math.sin(t * 0.6 + 1) * 12} ${Math.sin(t * 0.9) * 1.8})`
+      w3.current?.setAttribute('transform', t3)
+      crest.current?.setAttribute('transform', t3)
+      crest.current?.setAttribute('opacity', (0.55 + 0.3 * Math.sin(t * 1.4)).toFixed(2))
+      raf = requestAnimationFrame(tick)
     }
-    raf = requestAnimationFrame(draw)
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
-  }, [hasData])
-
-  useEffect(() => {
-    const hero = heroRef.current, cv = auroraRef.current, bl = bloomRef.current
-    if (!hero) return
-    const move = (e) => {
-      const r = hero.getBoundingClientRect()
-      const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5
-      if (cv) cv.style.transform = `translate(${x * 18}px,${y * 14}px) scale(1.06)`
-      if (bl) bl.style.transform = `translate(${-50 + x * 4}%,${-54 + y * 4}%)`
-    }
-    const leave = () => { if (cv) cv.style.transform = ''; if (bl) bl.style.transform = '' }
-    hero.addEventListener('mousemove', move); hero.addEventListener('mouseleave', leave)
-    return () => { hero.removeEventListener('mousemove', move); hero.removeEventListener('mouseleave', leave) }
-  }, [hasData])
-
-  /* ── runway SVG paths in true pixel space (round strokes, no distortion) ── */
-  const chartBoxRef = useRef(null)
-  const svgRef = useRef(null)
-  const pastRef = useRef(null)
-  const futRef = useRef(null)
-  const areaRef = useRef(null)
-  const gridRef = useRef(null)
-  const cursorRef = useRef(null)
-  const cursorDotRef = useRef(null)
-  const tipRef = useRef(null)
-  const tipDRef = useRef(null)
-  const tipVRef = useRef(null)
-  const drawnRef = useRef(false)
-
-  useEffect(() => {
-    const box = chartBoxRef.current, svg = svgRef.current
-    if (!box || !svg || !runway.series.length) return
-    drawnRef.current = false
-    const smooth = (p) => {
-      if (p.length < 2) return ''
-      let d = `M ${p[0].x.toFixed(1)} ${p[0].y.toFixed(1)}`
-      for (let i = 0; i < p.length - 1; i++) {
-        const a = p[i - 1] || p[i], b = p[i], c = p[i + 1], e = p[i + 2] || c
-        const c1x = b.x + (c.x - a.x) / 6, c1y = b.y + (c.y - a.y) / 6
-        const c2x = c.x - (e.x - b.x) / 6, c2y = c.y - (e.y - b.y) / 6
-        d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${c.x.toFixed(1)} ${c.y.toFixed(1)}`
-      }
-      return d
-    }
-    const layout = () => {
-      const W = box.clientWidth, H = box.clientHeight
-      if (!W || !H) return
-      svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
-      const padX = W * .04, top = H * .10, bot = H * .82
-      const vals = runway.series.map(s => s.value)
-      const min = Math.min(...vals), max = Math.max(...vals), rng = (max - min) || 1
-      const X = (i) => padX + (i / SPAN) * (W - 2 * padX)
-      const Y = (v) => top + (1 - (v - min) / rng) * (bot - top)
-      const pts = runway.series.map(s => ({ x: X(s.i), y: Y(s.value) }))
-      const pastP = pts.slice(0, PAST_DAYS + 1), futureP = pts.slice(PAST_DAYS)
-      pastRef.current.setAttribute('d', smooth(pastP))
-      futRef.current.setAttribute('d', smooth(futureP))
-      areaRef.current.setAttribute('d', `${smooth(pastP)} L ${X(PAST_DAYS).toFixed(1)} ${(bot + 10).toFixed(1)} L ${X(0).toFixed(1)} ${(bot + 10).toFixed(1)} Z`)
-      let g = ''
-      for (let k = 0; k <= 3; k++) { const y = (top + (bot - top) * k / 3).toFixed(1); g += `<line x1="${padX.toFixed(1)}" y1="${y}" x2="${(W - padX).toFixed(1)}" y2="${y}" stroke="rgba(170,185,255,.06)" stroke-width="1"/>` }
-      gridRef.current.innerHTML = g
-      if (!drawnRef.current) {
-        drawnRef.current = true
-        const len = pastRef.current.getTotalLength()
-        pastRef.current.style.strokeDasharray = len
-        pastRef.current.style.strokeDashoffset = len
-        pastRef.current.getBoundingClientRect()
-        pastRef.current.style.transition = 'stroke-dashoffset 1.5s cubic-bezier(.3,.7,.2,1)'
-        pastRef.current.style.strokeDashoffset = 0
-      } else {
-        pastRef.current.style.strokeDasharray = 'none'
-        pastRef.current.style.strokeDashoffset = 0
-      }
-    }
-    layout()
-    const ro = new ResizeObserver(layout); ro.observe(box)
-    return () => ro.disconnect()
-  }, [runway])
-
-  /* hover scrub */
-  const onChartMove = (e) => {
-    const box = chartBoxRef.current
-    if (!box || !runway.series.length) return
-    const r = box.getBoundingClientRect()
-    let p = ((e.clientX - r.left) / r.width) * 100
-    p = Math.max(PADX, Math.min(100 - PADX, p))
-    let idx = Math.round(((p - PADX) / (100 - 2 * PADX)) * SPAN)
-    idx = Math.max(0, Math.min(SPAN, idx))
-    const s = runway.series[idx]
-    const x = runway.X(idx) + '%', y = runway.Y(s.value) + '%'
-    if (cursorRef.current) { cursorRef.current.style.left = x; cursorRef.current.style.opacity = 1 }
-    if (cursorDotRef.current) { cursorDotRef.current.style.left = x; cursorDotRef.current.style.top = y; cursorDotRef.current.style.opacity = 1 }
-    if (tipRef.current) { tipRef.current.style.left = x; tipRef.current.style.top = y; tipRef.current.style.opacity = 1 }
-    if (tipDRef.current) tipDRef.current.textContent = (idx === PAST_DAYS ? 'TODAY' : shortDate(s.date).toUpperCase()) + (idx > PAST_DAYS ? ' · PROJECTED' : '')
-    if (tipVRef.current) tipVRef.current.textContent = '$' + n0(s.value)
-  }
-  const onChartLeave = () => {
-    for (const r of [cursorRef, cursorDotRef, tipRef]) if (r.current) r.current.style.opacity = 0
-  }
-
-  /* hero count-up (animate integer dollars, static cents) */
-  const { dollars, cc } = centsPair(hero.safeToday)
-  const heroDollars = useCountUp(dollars, { duration: 1200, easing: 'cubic' }).display
-  const meterFill = hero.dailyAllowance > 0 ? Math.min(100, Math.round((hero.spentToday / hero.dailyAllowance) * 100)) : 0
-
-  if (loading && !data) return <div className={styles.dash}><div className={styles.state}>Loading your dashboard…</div></div>
-  if (error) return <div className={styles.dash}><div className={styles.state}>Couldn’t load the dashboard. {error}</div></div>
-
-  const firstName = (user?.name || '').trim().split(' ')[0]
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
   return (
-    <div className={styles.dash}>
-
-      {/* ── top bar ── */}
-      <div className={styles.topbar}>
-        <div className={styles.greet}>
-          <div className={styles.hi}>{greeting()}{firstName ? `, ${firstName}.` : '.'}</div>
-          <div className={styles.sub}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </div>
+    <SwShell>
+      {/* ── hero ── */}
+      <div className={s.hero}>
+        <div className={s.orbWrap}><div className={s.orb} aria-hidden="true" /></div>
+        <div className={s.heroLabel}>Safe to spend today</div>
+        <div className={`${s.amt} ${s.tabnum}`} aria-live="polite">
+          ${loading ? '0' : heroDisplay}<span className={s.cents}>.{heroCents}</span>
         </div>
-        <div className={styles.topright}>
-          <div className={styles.bal}>
-            <div className={styles.balL}>Available balance</div>
-            <div className={styles.balV}>${n2(hero.balance)}</div>
-          </div>
-          <button className={styles.search} aria-label="Search" onClick={() => navigate('/transactions')}>
-            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-          </button>
+        <div className={s.sub}>
+          <b className={s.tabnum}>${n2(hero.heroBalance)}</b> free until payday
+          {hero.payDateStr && <> · <b>{hero.payDateStr}</b></>}
+          {' '}· {hero.tag}
+        </div>
+
+        {/* ripple rings spreading beneath the orb */}
+        <div className={s.ripples} aria-hidden="true">
+          <span className={s.ripple} />
+          <span className={s.ripple} style={{ '--d': '1.7s' }} />
+          <span className={s.ripple} style={{ '--d': '3.4s' }} />
+        </div>
+
+        {/* ── tide ── */}
+        <div className={s.tide}>
+          <svg viewBox="0 0 1000 118" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              {/* bioluminescent crest glow centered under the orb */}
+              <linearGradient id="swCrest" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#1c4f40" />
+                <stop offset=".42" stopColor="#62e0b5" />
+                <stop offset=".58" stopColor="#62e0b5" />
+                <stop offset="1" stopColor="#1c4f40" />
+              </linearGradient>
+            </defs>
+            <path ref={w1} d="M0,58 C150,44 280,76 420,62 C560,48 700,74 840,60 C920,53 970,58 1000,56 L1000,118 L0,118 Z" fill="#0e2c2c" opacity=".85" />
+            <path ref={w2} d="M0,74 C160,62 300,88 460,74 C620,60 760,86 1000,70 L1000,118 L0,118 Z" fill="#10393a" opacity=".9" />
+            <path ref={w3} d="M0,88 C200,78 360,100 540,88 C720,76 860,98 1000,86 L1000,118 L0,118 Z" fill="#144a45" opacity=".95" />
+            <path ref={crest} d="M0,88 C200,78 360,100 540,88 C720,76 860,98 1000,86" fill="none" stroke="url(#swCrest)" strokeWidth="1.6" opacity=".8" />
+          </svg>
         </div>
       </div>
 
-      {/* ── 2×2 grid: hero / runway (left) · upcoming / recent (right) ── */}
-      <div className={styles.grid}>
-
-        {/* HERO */}
-        <section className={styles.hero} ref={heroRef}>
-          <canvas className={styles.heroCanvas} ref={auroraRef} />
-          <div className={styles.stars}>
-            {stars.map((st, i) => (
-              <span key={i} className={styles.star} style={{ left: st.left, top: st.top, width: st.size, height: st.size, animationDelay: st.delay }} />
-            ))}
+      {/* ── cards on the waterline ── */}
+      <div className={s.cards}>
+        <div className={s.card} style={{ '--d': '.32s' }}>
+          <div className={s.cardHead}>Coming up
+            <button className={s.cardLink} onClick={() => navigate('/calendar')}>Calendar</button>
           </div>
-          <div className={styles.bloom} ref={bloomRef} />
-          <div className={styles.edge} />
-          <div className={styles.textscrim} />
-          <div className={styles.hcontent}>
-            <div className={styles.htop}>
-              <span className={styles.htag}><span className={styles.htagDot} />{hero.tag}</span>
-              <span className={styles.hdate}>
-                Daily allowance{hero.daysToPay != null ? ` · ${hero.daysToPay}d to payday` : ''}
-              </span>
+          {upcoming.map((b, i) => (
+            <div className={s.row} key={b.id} style={{ '--d': `${0.45 + i * 0.06}s` }}>
+              <span className={s.rowName}>{b.name}<span className={s.rowWhen}>{b.when}</span></span>
+              <span className={`${b.cls} ${s.tabnum}`}>{b.amt}</span>
             </div>
-            <div className={styles.hcenter}>
-              <div className={styles.hkick}>Safe to spend today</div>
-              <div className={styles.amount}>
-                <span className={styles.cur}>$</span>
-                <span className={styles.int}>{heroDollars}</span>
-                <span className={styles.dec}>.{cc}</span>
-              </div>
-              <div className={styles.hsub}>After rent, bills and your savings pace — this is genuinely yours.</div>
-              <div className={styles.meter}>
-                <div className={styles.meterRow}>
-                  <span>Spent today <b>${n2(hero.spentToday)}</b></span>
-                  <span><b>${n2(hero.safeToday)}</b> of ${n0(hero.dailyAllowance)} left</span>
-                </div>
-                <div className={styles.bar}><div className={styles.fill} style={{ '--fill': `${meterFill}%` }} /></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* RUNWAY */}
-        <section className={styles.runway}>
-          <div className={styles.chead}>
-            <h3>Cash flow runway</h3>
-            <div className={styles.leg}>
-              <span><i className={styles.legLine} />Actual</span>
-              <span><i className={`${styles.legLine} ${styles.legProj}`} />Projected</span>
-            </div>
-          </div>
-          <div className={styles.chartbox} ref={chartBoxRef} onMouseMove={onChartMove} onMouseLeave={onChartLeave}>
-            <svg className={styles.svg} ref={svgRef} preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <linearGradient id="lumLineGrad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0" stopColor="#6ff4dd" /><stop offset=".55" stopColor="#5aa6ff" /><stop offset="1" stopColor="#a78bff" />
-                </linearGradient>
-                <linearGradient id="lumFillGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="rgba(94,240,214,.26)" /><stop offset="1" stopColor="rgba(94,240,214,0)" />
-                </linearGradient>
-              </defs>
-              <g ref={gridRef} />
-              <path ref={areaRef} fill="url(#lumFillGrad)" stroke="none" />
-              <path ref={futRef} fill="none" stroke="#a78bff" strokeWidth="1.6" strokeDasharray="1 7" strokeLinecap="round" opacity=".6" />
-              <path ref={pastRef} fill="none" stroke="url(#lumLineGrad)" strokeWidth="2.4" strokeLinecap="round" />
-            </svg>
-
-            <div className={styles.overlay}>
-              <div className={styles.nowline} style={{ left: `${runway.nowX}%` }} />
-              <div className={styles.nowtag} style={{ left: `${runway.nowX}%`, top: `${runway.nowY}%` }}>Now</div>
-              {runway.markers.map((m, i) => (
-                <div key={i}>
-                  <div
-                    className={`${styles.dot} ${m.cls === 'bill' ? styles.bill : ''} ${m.cls === 'pos' ? styles.pos : ''}`}
-                    style={{ left: `${m.x}%`, top: `${m.y}%`, animationDelay: `${.7 + i * .1}s` }}
-                  />
-                  <div
-                    className={`${styles.lab} ${m.cls === 'pos' ? styles.labPos : ''} ${m.align === 'r' ? styles.labR : ''} ${m.align === 'l' ? styles.labL : ''}`}
-                    style={{ left: `${m.x}%`, top: `${m.below ? m.y + 5 : m.y - 15}%`, animationDelay: `${.8 + i * .1}s` }}
-                  >
-                    <div className={styles.labLine}>{m.name}</div>
-                    <div className={styles.labVal}>{m.amt}</div>
-                  </div>
-                </div>
-              ))}
-              <div className={`${styles.dot} ${styles.now}`} style={{ left: `${runway.nowX}%`, top: `${runway.nowY}%`, animationDelay: '.6s' }} />
-              <div className={styles.axis}>
-                {runway.ticks.map((t, i) => (
-                  <div key={i} className={`${styles.axtick} ${t.now ? styles.axtickNow : ''}`} style={{ left: `${t.x}%` }}>{t.label}</div>
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.cursor} ref={cursorRef} />
-            <div className={styles.cursordot} ref={cursorDotRef} />
-            <div className={styles.tip} ref={tipRef}>
-              <div className={styles.tipD} ref={tipDRef} />
-              <div className={styles.tipV} ref={tipVRef} />
-            </div>
-          </div>
-        </section>
-
-        {/* UPCOMING */}
-        <aside className={styles.up}>
-          <div className={styles.phead}>
-            <h3>On the horizon</h3>
-            <span className={styles.more} onClick={() => navigate('/calendar')}>Calendar →</span>
-          </div>
-          <div className={styles.tl}>
-            {upcoming.length ? upcoming.map(ev => (
-              <div key={ev.id} className={`${styles.ev} ${ev.income ? styles.pay : ''}`}>
-                <span className={styles.node} />
-                <div className={styles.when}>{ev.when}</div>
-                <div className={styles.line}>
-                  <span className={styles.nm}>{ev.name}</span>
-                  <span className={styles.evAmt}>{ev.amt}</span>
-                </div>
-                <div className={styles.cat}>{ev.cat}</div>
-              </div>
-            )) : <div className={styles.empty}>Nothing scheduled.</div>}
-          </div>
-          {netBeforePay != null && (
-            <div className={styles.upfoot}>
-              <span>Net before payday</span>
-              <b>{netBeforePay >= 0 ? '+' : '−'}${n2(Math.abs(netBeforePay))}</b>
-            </div>
+          ))}
+          {!loading && upcoming.length === 0 && (
+            <div className={s.row}><span className={s.rowWhen}>Nothing due before payday</span></div>
           )}
-        </aside>
+        </div>
 
-        {/* RECENT */}
-        <section className={styles.recent}>
-          <div className={`${styles.phead} ${styles.pheadR}`}>
-            <h3>Recent activity</h3>
-            <span className={styles.more} onClick={() => navigate('/transactions')}>View ledger →</span>
+        <div className={s.card} style={{ '--d': '.42s' }}>
+          <div className={s.cardHead}>Recent
+            <button className={s.cardLink} onClick={() => navigate('/transactions')}>All</button>
           </div>
-          <div className={styles.feed}>
-            {recent.length ? recent.map((t, i) => (
-              <div key={t.id} className={styles.fi} style={{ animationDelay: `${.55 + i * .11}s` }}>
-                <div className={styles.av} style={{ background: t.grad }}>{t.initial}</div>
-                <div>
-                  <div className={styles.fnm}>{t.nm}</div>
-                  <div className={styles.fcat}>{t.cat}</div>
-                </div>
-                <div className={styles.famt} style={t.income ? { color: 'var(--lum-mint)' } : undefined}>{t.amt}</div>
+          {recent.map((t, i) => (
+            <div className={s.row} key={t.id} style={{ '--d': `${0.55 + i * 0.06}s` }}>
+              <span className={s.rowName}>{t.name}<span className={s.rowWhen}>{t.when}</span></span>
+              <span className={`${t.cls} ${s.tabnum}`}>{t.amt}</span>
+            </div>
+          ))}
+          {!loading && recent.length === 0 && (
+            <div className={s.row}><span className={s.rowWhen}>No transactions yet</span></div>
+          )}
+        </div>
+
+        <div className={s.card} style={{ '--d': '.52s' }}>
+          <div className={s.cardHead}>
+            Budgets · {new Date().toLocaleDateString('en-US', { month: 'long' })}
+            <button className={s.cardLink} onClick={() => navigate('/budgets')}>Edit</button>
+          </div>
+          {budgets.map((b, i) => (
+            <div className={s.bud} key={b.id}>
+              <div className={s.budRow}>
+                <span>{b.name}</span>
+                <span className={`${s.budFig} ${s.tabnum}`}>{b.fig}</span>
               </div>
-            )) : <div className={styles.empty}>No recent transactions.</div>}
-          </div>
-        </section>
-
+              <div className={s.budBar}>
+                <i className={b.warn ? s.budFillWarn : s.budFill} style={{ width: `${b.pct}%`, '--d': `${0.65 + i * 0.12}s` }} />
+              </div>
+            </div>
+          ))}
+          {!loading && budgets.length === 0 && (
+            <div className={s.row}><span className={s.rowWhen}>No budgets yet — add one to start tracking</span></div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* ── accounts strip ── */}
+      <div className={s.strip}>
+        {strip.checking && (
+          <div style={{ '--d': '.6s' }}>
+            <div className={s.statKey}>{strip.checking.name}</div>
+            <div className={`${s.statVal} ${s.tabnum}`}>${n2(strip.checking.balance)}</div>
+          </div>
+        )}
+        {strip.savings && (
+          <div style={{ '--d': '.68s' }}>
+            <div className={s.statKey}>{strip.savings.name}</div>
+            <div className={`${s.statVal} ${s.tabnum}`}>${n2(strip.savings.balance)}</div>
+          </div>
+        )}
+        {strip.debt && (
+          <div style={{ '--d': '.76s' }}>
+            <div className={s.statKey}>{strip.debt.name}</div>
+            <div className={`${s.statValDebt} ${s.tabnum}`}>−${n2(strip.debt.balance)}</div>
+          </div>
+        )}
+        {strip.net != null && (
+          <div style={{ '--d': '.84s' }}>
+            <div className={s.statKey}>Net before payday</div>
+            <div className={`${strip.net >= 0 ? s.statValPos : s.statValDebt} ${s.tabnum}`}>
+              {strip.net >= 0 ? '+' : '−'}${n2(Math.abs(strip.net))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <div className={s.stateWrap}>Couldn't reach the server — showing what we have. <b>{error}</b></div>
+      )}
+    </SwShell>
   )
 }
