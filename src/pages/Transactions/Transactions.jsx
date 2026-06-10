@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
 import SwShell from '../../components/SwShell/SwShell'
@@ -7,12 +7,10 @@ import s from './Transactions.module.css'
 
 /* ──────────────────────────────────────────────────────────────
    Lumen — Activity (Stillwater · Dark)
-   The ledger under the water: month summary strip, glass search
-   and category pills, date-grouped rows with inline category
-   editing. All previous functionality preserved.
+   Full transaction editing: name, category (with budget picker),
+   amount, date, type, note. Glass drawer modal.
    ────────────────────────────────────────────────────────────── */
 
-// mint-family avatar tints so every merchant sits in the palette
 const AV_TINTS = [
   'linear-gradient(150deg,#1f5a48,#123a2e)',
   'linear-gradient(150deg,#1c4f54,#10333a)',
@@ -27,11 +25,19 @@ const avTint = (name = '') => {
   return AV_TINTS[h]
 }
 
+const TX_TYPES = ['expense', 'income', 'transfer']
+
 export default function Transactions() {
   const { data, loading, error, refresh } = useApi(() => api.transactions('?page=0'), [])
+  const { data: budgetsData } = useApi(() => api.budgets(), [])
   const [query, setQuery] = useState('')
   const [cat, setCat] = useState('All')
-  const [editing, setEditing] = useState(null) // tx id being recategorized
+  const [editingTx, setEditingTx] = useState(null) // full tx object being edited
+
+  const budgetNames = useMemo(() => {
+    if (!budgetsData?.budgets) return []
+    return budgetsData.budgets.map(b => ({ name: b.name, icon: b.icon || '📦' }))
+  }, [budgetsData])
 
   const all = useMemo(() => {
     if (!data) return []
@@ -52,7 +58,6 @@ export default function Transactions() {
     })
   }, [all, query, cat])
 
-  // group by date
   const groups = useMemo(() => {
     const map = new Map()
     for (const t of filtered) {
@@ -63,8 +68,6 @@ export default function Transactions() {
     return Array.from(map.entries()).sort((a, b) => new Date(b[0]) - new Date(a[0]))
   }, [filtered])
 
-  // Summary computed from the current month's transactions so it always matches
-  // the inflows/outflows shown below (the backend's totals field can under-count income).
   const totals = useMemo(() => {
     const month = data?.currentMonth || []
     let income = 0, spending = 0
@@ -77,19 +80,20 @@ export default function Transactions() {
   }, [data])
   const net = totals.income - totals.spending
 
-  async function saveCategory(t, value) {
-    setEditing(null)
-    const next = value.trim()
-    if (!next || next === t.category) return
+  function openEdit(t) {
+    setEditingTx(t)
+  }
+
+  async function handleSave(t, updates) {
+    setEditingTx(null)
     try {
-      await api.updateTransaction(t.id, { category: next, _original_category: t.category })
+      await api.updateTransaction(t.id, updates)
       refresh()
-    } catch { /* surfaced via error state on next load */ }
+    } catch { /* surfaced on next load */ }
   }
 
   return (
     <SwShell>
-      {/* ── page head: title + month summary ── */}
       <div className={s.head}>
         <div>
           <div className={s.eyebrow}>Activity</div>
@@ -114,7 +118,6 @@ export default function Transactions() {
         </div>
       </div>
 
-      {/* ── controls: glass search + category pills ── */}
       <div className={s.controls}>
         <div className={s.searchWrap}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -139,8 +142,6 @@ export default function Transactions() {
       {error && <div className={s.state}>Couldn't load transactions. <b>{error}</b></div>}
       {data && groups.length === 0 && <div className={s.state}>No transactions match — try a different search or category.</div>}
 
-      {/* ── date-grouped ledger ── */}
-      {/* keyed by filter so the cascade replays when results change */}
       <div className={s.list} key={`${cat}|${query.trim().toLowerCase()}`}>
         {groups.map(([date, rows], gi) => (
           <section key={date} className={s.group} style={{ '--d': `${0.12 + gi * 0.07}s` }}>
@@ -150,31 +151,23 @@ export default function Transactions() {
                 const income = t.amount > 0 || t.tx_type === 'income'
                 const nm = t.cleaned_name || t.name
                 return (
-                  <div key={t.id} className={s.row} style={{ '--d': `${0.18 + gi * 0.07 + ri * 0.05}s` }}>
+                  <div key={t.id} className={s.row} style={{ '--d': `${0.18 + gi * 0.07 + ri * 0.05}s` }}
+                    onClick={() => openEdit(t)} role="button" tabIndex={0}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') openEdit(t) }}>
                     <span className={s.av} style={{ background: avTint(nm) }}>{initial(nm)}</span>
                     <div className={s.meta}>
                       <div className={s.name}>{nm}</div>
-                      {editing === t.id ? (
-                        <input
-                          className={s.catEdit}
-                          defaultValue={t.category || ''}
-                          autoFocus
-                          onBlur={e => saveCategory(t, e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') setEditing(null) }}
-                          aria-label="Edit category"
-                        />
-                      ) : (
-                        <button className={s.cat} onClick={() => setEditing(t.id)} title="Edit category">
-                          {t.category || 'Uncategorized'}
-                          {t.account_mask && (
-                            <span className={s.acct}> · {t.account_institution || t.account_name} ··{t.account_mask}</span>
-                          )}
-                        </button>
-                      )}
+                      <div className={s.catRow}>
+                        <span className={s.cat}>{t.category || 'Uncategorized'}</span>
+                        {t.account_mask && (
+                          <span className={s.acct}>{t.account_institution || t.account_name} ··{t.account_mask}</span>
+                        )}
+                      </div>
                     </div>
                     <div className={`${income ? s.amtIn : s.amt} ${s.tabnum}`}>
                       {income ? `+${money(Math.abs(t.amount)).slice(1)}` : `−${money(Math.abs(t.amount)).slice(1)}`}
                     </div>
+                    <span className={s.editHint} aria-hidden="true">✎</span>
                   </div>
                 )
               })}
@@ -182,6 +175,134 @@ export default function Transactions() {
           </section>
         ))}
       </div>
+
+      {editingTx && (
+        <TxEditor
+          tx={editingTx}
+          budgetNames={budgetNames}
+          onClose={() => setEditingTx(null)}
+          onSave={handleSave}
+        />
+      )}
     </SwShell>
+  )
+}
+
+/* ── Full transaction editor modal ── */
+function TxEditor({ tx, budgetNames, onClose, onSave }) {
+  const nm = tx.cleaned_name || tx.name
+  const [form, setForm] = useState({
+    name: nm || '',
+    category: tx.category || '',
+    amount: String(Math.abs(Number(tx.amount) || 0)),
+    date: tx.date ? String(tx.date).slice(0, 10) : '',
+    tx_type: tx.tx_type || (Number(tx.amount) > 0 ? 'income' : 'expense'),
+    note: tx.note || '',
+  })
+  const [catOpen, setCatOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  async function save() {
+    setBusy(true)
+    const amt = Number(form.amount)
+    const signedAmt = form.tx_type === 'income' ? Math.abs(amt) : -Math.abs(amt)
+    await onSave(tx, {
+      name: form.name.trim() || undefined,
+      category: form.category || null,
+      amount: signedAmt,
+      date: form.date || undefined,
+      tx_type: form.tx_type,
+      note: form.note || null,
+      _original_category: tx.category,
+    })
+    setBusy(false)
+  }
+
+  return (
+    <div className={s.backdrop} onClick={onClose}>
+      <div className={s.drawer} onClick={e => e.stopPropagation()}>
+        <div className={s.drawerHead}>
+          <div className={s.drawerTitle}>Edit transaction</div>
+          <button className={s.drawerX} onClick={onClose} aria-label="Close">×</button>
+        </div>
+
+        {/* Type selector */}
+        <div className={s.fld}>
+          <label className={s.flabel}>Type</label>
+          <div className={s.typeRow}>
+            {TX_TYPES.map(t => (
+              <button key={t} type="button"
+                className={`${s.typeBtn} ${form.tx_type === t ? s.typeBtnOn : ''} ${s['type_' + t] || ''}`}
+                onClick={() => set('tx_type', t)}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Name */}
+        <div className={s.fld}>
+          <label className={s.flabel}>Name</label>
+          <input className={s.fin} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Merchant name" />
+        </div>
+
+        {/* Category with budget picker */}
+        <div className={s.fld}>
+          <label className={s.flabel}>Category</label>
+          <div className={s.catField}>
+            <input className={s.fin} value={form.category} onChange={e => { set('category', e.target.value); setCatOpen(true) }}
+              onFocus={() => setCatOpen(true)} placeholder="Category" />
+            {catOpen && budgetNames.length > 0 && (
+              <div className={s.catDrop}>
+                <div className={s.catDropHead}>Budget categories</div>
+                {budgetNames
+                  .filter(b => !form.category || b.name.toLowerCase().includes(form.category.toLowerCase()))
+                  .map(b => (
+                    <button key={b.name} className={s.catOpt} type="button"
+                      onClick={() => { set('category', b.name); setCatOpen(false) }}>
+                      <span className={s.catOptIcon}>{b.icon}</span>
+                      {b.name}
+                    </button>
+                  ))}
+                <button className={s.catClose} type="button" onClick={() => setCatOpen(false)}>Dismiss</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={s.frow}>
+          {/* Amount */}
+          <div className={s.fld}>
+            <label className={s.flabel}>Amount</label>
+            <input className={s.fin} inputMode="decimal" value={form.amount}
+              onChange={e => set('amount', e.target.value)} placeholder="0.00" />
+          </div>
+          {/* Date */}
+          <div className={s.fld}>
+            <label className={s.flabel}>Date</label>
+            <input className={s.fin} type="date" value={form.date} onChange={e => set('date', e.target.value)} />
+          </div>
+        </div>
+
+        {/* Note */}
+        <div className={s.fld}>
+          <label className={s.flabel}>Note</label>
+          <input className={s.fin} value={form.note} onChange={e => set('note', e.target.value)} placeholder="Optional note" />
+        </div>
+
+        <div className={s.drawerFoot}>
+          <button className={s.drawerCancel} onClick={onClose} disabled={busy}>Cancel</button>
+          <button className={s.drawerSave} onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button>
+        </div>
+      </div>
+    </div>
   )
 }

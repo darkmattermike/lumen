@@ -116,18 +116,23 @@
 }
 
 
-/* ── motion: chrome entrance + route transition ── */
+/* ── motion: chrome entrance + route transition ──
+   pageIn only translates — no opacity fade — because the content
+   rows animate their own entrance (staggered from opacity:0).
+   Fading the wrapper AND the rows creates a double-blink lag.
+   The top bar sinks in while the content rises up. ── */
 .top {
-  animation: swSink .55s cubic-bezier(.22, 1, .36, 1) both;
+  animation: swSink .5s cubic-bezier(.22, 1, .36, 1) both;
 }
 .pageIn {
-  animation: swSurface .6s cubic-bezier(.22, 1, .36, 1) both;
+  animation: swSurface .45s cubic-bezier(.22, 1, .36, 1) both;
 }
 @keyframes swSink {
-  from { opacity: 0; transform: translateY(-10px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: none; }
 }
 @keyframes swSurface {
-  from { opacity: 0; transform: translateY(16px); filter: blur(3px); }
-  to   { opacity: 1; transform: none; filter: blur(0); }
+  /* No opacity: rows handle their own fade-in. Just a subtle lift. */
+  from { transform: translateY(10px); }
+  to   { transform: none; }
 }
