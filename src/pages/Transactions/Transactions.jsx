@@ -204,7 +204,7 @@ export default function Transactions() {
             <div className={s.groupDate}>{fmtDate(date)}</div>
             <div className={s.groupCard}>
               {rows.map((t, ri) => {
-                const income = t.amount > 0 || t.tx_type === 'income'
+                const income = Number(t.amount) > 0  // amount sign is ground truth
                 const nm = t.cleaned_name || t.name
                 return (
                   <div key={t.id} className={s.row}
@@ -260,13 +260,22 @@ export default function Transactions() {
 
 /* ── Full transaction editor modal ── */
 function TxEditor({ tx, budgetNames, onClose, onSave }) {
-  const nm = tx.cleaned_name || tx.name
+  const nm  = tx.cleaned_name || tx.name
+  const amt = Number(tx.amount) || 0
+  // Amount sign is the ground truth for type. Stored tx_type only resolves
+  // expense vs transfer (negative) or income vs transfer (positive).
+  const derivedType = amt > 0
+    ? (tx.tx_type === 'transfer' ? 'transfer' : 'income')
+    : amt < 0
+      ? (tx.tx_type === 'transfer' ? 'transfer' : 'expense')
+      : (tx.tx_type || 'expense')
+
   const [form, setForm] = useState({
     name:     nm || '',
     category: tx.category || '',
-    amount:   String(Math.abs(Number(tx.amount) || 0)),
+    amount:   String(Math.abs(amt)),
     date:     tx.date ? String(tx.date).slice(0, 10) : '',
-    tx_type:  tx.tx_type || (Number(tx.amount) > 0 ? 'income' : 'expense'),
+    tx_type:  derivedType,
     note:     tx.note || '',
   })
   const [catOpen, setCatOpen]   = useState(false)
