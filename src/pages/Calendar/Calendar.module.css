@@ -386,22 +386,7 @@
 .msave:disabled, .mcancel:disabled, .delBtn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ── responsive ── */
-@media (min-width: 900px) {
-  .layout { flex-direction: row; align-items: flex-start; }
-  .calCard { flex: 0 0 340px; }
-  .agenda { flex: 1; }
-
-  /* two-column timeline on wide agenda */
-  .tl { columns: 2; column-gap: 44px; }
-  .tl::before { display: none; }
-  .ev { break-inside: avoid; padding-left: 28px; }
-  .ev::before {
-    content: ''; position: absolute; left: 8px; top: 5px; bottom: 0; width: 1px;
-    background: linear-gradient(180deg, rgba(98,224,181,.5), rgba(98,224,181,.15));
-  }
-  .ev:last-child::before { bottom: 12px; }
-  .node { left: 0; }
-}
+/* Layout is always stacked: calendar on top, agenda below, single column. */
 
 @media (max-width: 640px) {
   .head { padding: 18px 18px 20px; }
