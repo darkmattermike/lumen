@@ -383,3 +383,20 @@
   color: var(--sw-dim);
   opacity: .6;
 }
+
+/* ── transfer row styling ── */
+.catTransfer {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c8cff;
+  margin-top: 2px;
+}
+.amtTransfer {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: #6c8cff;
+  opacity: .7;
+  font-variant-numeric: tabular-nums;
+}

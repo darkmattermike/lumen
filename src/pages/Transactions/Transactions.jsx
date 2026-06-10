@@ -91,13 +91,15 @@ export default function Transactions() {
 
   const totals = useMemo(() => {
     const month = initialData?.currentMonth || []
-    let income = 0, spending = 0
+    let income = 0, spending = 0, count = 0
     for (const t of month) {
+      if (t.tx_type === 'transfer') continue  // transfers are neutral, not in/out
       const amt = Number(t.amount) || 0
-      if (amt > 0 || t.tx_type === 'income') income += Math.abs(amt)
+      count++
+      if (amt > 0) income += Math.abs(amt)
       else spending += Math.abs(amt)
     }
-    return { income, spending, count: month.length }
+    return { income, spending, count }
   }, [initialData])
   const net = totals.income - totals.spending
 
@@ -204,7 +206,8 @@ export default function Transactions() {
             <div className={s.groupDate}>{fmtDate(date)}</div>
             <div className={s.groupCard}>
               {rows.map((t, ri) => {
-                const income = Number(t.amount) > 0  // amount sign is ground truth
+                const isTransfer = t.tx_type === 'transfer'
+                const income = !isTransfer && Number(t.amount) > 0
                 const nm = t.cleaned_name || t.name
                 return (
                   <div key={t.id} className={s.row}
@@ -215,14 +218,18 @@ export default function Transactions() {
                     <div className={s.meta}>
                       <div className={s.name}>{nm}</div>
                       <div className={s.catRow}>
-                        <span className={s.cat}>{t.category || 'Uncategorized'}</span>
+                        <span className={isTransfer ? s.catTransfer : s.cat}>{isTransfer ? 'Transfer' : (t.category || 'Uncategorized')}</span>
                         {t.account_mask && (
                           <span className={s.acct}>{t.account_institution || t.account_name} ··{t.account_mask}</span>
                         )}
                       </div>
                     </div>
-                    <div className={`${income ? s.amtIn : s.amt} ${s.tabnum}`}>
-                      {income ? `+${money(Math.abs(t.amount)).slice(1)}` : `−${money(Math.abs(t.amount)).slice(1)}`}
+                    <div className={`${isTransfer ? s.amtTransfer : income ? s.amtIn : s.amt} ${s.tabnum}`}>
+                      {isTransfer
+                        ? money(Math.abs(t.amount)).slice(1)
+                        : income
+                          ? `+${money(Math.abs(t.amount)).slice(1)}`
+                          : `−${money(Math.abs(t.amount)).slice(1)}`}
                     </div>
                     <span className={s.editHint} aria-hidden="true">✎</span>
                   </div>
