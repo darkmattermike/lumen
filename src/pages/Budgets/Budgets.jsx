@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
@@ -181,6 +181,7 @@ export default function Budgets() {
 
 /* ── Budget editor modal ── */
 function BudgetEditor({ budget, icons, onClose, onSaved, onDelete, onComplete }) {
+  const [tab, setTab] = useState('edit') // 'edit' | 'txns'
   const [form, setForm] = useState({
     name: budget.name || '',
     cap: String(Number(budget.cap) || ''),
@@ -188,6 +189,27 @@ function BudgetEditor({ budget, icons, onClose, onSaved, onDelete, onComplete })
   })
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
+
+  // Transactions for this category this month — fetched lazily on tab switch
+  const [txns, setTxns] = useState(null)
+  const [txnsLoading, setTxnsLoading] = useState(false)
+  const [txnsErr, setTxnsErr] = useState('')
+
+  useEffect(() => {
+    if (tab !== 'txns' || txns !== null) return
+    setTxnsLoading(true)
+    setTxnsErr('')
+    api.transactions(`?category=${encodeURIComponent(budget.name)}&days=31`)
+      .then(data => {
+        // api returns { current: [...], historical: [...] } — combine and sort
+        const all = [...(data?.current || []), ...(data?.historical || [])]
+        all.sort((a, b) => new Date(b.date) - new Date(a.date))
+        setTxns(all)
+      })
+      .catch(() => setTxnsErr('Could not load transactions.'))
+      .finally(() => setTxnsLoading(false))
+  }, [tab, txns, budget.name])
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   async function save() {
@@ -202,58 +224,137 @@ function BudgetEditor({ budget, icons, onClose, onSaved, onDelete, onComplete })
     } catch (e) { setErr(e?.message || 'Could not save.'); setBusy(false) }
   }
 
+  // Guess transaction count from the budget's spend data for the tab label
+  const txnCount = txns ? txns.length : null
+
   return (
     <div className={s.backdrop} onClick={onClose}>
       <div className={s.modal} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
         <div className={s.modalHead}>
-          <h3 className={s.modalTitle}>Edit budget</h3>
+          <div className={s.modalHeadLeft}>
+            <span className={s.modalIcon}>{budget.icon || '📦'}</span>
+            <h3 className={s.modalTitle}>{budget.name}</h3>
+          </div>
           <button className={s.modalX} onClick={onClose} aria-label="Close">×</button>
         </div>
 
-        {/* Icon picker */}
-        <div className={s.mfld}>
-          <label className={s.mlabel}>Icon</label>
-          <div className={s.iconGrid}>
-            {icons.map(ic => (
-              <button key={ic} type="button"
-                className={`${s.iconBtn} ${form.icon === ic ? s.iconOn : ''}`}
-                onClick={() => set('icon', ic)}>{ic}</button>
-            ))}
+        {/* Tab bar */}
+        <div className={s.tabBar}>
+          <button
+            className={`${s.tabBtn} ${tab === 'edit' ? s.tabBtnOn : ''}`}
+            onClick={() => setTab('edit')}>
+            Edit
+          </button>
+          <button
+            className={`${s.tabBtn} ${tab === 'txns' ? s.tabBtnOn : ''}`}
+            onClick={() => setTab('txns')}>
+            Transactions{txnCount !== null ? ` (${txnCount})` : ''}
+          </button>
+        </div>
+
+        {/* ── Edit tab ── */}
+        {tab === 'edit' && (
+          <>
+            {/* Icon picker */}
+            <div className={s.mfld}>
+              <label className={s.mlabel}>Icon</label>
+              <div className={s.iconGrid}>
+                {icons.map(ic => (
+                  <button key={ic} type="button"
+                    className={`${s.iconBtn} ${form.icon === ic ? s.iconOn : ''}`}
+                    onClick={() => set('icon', ic)}>{ic}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Name */}
+            <div className={s.mfld}>
+              <label className={s.mlabel}>Category name</label>
+              <input className={s.min} value={form.name} autoFocus onChange={e => set('name', e.target.value)}
+                placeholder="Matches transaction category" />
+              <div className={s.mhint}>This name links the budget to your transactions.</div>
+            </div>
+
+            {/* Cap */}
+            <div className={s.mfld}>
+              <label className={s.mlabel}>Monthly cap</label>
+              <input className={s.min} inputMode="decimal" value={form.cap}
+                onChange={e => set('cap', e.target.value)} placeholder="0.00" />
+            </div>
+
+            {err && <div className={s.merr}>{err}</div>}
+
+            <div className={s.modalFoot}>
+              <div className={s.modalFootLeft}>
+                <button className={s.delBtn} onClick={() => onDelete(budget)} disabled={busy} title="Delete budget">Delete</button>
+                <button
+                  className={`${s.completeBtn} ${budget.completed ? s.completeBtnOn : ''}`}
+                  onClick={() => onComplete(budget)} disabled={busy}
+                  title={budget.completed ? 'Mark as active' : 'Mark as completed'}>
+                  {budget.completed ? 'Reopen' : 'Complete'}
+                </button>
+              </div>
+              <div className={s.modalFootRight}>
+                <button className={s.mcancel} onClick={onClose} disabled={busy}>Cancel</button>
+                <button className={s.msave} onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── Transactions tab ── */}
+        {tab === 'txns' && (
+          <div className={s.txnPane}>
+            {/* Summary strip */}
+            <div className={s.txnSummary}>
+              <div className={s.txnSummaryItem}>
+                <span className={s.txnSummaryKey}>Spent</span>
+                <span className={s.txnSummaryVal}>{money(budget.spent)}</span>
+              </div>
+              <div className={s.txnSummaryItem}>
+                <span className={s.txnSummaryKey}>Cap</span>
+                <span className={s.txnSummaryVal}>{money0(budget.cap)}</span>
+              </div>
+              <div className={s.txnSummaryItem}>
+                <span className={s.txnSummaryKey}>Left</span>
+                <span className={`${s.txnSummaryVal} ${Number(budget.cap) - Number(budget.spent) < 0 ? s.txnOver : s.txnIn}`}>
+                  {money0(Math.abs(Number(budget.cap) - Number(budget.spent)))}
+                </span>
+              </div>
+            </div>
+
+            {txnsLoading && (
+              <div className={s.txnState}>Loading…</div>
+            )}
+            {txnsErr && (
+              <div className={s.txnState}>{txnsErr}</div>
+            )}
+            {txns && txns.length === 0 && (
+              <div className={s.txnState}>No transactions this month.</div>
+            )}
+            {txns && txns.length > 0 && (
+              <div className={s.txnList}>
+                {txns.map(tx => (
+                  <div key={tx.id} className={s.txnRow}>
+                    <div className={s.txnLeft}>
+                      <div className={s.txnMerchant}>{tx.merchant_name || tx.name || '—'}</div>
+                      <div className={s.txnDate}>
+                        {new Date(tx.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {tx.account_name && <span className={s.txnAcct}> · {tx.account_name}</span>}
+                      </div>
+                    </div>
+                    <div className={`${s.txnAmt} ${Number(tx.amount) < 0 ? s.txnAmtExp : s.txnAmtInc}`}>
+                      {Number(tx.amount) < 0 ? '−' : '+'}{money(Math.abs(Number(tx.amount)))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
-        {/* Name */}
-        <div className={s.mfld}>
-          <label className={s.mlabel}>Category name</label>
-          <input className={s.min} value={form.name} autoFocus onChange={e => set('name', e.target.value)}
-            placeholder="Matches transaction category" />
-          <div className={s.mhint}>This name links the budget to your transactions.</div>
-        </div>
-
-        {/* Cap */}
-        <div className={s.mfld}>
-          <label className={s.mlabel}>Monthly cap</label>
-          <input className={s.min} inputMode="decimal" value={form.cap}
-            onChange={e => set('cap', e.target.value)} placeholder="0.00" />
-        </div>
-
-        {err && <div className={s.merr}>{err}</div>}
-
-        <div className={s.modalFoot}>
-          <div className={s.modalFootLeft}>
-            <button className={s.delBtn} onClick={() => onDelete(budget)} disabled={busy} title="Delete budget">Delete</button>
-            <button
-              className={`${s.completeBtn} ${budget.completed ? s.completeBtnOn : ''}`}
-              onClick={() => onComplete(budget)} disabled={busy}
-              title={budget.completed ? 'Mark as active' : 'Mark as completed'}>
-              {budget.completed ? 'Reopen' : 'Complete'}
-            </button>
-          </div>
-          <div className={s.modalFootRight}>
-            <button className={s.mcancel} onClick={onClose} disabled={busy}>Cancel</button>
-            <button className={s.msave} onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
-          </div>
-        </div>
       </div>
     </div>
   )
