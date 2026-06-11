@@ -202,20 +202,20 @@ export default function Transactions() {
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingTx(t) }}>
                     {/* col 1: accent bar */}
                     <span className={isTransfer ? s.rowBarTransfer : income ? s.rowBarIn : s.rowBar} aria-hidden="true" />
-                    {/* col 2: name — mobile also shows account below */}
-                    <div className={s.meta}>
+                    {/* col 2: name (top) + account (bottom small) */}
+                    <div className={s.nameCell}>
                       <span className={s.name}>{nm}</span>
                       {t.account_mask && (
-                        <span className={`${s.acct} ${s.acctMobile}`}>
+                        <span className={s.acctSub}>
                           {t.account_institution || t.account_name} ··{t.account_mask}
                         </span>
                       )}
                     </div>
-                    {/* col 3 desktop: category */}
-                    <span className={`${isTransfer ? s.catTransfer : s.catPill} ${s.catDesktop}`}>
+                    {/* col 3: category (shared mobile+desktop) */}
+                    <span className={isTransfer ? s.catTransfer : s.catPill}>
                       {isTransfer ? 'Transfer' : (t.category || 'Uncategorized')}
                     </span>
-                    {/* col 4 desktop: account */}
+                    {/* col 4: account — desktop only, hidden on mobile */}
                     <span className={`${s.acct} ${s.acctDesktop}`}>
                       {t.account_mask ? `${t.account_institution || t.account_name} ··${t.account_mask}` : '–'}
                     </span>
