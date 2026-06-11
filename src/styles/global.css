@@ -31,6 +31,13 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { height: 100%; }
 
+/* Mobile: prevent bounce-scroll revealing the background */
+@media (max-width: 780px) {
+  body {
+    overscroll-behavior: none;
+  }
+}
+
 body {
   color: var(--sw-txt);
   font-family: var(--font-sans);

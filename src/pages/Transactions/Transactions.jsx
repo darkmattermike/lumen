@@ -211,26 +211,26 @@ export default function Transactions() {
                 const nm = t.cleaned_name || t.name
                 return (
                   <div key={t.id} className={s.row}
-                    style={{ '--d': `${0.18 + Math.min(gi, 8) * 0.06 + ri * 0.04}s` }}
+                    style={{ '--d': `${0.18 + Math.min(gi, 8) * 0.06 + ri * 0.03}s` }}
                     onClick={() => setEditingTx(t)} role="button" tabIndex={0}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingTx(t) }}>
-                    <span className={s.av} style={{ background: avTint(nm) }}>{initial(nm)}</span>
+                    <span className={isTransfer ? s.rowBarTransfer : income ? s.rowBarIn : s.rowBar} aria-hidden="true" />
                     <div className={s.meta}>
-                      <div className={s.name}>{nm}</div>
-                      <div className={s.catRow}>
-                        <span className={isTransfer ? s.catTransfer : s.cat}>{isTransfer ? 'Transfer' : (t.category || 'Uncategorized')}</span>
-                        {t.account_mask && (
-                          <span className={s.acct}>{t.account_institution || t.account_name} ··{t.account_mask}</span>
-                        )}
-                      </div>
+                      <span className={s.name}>{nm}</span>
+                      <span className={isTransfer ? s.catTransfer : s.catPill}>
+                        {isTransfer ? 'Transfer' : (t.category || 'Uncategorized')}
+                      </span>
+                      {t.account_mask && (
+                        <span className={s.acct}>{t.account_institution || t.account_name} ··{t.account_mask}</span>
+                      )}
                     </div>
-                    <div className={`${isTransfer ? s.amtTransfer : income ? s.amtIn : s.amt} ${s.tabnum}`}>
+                    <span className={`${isTransfer ? s.amtTransfer : income ? s.amtIn : s.amt}`}>
                       {isTransfer
                         ? money(Math.abs(t.amount)).slice(1)
                         : income
                           ? `+${money(Math.abs(t.amount)).slice(1)}`
                           : `−${money(Math.abs(t.amount)).slice(1)}`}
-                    </div>
+                    </span>
                     <span className={s.editHint} aria-hidden="true">✎</span>
                   </div>
                 )

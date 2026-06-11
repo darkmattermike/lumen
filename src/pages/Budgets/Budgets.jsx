@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
 import SwShell from '../../components/SwShell/SwShell'
@@ -163,7 +164,7 @@ export default function Budgets() {
         )}
       </div>
 
-      {editing && (
+      {editing && createPortal(
         <BudgetEditor
           budget={editing}
           icons={ICONS}
@@ -171,7 +172,8 @@ export default function Budgets() {
           onSaved={() => { setEditing(null); refresh() }}
           onDelete={async (b) => { await remove(b); setEditing(null) }}
           onComplete={async (b) => { await toggleComplete(b); setEditing(null) }}
-        />
+        />,
+        document.body
       )}
     </SwShell>
   )

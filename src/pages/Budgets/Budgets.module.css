@@ -14,7 +14,7 @@
   align-items: flex-end;
   gap: 18px;
   flex-wrap: wrap;
-  padding: 18px 28px 22px;
+  padding: 14px 22px 14px;
 }
 .eyebrow {
   font-size: 11px;
@@ -26,7 +26,7 @@
 .title {
   font-family: var(--font-disp);
   font-weight: 350;
-  font-size: clamp(26px, 4vw, 38px);
+  font-size: clamp(22px, 4vw, 34px);
   letter-spacing: -.02em;
   color: #f0fdf7;
   margin-top: 6px;
@@ -45,7 +45,7 @@
 .statVal {
   font-family: var(--font-disp);
   font-weight: 500;
-  font-size: 20px;
+  font-size: 17px;
   color: #eafaf2;
   margin-top: 3px;
 }
@@ -53,20 +53,20 @@
 .statValDebt { composes: statVal; color: var(--sw-rose); }
 
 /* ── list of envelope channels ── */
-.list { padding: 0 24px 28px; display: grid; gap: 12px; }
+.list { padding: 0 16px 24px; display: grid; gap: 7px; }
 
 .row {
   animation: bgFloat .6s cubic-bezier(.22, 1.2, .36, 1) both;
   animation-delay: var(--d, 0s);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   background: var(--sw-glass);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(120, 200, 175, .13);
-  border-radius: 16px;
-  padding: 16px 18px;
+  border-radius: 14px;
+  padding: 12px 14px;
   box-shadow: 0 14px 36px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(180, 255, 225, .06);
   transition: transform .25s, border-color .25s, box-shadow .25s;
 }
@@ -77,13 +77,13 @@
 }
 
 .icon {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   flex: none;
-  border-radius: 12px;
+  border-radius: 9px;
   display: grid;
   place-items: center;
-  font-size: 18px;
+  font-size: 15px;
   background: rgba(10, 26, 28, .7);
   border: 1px solid rgba(120, 200, 175, .16);
   transition: transform .3s cubic-bezier(.3, 1.4, .4, 1);
@@ -95,7 +95,7 @@
 .topLine { display: flex; align-items: baseline; gap: 10px; }
 .name {
   font-weight: 750;
-  font-size: 14.5px;
+  font-size: 13.5px;
   color: var(--sw-txt2);
   white-space: nowrap;
   overflow: hidden;
@@ -148,11 +148,11 @@
 /* ── the water channel ── */
 .bar {
   position: relative;
-  height: 10px;
+  height: 7px;
   border-radius: 99px;
   background: rgba(120, 200, 175, .1);
   overflow: hidden;
-  margin-top: 9px;
+  margin-top: 5px;
 }
 .fill {
   display: block;
@@ -194,8 +194,8 @@
   align-items: baseline;
   margin-top: 7px;
 }
-.leftOk   { font-size: 11.5px; font-weight: 650; color: var(--sw-mut); }
-.leftOver { font-size: 11.5px; font-weight: 700; color: var(--sw-rose); }
+.leftOk   { font-size: 11px; font-weight: 600; color: var(--sw-mut); }
+.leftOver { font-size: 11px; font-weight: 700; color: var(--sw-rose); }
 .pctOk   { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--sw-dim); }
 .pctWarn { composes: pctOk; color: var(--sw-amber); }
 .pctOver { composes: pctOk; color: var(--sw-rose); }
@@ -294,7 +294,7 @@
   background: none;
   border: 1px dashed rgba(120, 200, 175, .25);
   border-radius: 16px;
-  padding: 15px;
+  padding: 11px;
   transition: .25s;
 }
 .newRow:hover {
@@ -325,8 +325,8 @@
   .head { padding: 12px 20px 16px; }
   .summary { gap: 18px; width: 100%; justify-content: space-between; }
   .stat { text-align: left; }
-  .list { padding: 0 14px 22px; }
-  .row { gap: 12px; padding: 14px; }
+  .list { padding: 0 12px 20px; }
+  .row { gap: 10px; padding: 10px 12px; }
   .topLine { flex-wrap: wrap; }
   .nums { margin-left: 0; width: 100%; }
   .addRow { flex-wrap: wrap; }
