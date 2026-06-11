@@ -101,96 +101,125 @@
 }
 
 /* ══════════════════════════════════════════════════
-   Row layout — mobile vs desktop
+   The entire .list is ONE CSS grid.
+   All rows share the same column tracks so every
+   column aligns perfectly across all date groups.
 
-   Mobile  (default): 3 tracks
-     [bar 3px] [name+account stacked] [amount]
-   Desktop (≥600px):  4 tracks
-     [bar 3px] [name] [category | account cols] [amount]
+   Mobile  : [bar 3px] [name+acct stacked, 1fr] [amount auto]
+   Desktop : [bar 3px] [name 1fr] [category 160px] [account 160px] [amount auto]
    ══════════════════════════════════════════════════ */
-.groupCard { display: flex; flex-direction: column; }
 
-.row {
-  animation: txRow .4s cubic-bezier(.22,1,.36,1) both;
-  animation-delay: var(--d, 0s);
-  /* mobile default: bar / name+meta / amount */
+/* .list is the shared grid container */
+.list {
+  padding: 0 14px 24px;
+  /* mobile grid */
   display: grid;
   grid-template-columns: 3px 1fr auto;
-  align-items: center;
   column-gap: 10px;
-  padding: 7px 4px;
+  row-gap: 0;
+  align-items: center;
+}
+
+/* date header spans all columns */
+.groupDate {
+  grid-column: 1 / -1;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: .24em; text-transform: uppercase;
+  color: var(--sw-dim);
+  padding: 14px 4px 4px;
+  position: sticky; top: 0;
+  background: linear-gradient(180deg, #091317 60%, transparent);
+  z-index: 2;
+}
+
+/* group and groupCard are just passthrough — no layout of their own */
+.group { display: contents; }
+.groupCard { display: contents; }
+
+/* ── each row is 3 cells (mobile) spanning the shared grid ── */
+.row {
+  /* row spans all 3 columns by being 3 direct grid children */
+  display: contents;
+  cursor: pointer;
+}
+/* hover highlight: we can't use display:contents + background,
+   so we use a pseudo approach via a wrapper div styled below */
+.rowWrap {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+  padding: 6px 4px;
   border-radius: 8px;
   cursor: pointer;
   transition: background .12s;
+  animation: txRow .4s cubic-bezier(.22,1,.36,1) both;
+  animation-delay: var(--d, 0s);
 }
-.row:hover  { background: rgba(98,224,181,.05); }
-.row:active { background: rgba(98,224,181,.09); }
+.rowWrap:hover  { background: rgba(98,224,181,.05); }
+.rowWrap:active { background: rgba(98,224,181,.09); }
 
 /* left accent bar */
-.rowBar         { width: 3px; height: 28px; border-radius: 2px; background: transparent; }
+.rowBar         { width: 3px; height: 28px; border-radius: 2px; background: transparent; align-self: center; }
 .rowBarIn       { background: var(--sw-mint-2); box-shadow: 0 0 6px rgba(127,227,176,.4); }
 .rowBarTransfer { background: #6c8cff;          box-shadow: 0 0 6px rgba(108,140,255,.4); }
 
-/* ── mobile: name + account stacked in col 2 ── */
+/* name cell */
 .name {
-  font-size: 13px; font-weight: 600;
-  color: var(--sw-txt2);
+  font-size: 13px; font-weight: 600; color: var(--sw-txt2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  /* on mobile name shares the meta cell */
-  display: block;
+  min-width: 0;
 }
 
-/* meta wraps name + account on mobile; just cat+acct on desktop */
+/* mobile: meta holds name + account stacked */
 .meta {
   min-width: 0; overflow: hidden;
   display: flex; flex-direction: column; gap: 1px;
 }
 
-/* the name is placed inside .meta on mobile via JSX order */
 .catPill {
-  font-size: 10.5px; font-weight: 600;
-  color: var(--sw-dim);
+  font-size: 10.5px; font-weight: 600; color: var(--sw-dim);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .catTransfer { composes: catPill; color: #6c8cff; }
 
 .acct {
-  font-size: 10px; color: var(--sw-dim);
+  font-size: 10.5px; color: var(--sw-dim);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* amount — always last col */
+/* amount */
 .amt {
-  font-family: var(--font-mono);
-  font-size: 12.5px; font-weight: 500;
+  font-family: var(--font-mono); font-size: 12.5px; font-weight: 500;
   color: #a9c7ba; text-align: right;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .amtIn       { composes: amt; color: var(--sw-mint-2); }
 .amtTransfer { composes: amt; color: #6c8cff; opacity: .85; }
 
-/* mobile: show account inside meta, hide the standalone desktop columns */
+/* mobile: account inside meta, desktop cols hidden */
 .acctMobile  { display: block; }
 .acctDesktop { display: none; }
 .catDesktop  { display: none; }
 
-/* ── desktop ≥600px: true 5-column grid ── */
+/* ── desktop ≥600px: 5-column shared grid ── */
 @media (min-width: 600px) {
-  .row {
-    /* bar(3px) | name(flex) | category(150px) | account(150px) | amount(auto) */
-    grid-template-columns: 3px 1fr 150px 150px auto;
+  .list {
+    grid-template-columns: 3px 1fr 160px 160px auto;
     column-gap: 14px;
-    padding: 6px 6px;
+    padding: 0 20px 28px;
   }
-  /* meta becomes just the name cell — account moves to its own column */
-  .meta { display: block; }   /* single cell: name only */
-  .acctMobile  { display: none; }   /* hide the stacked account */
-  .acctDesktop { display: block; }  /* show the dedicated account column */
-  .catDesktop  { display: block; }  /* show the category column */
+  .rowWrap { padding: 5px 6px; }
+  .meta    { display: block; /* name-only cell */ }
+  .acctMobile  { display: none; }
+  .acctDesktop { display: block; }
+  .catDesktop  { display: block; }
 }
 
 .editHint { display: none; }
+
+/* sentinel/endNote still need to span */
+.sentinel, .endNote { grid-column: 1 / -1; }
 
 /* ── states ── */
 .state {
@@ -295,7 +324,6 @@
 
 /* ── responsive ── */
 @media (max-width: 599px) {
-  /* head: stack title and summary vertically, full-width summary */
   .head {
     flex-direction: column;
     align-items: flex-start;
@@ -318,32 +346,24 @@
   }
   .stat:last-child { border-right: none; }
   .statVal { font-size: 15px; }
-
-  /* search: full width */
   .searchWrap { max-width: 100%; }
-
-  /* chips: single row, horizontal scroll, no wrap */
   .chips {
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     padding-bottom: 2px;
-    /* stretch to card edge */
-    margin-left: -22px;
-    margin-right: -22px;
-    padding-left: 22px;
-    padding-right: 22px;
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
   .chips::-webkit-scrollbar { display: none; }
   .chip, .chipOn { flex-shrink: 0; }
-
-  .list { padding: 0 14px 24px; }
   .controls { padding: 0 16px 10px; }
 }
 
 @media (min-width: 600px) {
-  .list { padding: 0 20px 28px; }
   .head { padding: 18px 28px 16px; }
   .controls { padding: 0 28px 14px; }
 }

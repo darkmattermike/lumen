@@ -188,7 +188,7 @@ export default function Transactions() {
       {/* ── date-grouped ledger ── */}
       <div className={s.list} key={`${cat}|${query.trim().toLowerCase()}`}>
         {groups.map(([date, rows], gi) => (
-          <section key={date} className={s.group} style={{ '--d': `${0.12 + Math.min(gi, 8) * 0.06}s` }}>
+          <section key={date} className={s.group}>
             <div className={s.groupDate}>{fmtDate(date)}</div>
             <div className={s.groupCard}>
               {rows.map((t, ri) => {
@@ -196,31 +196,28 @@ export default function Transactions() {
                 const income = !isTransfer && Number(t.amount) > 0
                 const nm = t.cleaned_name || t.name
                 return (
-                  <div key={t.id} className={s.row}
+                  <div key={t.id} className={s.rowWrap}
                     style={{ '--d': `${0.18 + Math.min(gi, 8) * 0.06 + ri * 0.03}s` }}
                     onClick={() => setEditingTx(t)} role="button" tabIndex={0}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingTx(t) }}>
                     {/* col 1: accent bar */}
                     <span className={isTransfer ? s.rowBarTransfer : income ? s.rowBarIn : s.rowBar} aria-hidden="true" />
-                    {/* col 2 (mobile: name+account stacked) / col 2 (desktop: name only) */}
+                    {/* col 2: name — mobile also shows account below */}
                     <div className={s.meta}>
                       <span className={s.name}>{nm}</span>
-                      {/* account shown here on mobile; hidden on desktop via CSS */}
                       {t.account_mask && (
                         <span className={`${s.acct} ${s.acctMobile}`}>
                           {t.account_institution || t.account_name} ··{t.account_mask}
                         </span>
                       )}
                     </div>
-                    {/* col 3 desktop: category (hidden on mobile via CSS) */}
+                    {/* col 3 desktop: category */}
                     <span className={`${isTransfer ? s.catTransfer : s.catPill} ${s.catDesktop}`}>
                       {isTransfer ? 'Transfer' : (t.category || 'Uncategorized')}
                     </span>
-                    {/* col 4 desktop: account (hidden on mobile via CSS) */}
+                    {/* col 4 desktop: account */}
                     <span className={`${s.acct} ${s.acctDesktop}`}>
-                      {t.account_mask
-                        ? `${t.account_institution || t.account_name} ··${t.account_mask}`
-                        : ''}
+                      {t.account_mask ? `${t.account_institution || t.account_name} ··${t.account_mask}` : '–'}
                     </span>
                     {/* col 5: amount */}
                     <span className={isTransfer ? s.amtTransfer : income ? s.amtIn : s.amt}>
