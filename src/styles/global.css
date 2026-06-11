@@ -38,6 +38,11 @@ html, body, #root { height: 100%; }
   }
 }
 
+/* Ensure the very top of the screen is dark on all devices */
+html {
+  background: #05090b;
+}
+
 body {
   color: var(--sw-txt);
   font-family: var(--font-sans);
@@ -48,6 +53,15 @@ body {
     radial-gradient(110% 80% at 50% -10%, #0c1f1d 0%, transparent 55%),
     linear-gradient(180deg, #05090b 0%, #071013 45%, #08161a 75%, #0a1c20 100%);
   background-attachment: fixed;
+}
+
+/* background-attachment:fixed breaks on iOS Safari — use scroll instead */
+@media (max-width: 780px) {
+  body {
+    background-attachment: scroll;
+    /* pin the gradient so it doesn't repeat when scrolling past bottom */
+    background-size: 100% 100vh;
+  }
 }
 
 button { font-family: inherit; cursor: pointer; }

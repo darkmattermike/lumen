@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
 import SwShell from '../../components/SwShell/SwShell'
-import { money, initial, fmtDate } from '../../lib/format'
+import { money, fmtDate } from '../../lib/format'
 import s from './Transactions.module.css'
 
 /* ──────────────────────────────────────────────────────────────
@@ -11,20 +11,6 @@ import s from './Transactions.module.css'
    Initial load: rolling 60 days. Older pages load on demand
    at 100 rows each via a "Load more" sentinel at the bottom.
    ────────────────────────────────────────────────────────────── */
-
-const AV_TINTS = [
-  'linear-gradient(150deg,#1f5a48,#123a2e)',
-  'linear-gradient(150deg,#1c4f54,#10333a)',
-  'linear-gradient(150deg,#2a5a3a,#16331f)',
-  'linear-gradient(150deg,#1f4a5e,#102a3a)',
-  'linear-gradient(150deg,#3a5a2a,#1f3316)',
-  'linear-gradient(150deg,#1d5550,#0f322e)',
-]
-const avTint = (name = '') => {
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % AV_TINTS.length
-  return AV_TINTS[h]
-}
 
 const TX_TYPES = ['expense', 'income', 'transfer']
 
@@ -214,9 +200,12 @@ export default function Transactions() {
                     style={{ '--d': `${0.18 + Math.min(gi, 8) * 0.06 + ri * 0.03}s` }}
                     onClick={() => setEditingTx(t)} role="button" tabIndex={0}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingTx(t) }}>
+                    {/* col 1: accent bar — only visible for income + transfer */}
                     <span className={isTransfer ? s.rowBarTransfer : income ? s.rowBarIn : s.rowBar} aria-hidden="true" />
+                    {/* col 2: merchant name */}
+                    <span className={s.name}>{nm}</span>
+                    {/* col 3: category stacked above account */}
                     <div className={s.meta}>
-                      <span className={s.name}>{nm}</span>
                       <span className={isTransfer ? s.catTransfer : s.catPill}>
                         {isTransfer ? 'Transfer' : (t.category || 'Uncategorized')}
                       </span>
@@ -224,14 +213,14 @@ export default function Transactions() {
                         <span className={s.acct}>{t.account_institution || t.account_name} ··{t.account_mask}</span>
                       )}
                     </div>
-                    <span className={`${isTransfer ? s.amtTransfer : income ? s.amtIn : s.amt}`}>
+                    {/* col 4: amount */}
+                    <span className={isTransfer ? s.amtTransfer : income ? s.amtIn : s.amt}>
                       {isTransfer
                         ? money(Math.abs(t.amount)).slice(1)
                         : income
                           ? `+${money(Math.abs(t.amount)).slice(1)}`
                           : `−${money(Math.abs(t.amount)).slice(1)}`}
                     </span>
-                    <span className={s.editHint} aria-hidden="true">✎</span>
                   </div>
                 )
               })}

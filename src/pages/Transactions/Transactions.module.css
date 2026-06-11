@@ -106,61 +106,69 @@
 .row {
   animation: txRow .4s cubic-bezier(.22,1,.36,1) both;
   animation-delay: var(--d, 0s);
-  display: flex;
+  /* 4-column grid: [bar] [name] [category · account] [amount] */
+  display: grid;
+  grid-template-columns: 4px 1fr 1fr auto;
   align-items: center;
-  gap: 0;
-  padding: 7px 6px;
+  gap: 0 10px;
+  padding: 6px 6px;
   border-radius: 8px;
   cursor: pointer;
   transition: background .12s;
   position: relative;
 }
-.row:hover { background: rgba(98,224,181,.05); }
+.row:hover  { background: rgba(98,224,181,.05); }
 .row:active { background: rgba(98,224,181,.09); }
 
-/* colored left bar instead of avatar */
+/* left accent bar — only on income and transfers */
 .rowBar {
-  width: 3px; height: 28px; border-radius: 2px; flex-shrink: 0;
-  margin-right: 10px;
-  background: var(--sw-dim);
+  width: 3px; height: 26px; border-radius: 2px;
+  /* plain expense: invisible bar (keeps grid spacing) */
+  background: transparent;
 }
-.rowBarIn       { background: var(--sw-mint-2); box-shadow: 0 0 6px rgba(127,227,176,.35); }
-.rowBarTransfer { background: #6c8cff; }
+.rowBarIn       { background: var(--sw-mint-2); box-shadow: 0 0 6px rgba(127,227,176,.4); }
+.rowBarTransfer { background: #6c8cff;          box-shadow: 0 0 6px rgba(108,140,255,.4); }
 
-.meta { min-width: 0; flex: 1; display: flex; align-items: baseline; gap: 7px; overflow: hidden; }
-
+/* col 2: merchant name */
 .name {
   font-size: 13px; font-weight: 600;
   color: var(--sw-txt2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  flex-shrink: 1; min-width: 0;
 }
 
+/* col 3: category + account — stacked on mobile, inline on desktop */
+.meta {
+  min-width: 0;
+  display: flex; flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
 .catPill {
-  font-size: 10px; font-weight: 600; white-space: nowrap;
-  color: var(--sw-dim); flex-shrink: 0;
+  font-size: 10.5px; font-weight: 600;
+  color: var(--sw-dim); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
 }
 .catTransfer { composes: catPill; color: #6c8cff; }
 
 .acct {
   font-size: 10px; color: var(--sw-dim); white-space: nowrap;
-  flex-shrink: 0; display: none; /* shown on wider screens */
+  overflow: hidden; text-overflow: ellipsis;
 }
 
+/* col 4: amount */
 .amt {
   font-family: var(--font-mono);
   font-size: 12.5px; font-weight: 500;
-  color: #a9c7ba; margin-left: 10px; flex-shrink: 0;
+  color: #a9c7ba; text-align: right; flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
 .amtIn       { composes: amt; color: var(--sw-mint-2); }
-.amtTransfer { composes: amt; color: #6c8cff; opacity: .8; }
+.amtTransfer { composes: amt; color: #6c8cff; opacity: .85; }
 
 .editHint {
-  font-size: 11px; color: var(--sw-dim); opacity: 0;
-  transition: opacity .12s; flex-shrink: 0; padding-left: 4px;
+  display: none; /* hidden on mobile to save space */
 }
-.row:hover .editHint { opacity: 1; }
+.row:hover .editHint { display: block; }
 
 /* ── states ── */
 .state {
