@@ -118,52 +118,59 @@
 
 /* ════════════════════════════════════════════════
    MOBILE  ≤ 780px
-   Edge-to-edge card, no outer margin/border,
-   bottom tab bar replaces the pill nav.
+   Full-bleed: card is transparent so the body
+   gradient bleeds top-to-bottom. Floating pill
+   tab bar mirrors the desktop nav aesthetic.
    ════════════════════════════════════════════════ */
 @media (max-width: 780px) {
-  /* frame fills the screen */
   .frame {
     margin: 0;
     padding: 0;
   }
 
-  /* card loses radius + border so it feels native */
+  /* card is transparent — body gradient shows through end-to-end */
   .sw {
     border-radius: 0;
     border: none;
     box-shadow: none;
+    background: transparent;
     min-height: 100dvh;
-    /* bottom padding = tab bar height + safe area */
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    /* clear the floating tab bar at the bottom */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* slim top bar */
   .top {
     padding: 12px 18px;
-    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
     border-bottom: 1px solid var(--sw-line-soft);
+    /* top bar also transparent */
+    background: transparent;
   }
 
-  /* hide desktop nav */
   .nav { display: none; }
-
-  /* hide date badge — tab bar does orientation */
   .date { display: none; }
 
-  /* ── bottom tab bar ── */
+  /* ── floating pill tab bar ── */
   .tabBar {
     position: fixed;
-    bottom: 0; left: 0; right: 0;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 50;
-    height: calc(56px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: rgba(8,17,20,.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid var(--sw-line);
+    /* pill sizing — wide enough for 5 items but not full-width */
+    width: calc(100% - 40px);
+    max-width: 440px;
+    height: 56px;
+    border-radius: 99px;
+    background: rgba(8, 20, 22, .88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(120, 200, 175, .18);
+    box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(180,255,225,.04) inset;
     display: flex;
-    align-items: stretch;
+    align-items: center;
+    padding: 4px 6px;
+    gap: 2px;
   }
 
   .tabItem {
@@ -172,33 +179,35 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
     border: none;
     background: transparent;
     color: var(--sw-dim);
     font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: .05em;
-    transition: color .18s;
+    font-size: 8.5px;
+    letter-spacing: .04em;
+    border-radius: 99px;
+    height: 100%;
+    transition: color .18s, background .18s;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
   }
-  .tabItem:active { transform: scale(.92); }
-  .tabItemActive { color: var(--sw-mint); }
+  .tabItem:active { transform: scale(.91); }
+
+  /* active item gets the same mint pill as desktop */
+  .tabItemActive {
+    color: #06281c;
+    background: var(--sw-mint);
+    box-shadow: 0 0 14px rgba(98,224,181,.3);
+  }
 
   .tabIcon {
-    width: 22px; height: 22px;
+    width: 20px; height: 20px;
     display: grid; place-items: center;
   }
 
-  /* active dot under icon */
-  .tabItemActive .tabDot {
-    width: 4px; height: 4px; border-radius: 50%;
-    background: var(--sw-mint);
-    box-shadow: 0 0 8px rgba(98,224,181,.7);
-    margin-top: 1px;
-  }
-  .tabDot { width: 4px; height: 4px; }
+  /* no separate dot — the pill background is enough */
+  .tabDot { display: none; }
 }
 
 /* hide tab bar on desktop */

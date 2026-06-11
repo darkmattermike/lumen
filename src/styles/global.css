@@ -38,9 +38,9 @@ html, body, #root { height: 100%; }
   }
 }
 
-/* Ensure the very top of the screen is dark on all devices */
+/* Ensure the very top (behind status bar) is always the teal-dark color */
 html {
-  background: #05090b;
+  background: #081a1c;
 }
 
 body {
@@ -50,17 +50,18 @@ body {
   text-rendering: optimizeLegibility;
   /* full-bleed Stillwater night atmosphere */
   background:
-    radial-gradient(110% 80% at 50% -10%, #0c1f1d 0%, transparent 55%),
-    linear-gradient(180deg, #05090b 0%, #071013 45%, #08161a 75%, #0a1c20 100%);
+    radial-gradient(110% 80% at 50% -10%, #0d2422 0%, transparent 55%),
+    linear-gradient(180deg, #081a1c 0%, #071013 40%, #08161a 70%, #0a1c20 100%);
   background-attachment: fixed;
+  /* match the top gradient color so status bar area blends */
+  background-color: #081a1c;
 }
 
 /* background-attachment:fixed breaks on iOS Safari — use scroll instead */
 @media (max-width: 780px) {
   body {
     background-attachment: scroll;
-    /* pin the gradient so it doesn't repeat when scrolling past bottom */
-    background-size: 100% 100vh;
+    background-size: 100% 100dvh;
   }
 }
 

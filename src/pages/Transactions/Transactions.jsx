@@ -200,20 +200,29 @@ export default function Transactions() {
                     style={{ '--d': `${0.18 + Math.min(gi, 8) * 0.06 + ri * 0.03}s` }}
                     onClick={() => setEditingTx(t)} role="button" tabIndex={0}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingTx(t) }}>
-                    {/* col 1: accent bar — only visible for income + transfer */}
+                    {/* col 1: accent bar */}
                     <span className={isTransfer ? s.rowBarTransfer : income ? s.rowBarIn : s.rowBar} aria-hidden="true" />
-                    {/* col 2: merchant name */}
-                    <span className={s.name}>{nm}</span>
-                    {/* col 3: category stacked above account */}
+                    {/* col 2 (mobile: name+account stacked) / col 2 (desktop: name only) */}
                     <div className={s.meta}>
-                      <span className={isTransfer ? s.catTransfer : s.catPill}>
-                        {isTransfer ? 'Transfer' : (t.category || 'Uncategorized')}
-                      </span>
+                      <span className={s.name}>{nm}</span>
+                      {/* account shown here on mobile; hidden on desktop via CSS */}
                       {t.account_mask && (
-                        <span className={s.acct}>{t.account_institution || t.account_name} ··{t.account_mask}</span>
+                        <span className={`${s.acct} ${s.acctMobile}`}>
+                          {t.account_institution || t.account_name} ··{t.account_mask}
+                        </span>
                       )}
                     </div>
-                    {/* col 4: amount */}
+                    {/* col 3 desktop: category (hidden on mobile via CSS) */}
+                    <span className={`${isTransfer ? s.catTransfer : s.catPill} ${s.catDesktop}`}>
+                      {isTransfer ? 'Transfer' : (t.category || 'Uncategorized')}
+                    </span>
+                    {/* col 4 desktop: account (hidden on mobile via CSS) */}
+                    <span className={`${s.acct} ${s.acctDesktop}`}>
+                      {t.account_mask
+                        ? `${t.account_institution || t.account_name} ··${t.account_mask}`
+                        : ''}
+                    </span>
+                    {/* col 5: amount */}
                     <span className={isTransfer ? s.amtTransfer : income ? s.amtIn : s.amt}>
                       {isTransfer
                         ? money(Math.abs(t.amount)).slice(1)

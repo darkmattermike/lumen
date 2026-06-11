@@ -100,75 +100,97 @@
   z-index: 2;
 }
 
-/* ── the dense row ── */
+/* ══════════════════════════════════════════════════
+   Row layout — mobile vs desktop
+
+   Mobile  (default): 3 tracks
+     [bar 3px] [name+account stacked] [amount]
+   Desktop (≥600px):  4 tracks
+     [bar 3px] [name] [category | account cols] [amount]
+   ══════════════════════════════════════════════════ */
 .groupCard { display: flex; flex-direction: column; }
 
 .row {
   animation: txRow .4s cubic-bezier(.22,1,.36,1) both;
   animation-delay: var(--d, 0s);
-  /* 4-column grid: [bar] [name] [category · account] [amount] */
+  /* mobile default: bar / name+meta / amount */
   display: grid;
-  grid-template-columns: 4px 1fr 1fr auto;
+  grid-template-columns: 3px 1fr auto;
   align-items: center;
-  gap: 0 10px;
-  padding: 6px 6px;
+  column-gap: 10px;
+  padding: 7px 4px;
   border-radius: 8px;
   cursor: pointer;
   transition: background .12s;
-  position: relative;
 }
 .row:hover  { background: rgba(98,224,181,.05); }
 .row:active { background: rgba(98,224,181,.09); }
 
-/* left accent bar — only on income and transfers */
-.rowBar {
-  width: 3px; height: 26px; border-radius: 2px;
-  /* plain expense: invisible bar (keeps grid spacing) */
-  background: transparent;
-}
+/* left accent bar */
+.rowBar         { width: 3px; height: 28px; border-radius: 2px; background: transparent; }
 .rowBarIn       { background: var(--sw-mint-2); box-shadow: 0 0 6px rgba(127,227,176,.4); }
 .rowBarTransfer { background: #6c8cff;          box-shadow: 0 0 6px rgba(108,140,255,.4); }
 
-/* col 2: merchant name */
+/* ── mobile: name + account stacked in col 2 ── */
 .name {
   font-size: 13px; font-weight: 600;
   color: var(--sw-txt2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  /* on mobile name shares the meta cell */
+  display: block;
 }
 
-/* col 3: category + account — stacked on mobile, inline on desktop */
+/* meta wraps name + account on mobile; just cat+acct on desktop */
 .meta {
-  min-width: 0;
-  display: flex; flex-direction: column;
-  gap: 0;
-  overflow: hidden;
+  min-width: 0; overflow: hidden;
+  display: flex; flex-direction: column; gap: 1px;
 }
+
+/* the name is placed inside .meta on mobile via JSX order */
 .catPill {
   font-size: 10.5px; font-weight: 600;
-  color: var(--sw-dim); white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
+  color: var(--sw-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .catTransfer { composes: catPill; color: #6c8cff; }
 
 .acct {
-  font-size: 10px; color: var(--sw-dim); white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
+  font-size: 10px; color: var(--sw-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* col 4: amount */
+/* amount — always last col */
 .amt {
   font-family: var(--font-mono);
   font-size: 12.5px; font-weight: 500;
-  color: #a9c7ba; text-align: right; flex-shrink: 0;
+  color: #a9c7ba; text-align: right;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .amtIn       { composes: amt; color: var(--sw-mint-2); }
 .amtTransfer { composes: amt; color: #6c8cff; opacity: .85; }
 
-.editHint {
-  display: none; /* hidden on mobile to save space */
+/* mobile: show account inside meta, hide the standalone desktop columns */
+.acctMobile  { display: block; }
+.acctDesktop { display: none; }
+.catDesktop  { display: none; }
+
+/* ── desktop ≥600px: true 5-column grid ── */
+@media (min-width: 600px) {
+  .row {
+    /* bar(3px) | name(flex) | category(150px) | account(150px) | amount(auto) */
+    grid-template-columns: 3px 1fr 150px 150px auto;
+    column-gap: 14px;
+    padding: 6px 6px;
+  }
+  /* meta becomes just the name cell — account moves to its own column */
+  .meta { display: block; }   /* single cell: name only */
+  .acctMobile  { display: none; }   /* hide the stacked account */
+  .acctDesktop { display: block; }  /* show the dedicated account column */
+  .catDesktop  { display: block; }  /* show the category column */
 }
-.row:hover .editHint { display: block; }
+
+.editHint { display: none; }
 
 /* ── states ── */
 .state {
@@ -272,8 +294,55 @@
 .drawerSave:disabled,.drawerCancel:disabled { opacity:.5; cursor:not-allowed; }
 
 /* ── responsive ── */
-@media (min-width: 640px) {
-  .acct { display: inline; }
+@media (max-width: 599px) {
+  /* head: stack title and summary vertically, full-width summary */
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .summary {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    background: rgba(10,26,28,.5);
+    border: 1px solid var(--sw-line);
+    border-radius: 12px;
+    padding: 10px 0;
+  }
+  .stat {
+    text-align: center;
+    border-right: 1px solid var(--sw-line);
+    padding: 0 10px;
+  }
+  .stat:last-child { border-right: none; }
+  .statVal { font-size: 15px; }
+
+  /* search: full width */
+  .searchWrap { max-width: 100%; }
+
+  /* chips: single row, horizontal scroll, no wrap */
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    /* stretch to card edge */
+    margin-left: -22px;
+    margin-right: -22px;
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip, .chipOn { flex-shrink: 0; }
+
+  .list { padding: 0 14px 24px; }
+  .controls { padding: 0 16px 10px; }
+}
+
+@media (min-width: 600px) {
   .list { padding: 0 20px 28px; }
   .head { padding: 18px 28px 16px; }
   .controls { padding: 0 28px 14px; }
