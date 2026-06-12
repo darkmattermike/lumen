@@ -4,101 +4,73 @@
    Budgets.module.css file.
    ════════════════════════════════════════════════════════════ */
 
-/* ── head layout update ── */
-.headRight {
+/* ── toolbar strip (below header, above list) ── */
+.toolbar {
+  animation: bgUp .6s cubic-bezier(.22, 1, .36, 1) .04s both;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-/* ── Action button row ── */
-.actionBtns {
-  display: flex;
-  gap: 8px;
+  gap: 7px;
+  align-items: center;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  padding: 0 22px 14px;
 }
 
-/* Base action button */
-.actionBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(98, 224, 181, .07);
-  border: 1px solid rgba(98, 224, 181, .22);
-  border-radius: 10px;
-  padding: 8px 14px;
+/* Base chip — matches .chip from Transactions */
+.toolChip {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .06em;
+  color: var(--sw-mut);
+  padding: 6px 13px;
+  border-radius: 99px;
+  background: rgba(10, 26, 28, .65);
+  border: 1px solid rgba(120, 200, 175, .14);
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s, box-shadow .2s;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.toolChip:hover:not(:disabled) {
   color: var(--sw-mint);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background .18s, border-color .18s, box-shadow .18s, transform .15s;
-  white-space: nowrap;
+  border-color: rgba(98, 224, 181, .35);
+  box-shadow: 0 0 14px rgba(98, 224, 181, .08);
 }
-.actionBtn:hover {
-  background: rgba(98, 224, 181, .13);
+.toolChip:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* "Copied!" success state */
+.toolChipDone {
+  color: var(--sw-mint);
   border-color: rgba(98, 224, 181, .4);
-  box-shadow: 0 0 18px rgba(98, 224, 181, .12);
-  transform: translateY(-1px);
-}
-.actionBtn:disabled {
-  opacity: .55;
-  cursor: not-allowed;
-  transform: none;
-}
-.actionBtnDone {
-  background: rgba(98, 224, 181, .15);
-  border-color: rgba(98, 224, 181, .5);
-  box-shadow: 0 0 20px rgba(98, 224, 181, .18);
+  background: rgba(98, 224, 181, .07);
+  box-shadow: 0 0 14px rgba(98, 224, 181, .1);
 }
 
-/* Auto-Optimize button — subtle purple/aurora tint to differentiate */
-.optimizeBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(160, 120, 240, .08);
-  border: 1px solid rgba(160, 120, 240, .25);
-  border-radius: 10px;
-  padding: 8px 14px;
-  color: #c4a8ff;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background .18s, border-color .18s, box-shadow .18s, transform .15s;
-  white-space: nowrap;
+/* Auto-Optimize — soft lavender tint to differentiate from mint */
+.toolChipAlt {
+  color: #b8a4e8;
+  border-color: rgba(160, 120, 240, .2);
 }
-.optimizeBtn:hover {
-  background: rgba(160, 120, 240, .15);
-  border-color: rgba(160, 120, 240, .45);
-  box-shadow: 0 0 18px rgba(160, 120, 240, .15);
-  transform: translateY(-1px);
-}
-.optimizeBtn:disabled {
-  opacity: .55;
-  cursor: not-allowed;
-  transform: none;
+.toolChipAlt:hover:not(:disabled) {
+  color: #cebcff;
+  border-color: rgba(160, 120, 240, .4);
+  background: rgba(160, 120, 240, .07);
+  box-shadow: 0 0 14px rgba(160, 120, 240, .1);
 }
 
-.btnIcon {
-  font-style: normal;
-  font-size: 13px;
-  line-height: 1;
+/* Busy / loading spin via unicode — no extra markup needed */
+.toolChipBusy {
+  color: #b8a4e8;
+  opacity: .7;
 }
 
-/* Inline error below head */
+/* ── inline error ── */
 .optimizeError {
   margin: -4px 22px 10px;
   padding: 10px 14px;
   background: rgba(232, 168, 150, .08);
-  border: 1px solid rgba(232, 168, 150, .25);
+  border: 1px solid rgba(232, 168, 150, .22);
   border-radius: 10px;
   color: var(--sw-rose);
   font-size: 12.5px;
@@ -195,8 +167,8 @@
   font-weight: 700;
   flex-shrink: 0;
 }
-.optimizeDeltaUp   { color: var(--sw-rose); }   /* increase = spending more */
-.optimizeDeltaDown { color: var(--sw-mint-2); }  /* decrease = tighter cap  */
+.optimizeDeltaUp   { color: var(--sw-rose); }
+.optimizeDeltaDown { color: var(--sw-mint-2); }
 
 .optimizeCapLine {
   display: flex;
@@ -264,18 +236,4 @@
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--sw-dim);
-}
-
-/* ── responsive: stack action buttons below summary on mobile ── */
-@media (max-width: 600px) {
-  .headRight {
-    align-items: flex-start;
-    width: 100%;
-  }
-  .actionBtns {
-    justify-content: flex-start;
-  }
-  .summary {
-    gap: 18px;
-  }
 }

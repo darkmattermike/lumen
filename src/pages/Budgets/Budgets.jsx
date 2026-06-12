@@ -129,55 +129,40 @@ export default function Budgets() {
             Day {pace.day} of {pace.days} · {pace.pct}% through {new Date().toLocaleDateString('en-US', { month: 'long' })}
           </div>
         </div>
-
-        <div className={s.headRight}>
-          {/* ── Action buttons ── */}
-          <div className={s.actionBtns}>
-            <button
-              className={`${s.actionBtn} ${copyDone ? s.actionBtnDone : ''}`}
-              onClick={handleShareWithClaude}
-              disabled={copying}
-              title="Copy your full financial snapshot as JSON to paste into Claude">
-              {copying ? (
-                <><span className={s.btnIcon}>⟳</span> Copying…</>
-              ) : copyDone ? (
-                <><span className={s.btnIcon}>✓</span> Copied!</>
-              ) : (
-                <><span className={s.btnIcon}>◈</span> Share with Claude</>
-              )}
-            </button>
-
-            <button
-              className={s.optimizeBtn}
-              onClick={handleAutoOptimize}
-              disabled={optimizing}
-              title="Analyze last 3 months of spending and suggest optimized budget caps">
-              {optimizing ? (
-                <><span className={s.btnIcon}>⟳</span> Analyzing…</>
-              ) : (
-                <><span className={s.btnIcon}>✦</span> Auto-Optimize</>
-              )}
-            </button>
+        <div className={s.summary}>
+          <div className={s.stat}>
+            <div className={s.statKey}>Budgeted</div>
+            <div className={`${s.statVal} ${s.tabnum}`}>{money(totalBudgeted)}</div>
           </div>
-
-          {/* ── Summary stats ── */}
-          <div className={s.summary}>
-            <div className={s.stat}>
-              <div className={s.statKey}>Budgeted</div>
-              <div className={`${s.statVal} ${s.tabnum}`}>{money(totalBudgeted)}</div>
-            </div>
-            <div className={s.stat}>
-              <div className={s.statKey}>Spent</div>
-              <div className={`${s.statVal} ${s.tabnum}`}>{money(totalSpent)}</div>
-            </div>
-            <div className={s.stat}>
-              <div className={s.statKey}>Remaining</div>
-              <div className={`${remaining >= 0 ? s.statValIn : s.statValDebt} ${s.tabnum}`}>
-                {remaining >= 0 ? '' : '−'}{money(Math.abs(remaining))}
-              </div>
+          <div className={s.stat}>
+            <div className={s.statKey}>Spent</div>
+            <div className={`${s.statVal} ${s.tabnum}`}>{money(totalSpent)}</div>
+          </div>
+          <div className={s.stat}>
+            <div className={s.statKey}>Remaining</div>
+            <div className={`${remaining >= 0 ? s.statValIn : s.statValDebt} ${s.tabnum}`}>
+              {remaining >= 0 ? '' : '−'}{money(Math.abs(remaining))}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Toolbar ── */}
+      <div className={s.toolbar}>
+        <button
+          className={`${s.toolChip} ${copyDone ? s.toolChipDone : ''}`}
+          onClick={handleShareWithClaude}
+          disabled={copying}
+          title="Copy your full financial snapshot as JSON to paste into Claude">
+          {copying ? '⟳ Copying…' : copyDone ? '✓ Copied to clipboard' : '◈ Share with Claude'}
+        </button>
+        <button
+          className={`${s.toolChip} ${s.toolChipAlt} ${optimizing ? s.toolChipBusy : ''}`}
+          onClick={handleAutoOptimize}
+          disabled={optimizing}
+          title="Analyze last 3 months of spending and suggest optimized budget caps">
+          {optimizing ? '⟳ Analyzing…' : '✦ Auto-Optimize'}
+        </button>
       </div>
 
       {/* Optimize error */}
