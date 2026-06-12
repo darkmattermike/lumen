@@ -1,0 +1,102 @@
+/* ════════════════════════════════════════════════════════════
+   Lumen — Meniscus loader (Stillwater · Dark)
+   A glass vessel filling with night water. The water level is
+   driven by real load progress; the slosh never stops.
+   ════════════════════════════════════════════════════════════ */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ── the glass ── */
+.vessel {
+  position: relative;
+  border-radius: 50%;
+  border: 1.5px solid rgba(120, 200, 175, .2);
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 16px rgba(98, 224, 181, .06),
+    0 0 24px rgba(98, 224, 181, .05);
+  transition: box-shadow .5s ease;
+}
+.vesselFull {
+  box-shadow:
+    inset 0 0 20px rgba(98, 224, 181, .14),
+    0 0 32px rgba(98, 224, 181, .22);
+  border-color: rgba(98, 224, 181, .45);
+}
+
+/* ── the water ──
+   Wider than the vessel (-30% sides) so the slosh rotation never
+   exposes a corner. `top` is set inline from the progress value;
+   the transition makes chunky fetch completions read as a smooth
+   continuous rise. */
+.water {
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  height: 140%;
+  background: linear-gradient(180deg, rgba(98, 224, 181, .78), rgba(58, 143, 216, .5) 70%);
+  border-radius: 44% 46% 0 0;
+  box-shadow: 0 -3px 14px rgba(98, 224, 181, .35);
+  animation: mlSlosh 2.6s ease-in-out infinite;
+  transition: top .9s cubic-bezier(.3, .7, .3, 1);
+  will-change: top, transform;
+}
+@keyframes mlSlosh {
+  0%, 100% { transform: rotate(-6deg) translateY(2px); }
+  50%      { transform: rotate(6deg) translateY(-2px); }
+}
+
+/* ── glass highlight ── */
+.shine {
+  position: absolute;
+  left: 22%;
+  top: 16%;
+  width: 17%;
+  height: 17%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .5);
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+/* ── label ── */
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--sw-dim);
+}
+/* ── full-page overlay ──
+   Mounts immediately but only becomes visible after 150ms, so
+   fast loads never flash a loader. Fades out over .45s when the
+   data lands (the water tops off during the same beat). */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(110% 80% at 50% -10%, #0d2422 0%, transparent 55%),
+    linear-gradient(180deg, #081a1c 0%, #071013 40%, #08161a 70%, #0a1c20 100%);
+  opacity: 0;
+  animation: mlAppear .25s ease .15s forwards;
+}
+@keyframes mlAppear { to { opacity: 1; } }
+
+.overlayOut {
+  opacity: 1; /* base must be 1 here — replacing the animation drops mlAppear's fill */
+  animation: mlVanish .45s ease .3s forwards;
+  pointer-events: none;
+}
+@keyframes mlVanish { to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .water { animation: none; transform: none; }
+}
