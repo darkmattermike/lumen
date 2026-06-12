@@ -54,10 +54,11 @@ export const api = {
   updateAccount: (id, body) => USE_MOCK ? mock(() => mockUpdateAccount(id, body)) : request(`/api/accounts/${id}`, { method: 'PATCH', body }),
 
   // ── budgets ──
-  budgets:      ()         => USE_MOCK ? mock(mockBudgets) : request('/api/budgets'),
-  createBudget: (body)     => USE_MOCK ? mock(() => mockCreateBudget(body)) : request('/api/budgets', { method: 'POST', body }),
-  updateBudget: (id, body) => USE_MOCK ? mock(() => mockUpdateBudget(id, body)) : request(`/api/budgets/${id}`, { method: 'PATCH', body }),
-  deleteBudget: (id)       => USE_MOCK ? mock(() => mockDeleteBudget(id)) : request(`/api/budgets/${id}`, { method: 'DELETE' }),
+  budgets:            ()         => USE_MOCK ? mock(mockBudgets) : request('/api/budgets'),
+  createBudget:       (body)     => USE_MOCK ? mock(() => mockCreateBudget(body)) : request('/api/budgets', { method: 'POST', body }),
+  updateBudget:       (id, body) => USE_MOCK ? mock(() => mockUpdateBudget(id, body)) : request(`/api/budgets/${id}`, { method: 'PATCH', body }),
+  deleteBudget:       (id)       => USE_MOCK ? mock(() => mockDeleteBudget(id)) : request(`/api/budgets/${id}`, { method: 'DELETE' }),
+  autoOptimizeBudgets: ()        => USE_MOCK ? mock(() => ({ suggestions: [], summary: 'Mock mode — connect to backend to use Auto-Optimize.' })) : request('/api/budgets/auto-optimize', { method: 'POST' }),
 
   // ── calendar / recurring ──
   calendar:        ()         => USE_MOCK ? mock(mockCalendar) : request('/api/calendar'),
@@ -65,4 +66,9 @@ export const api = {
   createRecurring: (body)     => USE_MOCK ? mock(() => mockCreateRecurring(body)) : request('/api/calendar', { method: 'POST', body }),
   updateRecurring: (id, body) => USE_MOCK ? mock(() => mockUpdateRecurring(id, body)) : request(`/api/calendar/${id}`, { method: 'PATCH', body }),
   deleteRecurring: (id)       => USE_MOCK ? mock(() => mockDeleteRecurring(id)) : request(`/api/calendar/${id}`, { method: 'DELETE' }),
+
+  // ── snapshot (Share with Claude) ──
+  snapshot: () => USE_MOCK
+    ? mock(() => ({ error: 'Snapshot not available in mock mode. Connect to the backend.' }))
+    : request('/api/snapshot'),
 }
