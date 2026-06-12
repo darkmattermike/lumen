@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useApi } from '../../hooks/useApi'
 import { useCountUp } from '../../hooks/useCountUp'
 import SwShell from '../../components/SwShell/SwShell'
+import { PageLoader } from '../../components/MeniscusLoader/MeniscusLoader'
 import { api } from '../../data/api'
 import s from './Dashboard.module.css'
 
@@ -36,9 +37,9 @@ const BUDGET_WARN_PCT = 80  // budget bars at/above this % turn amber
 export default function Dashboard() {
   const navigate = useNavigate()
   const { data, loading, error } = useApi(api.dashboard)
-  const { data: txData }   = useApi(() => api.transactions('?limit=40'))
-  const { data: budData }  = useApi(api.budgets)
-  const { data: acctData } = useApi(api.accounts)
+  const { data: txData, loading: txLoading }   = useApi(() => api.transactions('?limit=40'))
+  const { data: budData, loading: budLoading }  = useApi(api.budgets)
+  const { data: acctData, loading: acctLoading } = useApi(api.accounts)
 
   /* ── hero figures (safe-to-spend = plug point) ── */
   const hero = useMemo(() => {
@@ -179,6 +180,8 @@ export default function Dashboard() {
 
   return (
     <SwShell>
+      <PageLoader loadingFlags={[loading, txLoading, budLoading, acctLoading]} label="loading" />
+
       {/* ── hero ── */}
       <div className={s.hero}>
         <div className={s.orbWrap}><div className={s.orb} aria-hidden="true" /></div>
