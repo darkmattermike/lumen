@@ -15,13 +15,24 @@ export default function SwShell({ children }) {
   const { pathname } = useLocation()
 
   const btnRefs = useRef({})
+  const navRef  = useRef(null)
   const [ind, setInd] = useState(null)
 
   const measure = useCallback(() => {
     const active = NAV.find((n) => pathname.startsWith(n.path))
     const el = active && btnRefs.current[active.path]
-    if (el) setInd({ x: el.offsetLeft, w: el.offsetWidth })
-    else setInd(null)
+    if (el) {
+      // offsetLeft is measured from the nav container's padding-box edge.
+      // The indicator is absolutely positioned at left:0 inside that same
+      // box, so we subtract the nav's paddingLeft (4px) to keep the sliding
+      // pill pixel-perfect with the button it highlights.
+      const pad = navRef.current
+        ? parseInt(getComputedStyle(navRef.current).paddingLeft, 10) || 0
+        : 0
+      setInd({ x: el.offsetLeft - pad, w: el.offsetWidth })
+    } else {
+      setInd(null)
+    }
   }, [pathname])
 
   useLayoutEffect(() => {
@@ -34,6 +45,7 @@ export default function SwShell({ children }) {
     .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     .toUpperCase()
 
+
   return (
     <div className={s.frame}>
       <div className={s.sw}>
@@ -42,7 +54,7 @@ export default function SwShell({ children }) {
           <button className={s.brand} onClick={() => navigate('/dashboard')} aria-label="Lumen home">
             <span className={s.brandOrb} aria-hidden="true" />Lumen
           </button>
-          <nav className={`${s.nav} ${ind ? s.navReady : ''}`} aria-label="Primary">
+          <nav ref={navRef} className={`${s.nav} ${ind ? s.navReady : ''}`} aria-label="Primary">
             {ind && (
               <span className={s.navInd} aria-hidden="true"
                 style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} />
