@@ -3,11 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import s from './SwShell.module.css'
 
 const NAV = [
-  { label: 'Home',     path: '/dashboard',    icon: HomeIcon    },
-  { label: 'Activity', path: '/transactions', icon: ActivityIcon },
-  { label: 'Budgets',  path: '/budgets',      icon: BudgetsIcon  },
-  { label: 'Accounts', path: '/accounts',     icon: AccountsIcon },
-  { label: 'Calendar', path: '/calendar',     icon: CalendarIcon },
+  { label: 'Home',     path: '/dashboard',       icon: HomeIcon     },
+  { label: 'Activity', path: '/transactions',    icon: ActivityIcon },
+  { label: 'Budgets',  path: '/budgets',         icon: BudgetsIcon  },
+  { label: 'Accounts', path: '/accounts',        icon: AccountsIcon },
+  { label: 'Calendar', path: '/calendar',        icon: CalendarIcon },
+  { label: 'Plan',     path: '/budget-calendar', icon: PlanIcon     },
 ]
 
 export default function SwShell({ children }) {
@@ -148,6 +149,16 @@ function CalendarIcon({ active }) {
       strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="4" width="18" height="18" rx="2"/>
       <path d="M16 2v4M8 2v4M3 10h18"/>
+    </svg>
+  )
+}
+
+function PlanIcon({ active }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 11l3 3L22 4"/>
+      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
     </svg>
   )
 }

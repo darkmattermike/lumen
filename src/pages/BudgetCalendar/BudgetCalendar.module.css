@@ -1,0 +1,382 @@
+/* ════════════════════════════════════════════════════════════
+   Lumen — Budget Calendar (Stillwater · Dark)
+   ════════════════════════════════════════════════════════════ */
+
+/* ── page head ── */
+.head {
+  animation: calUp .6s cubic-bezier(.22, 1, .36, 1) both;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 18px 28px 16px;
+}
+@keyframes calUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--sw-mint);
+}
+.title {
+  font-family: var(--font-disp);
+  font-weight: 350;
+  font-size: clamp(26px, 4vw, 38px);
+  letter-spacing: -.02em;
+  color: #f0fdf7;
+  margin-top: 6px;
+}
+.subtitle { margin-top: 6px; font-size: 13px; color: var(--sw-mut); }
+
+.summary { display: flex; gap: 26px; align-items: flex-end; }
+.stat    { text-align: right; }
+.statKey {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--sw-dim);
+}
+.statVal {
+  font-family: var(--font-disp);
+  font-weight: 500;
+  font-size: 22px;
+  color: #eafaf2;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.statValIn { color: var(--sw-mint-2); }
+
+/* ── progress strip ── */
+.progressStrip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 28px 14px;
+}
+.progressLabel { font-family: var(--font-mono); font-size: 11px; color: var(--sw-dim); white-space: nowrap; }
+.progressTrack { flex: 1; height: 3px; background: rgba(120,200,175,.1); border-radius: 2px; overflow: hidden; }
+.progressFill  { height: 100%; background: var(--sw-mint); border-radius: 2px; transition: width .4s cubic-bezier(.22,1,.36,1); }
+.progressCount { font-family: var(--font-mono); font-size: 11px; color: var(--sw-mut); white-space: nowrap; }
+.resetBtn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--sw-dim);
+  background: none;
+  border: 1px solid rgba(120,200,175,.14);
+  border-radius: 6px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: color .18s, border-color .18s;
+}
+.resetBtn:hover { color: var(--sw-mut); border-color: rgba(120,200,175,.3); }
+
+/* ── payoff banner ── */
+.payoffBanner {
+  margin: 0 22px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: rgba(176,127,216,.08);
+  border: 1px solid rgba(176,127,216,.25);
+  border-left: 3px solid #b07fd8;
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--sw-txt);
+  line-height: 1.5;
+}
+.payoffRight {
+  font-size: 11.5px;
+  color: var(--sw-mut);
+  text-align: right;
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+
+/* ── account legend ── */
+.legend {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin: 0 22px 18px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--sw-line);
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--acct-bg);
+}
+.legendDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--acct-color);
+  flex-shrink: 0;
+}
+.legendName {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--acct-color);
+}
+
+/* ── months container ── */
+.months {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 22px 28px;
+}
+
+/* ── individual month ── */
+.month {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--sw-line);
+  background: rgba(9,24,26,.5);
+  animation: calUp .65s cubic-bezier(.22,1,.36,1) both;
+}
+
+.monthHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(6,18,20,.7);
+  border-bottom: 1px solid var(--sw-line);
+}
+.monthName {
+  font-family: var(--font-disp);
+  font-size: 17px;
+  font-weight: 500;
+  color: #e8f5f0;
+}
+.monthMeta  { text-align: right; }
+.monthIncome { font-size: 13.5px; font-weight: 600; color: var(--sw-mint-2); }
+.monthNote   { font-size: 11px; color: var(--sw-dim); margin-top: 2px; }
+
+/* ── phase banners ── */
+.phaseBanner {
+  padding: 8px 18px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--sw-line);
+}
+.now     { background: rgba(176,127,216,.08); color: #c4a8ff; border-left: 3px solid rgba(176,127,216,.5); }
+.phase2  { background: rgba(232,184,98,.06);  color: var(--sw-amber); border-left: 3px solid rgba(232,184,98,.35); }
+.phase3  { background: rgba(98,224,181,.05);  color: var(--sw-mint);  border-left: 3px solid rgba(98,224,181,.3); }
+
+/* ── weeks ── */
+.week { border-bottom: 1px solid var(--sw-line-soft); }
+.week:last-of-type { border-bottom: none; }
+
+.weekLabel {
+  padding: 6px 18px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sw-dim);
+  background: rgba(5,14,16,.4);
+  border-bottom: 1px solid var(--sw-line-soft);
+}
+
+/* ── events ── */
+.event {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 7px 18px;
+  border-bottom: 1px solid rgba(120,200,175,.04);
+  cursor: pointer;
+  transition: background .15s;
+  user-select: none;
+}
+.event:last-child { border-bottom: none; }
+.event:hover { background: rgba(120,200,175,.03); }
+
+.eventToday     { background: rgba(232,184,98,.05)  !important; border-left: 2px solid rgba(232,184,98,.5);  padding-left: 16px; }
+.eventPayoff    { background: rgba(176,127,216,.06) !important; border-left: 2px solid rgba(176,127,216,.4); padding-left: 16px; }
+.eventMilestone { background: rgba(98,224,181,.04)  !important; border-left: 2px solid rgba(98,224,181,.3);  padding-left: 16px; }
+
+/* done state */
+.eventDone { background: rgba(5,14,16,.5) !important; border-left-color: rgba(120,200,175,.1) !important; }
+.eventDone .evName { text-decoration: line-through; color: var(--sw-dim) !important; }
+.eventDone .evSub  { color: rgba(93,122,112,.5); }
+.eventDone .evAmt  { color: var(--sw-dim) !important; }
+.eventDone .evDate { color: rgba(93,122,112,.5); }
+.eventDone .evDot  { opacity: .2; }
+.eventDone .tag    { opacity: .3; }
+
+/* ── event check ── */
+.check {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid rgba(120,200,175,.2);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+  font-size: 10px;
+  font-weight: 800;
+  color: #05090b;
+}
+.check:hover { border-color: rgba(120,200,175,.45); }
+.checkDone {
+  background: var(--sw-mint);
+  border-color: var(--sw-mint);
+}
+
+/* ── event parts ── */
+.evDate {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--sw-dim);
+  width: 64px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+.evDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.evBody { flex: 1; min-width: 0; }
+.evName {
+  font-size: 13px;
+  color: var(--sw-txt2);
+  line-height: 1.45;
+}
+.evSub {
+  font-size: 11px;
+  color: var(--sw-dim);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+.evAmt {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* amount classes — via CSS module workaround for dynamic class names */
+.amt-income   { color: var(--sw-mint-2); }
+.amt-expense  { color: var(--sw-rose); }
+.amt-transfer { color: var(--sw-dim); }
+.amt-save     { color: #5ba8e8; }
+.amt-house    { color: var(--sw-mint); font-weight: 800; }
+.amt-payoff   { color: #b07fd8; font-weight: 700; }
+.amt-warn     { color: var(--sw-amber); }
+
+/* ── tags ── */
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  vertical-align: middle;
+}
+.tagAtn     { background: rgba(91,168,232,.12);  color: #5ba8e8; }
+.tagAp      { background: rgba(176,127,216,.12); color: #b07fd8; }
+.tagSp      { background: rgba(98,224,181,.10);  color: var(--sw-mint); }
+.tagCs      { background: rgba(232,184,98,.10);  color: var(--sw-amber); }
+.tagPayoff  { background: rgba(176,127,216,.15); color: #c4a8ff; }
+.tagBonus   { background: rgba(232,184,98,.12);  color: var(--sw-amber); }
+.tagHouse   { background: rgba(98,224,181,.10);  color: var(--sw-mint-2); }
+.tagNow     { background: rgba(232,184,98,.18);  color: #e8c862; }
+.tagDefault { background: rgba(120,200,175,.08); color: var(--sw-mut); }
+
+/* ── savings impact bar ── */
+.savingsImpact {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 9px 18px;
+  background: rgba(91,168,232,.06);
+  border-top: 1px solid rgba(91,168,232,.15);
+  font-size: 11.5px;
+  color: #7ab0d8;
+  line-height: 1.5;
+}
+.savingsImpact span:last-child { font-weight: 600; }
+
+/* ── milestone bar ── */
+.milestoneBar {
+  padding: 10px 18px;
+  background: rgba(98,224,181,.06);
+  border-top: 1px solid rgba(98,224,181,.2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sw-mint);
+  letter-spacing: .02em;
+}
+.milestoneBar::before { content: '✓ '; }
+
+/* ── month footer ── */
+.monthFooter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 12px 18px;
+  background: rgba(5,14,16,.45);
+  border-top: 1px solid var(--sw-line);
+}
+.footerLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sw-dim);
+  margin-bottom: 3px;
+}
+.footerDot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.footerBal  { font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.footerBalOk   { color: var(--sw-mint-2); }
+.footerBalWarn { color: var(--sw-amber); }
+
+/* ── responsive ── */
+@media (max-width: 700px) {
+  .legend       { grid-template-columns: repeat(2, 1fr); }
+  .monthFooter  { grid-template-columns: repeat(2, 1fr); }
+  .head         { padding: 14px 16px 12px; }
+  .months       { padding: 0 12px 20px; }
+  .payoffBanner { margin: 0 12px 12px; flex-direction: column; }
+  .legend       { margin: 0 12px 14px; }
+  .payoffRight  { text-align: left; }
+  .evDate       { width: 52px; font-size: 9.5px; }
+}
