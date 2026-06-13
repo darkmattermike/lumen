@@ -1,30 +1,31 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { usePlaidLink } from 'react-plaid-link'
 import { api } from '../../data/api'
 import { useApi } from '../../hooks/useApi'
 import SwShell from '../../components/SwShell/SwShell'
 import { money } from '../../lib/format'
 import s from './Accounts.module.css'
 
-/* ──────────────────────────────────────────────────────────────
-   Lumen — Accounts (Stillwater · Dark)
-   Holdings as glass cards on the night water: net worth strip,
-   inline balance editing, spendable-balance toggle, forecast
-   role. All previous functionality preserved.
-   ────────────────────────────────────────────────────────────── */
-
 const ROLES = ['source', 'protected', 'ignore']
 
 export default function Accounts() {
   const { data, loading, error, refresh } = useApi(() => api.accounts(), [])
-  const [editing, setEditing] = useState(null)
+  const [editing, setEditing]   = useState(null)
+
+  // ── Plaid Link state ────────────────────────────────────────
+  const [linkToken,    setLinkToken]    = useState(null)
+  const [linkLoading,  setLinkLoading]  = useState(false)
+  const [linkError,    setLinkError]    = useState('')
+  const [connecting,   setConnecting]   = useState(false) // exchanging token
+  const [syncDone,     setSyncDone]     = useState(false)
 
   const accounts = data?.accounts || []
-  const assets = accounts.filter(a => !a.is_debt).reduce((t, a) => t + Number(a.balance), 0)
-  const debt = accounts.filter(a => a.is_debt).reduce((t, a) => t + Number(a.balance), 0)
+  const assets   = accounts.filter(a => !a.is_debt).reduce((t, a) => t + Number(a.balance), 0)
+  const debt     = accounts.filter(a =>  a.is_debt).reduce((t, a) => t + Number(a.balance), 0)
   const netWorth = data?.netWorth ?? (assets - debt)
 
   async function patch(id, body) {
-    try { await api.updateAccount(id, body); refresh() } catch { /* surfaced on next load */ }
+    try { await api.updateAccount(id, body); refresh() } catch { /* */ }
   }
   async function saveBalance(a, value) {
     setEditing(null)
@@ -33,9 +34,63 @@ export default function Accounts() {
     patch(a.id, { balance: n })
   }
 
+  // ── Step 1: fetch a link token from the backend ─────────────
+  async function openPlaid() {
+    setLinkError('')
+    setSyncDone(false)
+    setLinkLoading(true)
+    try {
+      const { link_token } = await api.plaidLinkToken()
+      setLinkToken(link_token)
+      // usePlaidLink will auto-open once linkToken is set (see useEffect inside the hook)
+    } catch (e) {
+      setLinkError(e?.message || 'Could not start Plaid Link.')
+    } finally {
+      setLinkLoading(false)
+    }
+  }
+
+  // ── Step 2: Plaid calls onSuccess with a public_token ───────
+  const onPlaidSuccess = useCallback(async (public_token, metadata) => {
+    setConnecting(true)
+    setLinkError('')
+    try {
+      await api.plaidExchange({
+        public_token,
+        institution_id:   metadata?.institution?.institution_id,
+        institution_name: metadata?.institution?.name,
+      })
+      setSyncDone(true)
+      setLinkToken(null)
+      refresh()
+    } catch (e) {
+      setLinkError(e?.message || 'Could not connect account.')
+    } finally {
+      setConnecting(false)
+    }
+  }, [refresh])
+
+  const onPlaidExit = useCallback(() => {
+    setLinkToken(null)
+  }, [])
+
+  // ── Plaid Link hook (only active when linkToken is present) ─
+  const { open: openLink, ready } = usePlaidLink({
+    token:     linkToken,
+    onSuccess: onPlaidSuccess,
+    onExit:    onPlaidExit,
+  })
+
+  // Auto-open the Plaid modal as soon as the token arrives and the SDK is ready
+  // This is safe to call in render since usePlaidLink debounces it internally
+  if (linkToken && ready && !connecting) {
+    openLink()
+  }
+
+  const isWorking = linkLoading || connecting
+
   return (
     <SwShell>
-      {/* ── page head: title + worth summary ── */}
       <div className={s.head}>
         <div>
           <div className={s.eyebrow}>Accounts</div>
@@ -58,10 +113,24 @@ export default function Accounts() {
         </div>
       </div>
 
+      {/* ── Toolbar ── */}
+      <div className={s.toolbar}>
+        <button
+          className={`${s.connectBtn} ${syncDone ? s.connectBtnDone : ''}`}
+          onClick={openPlaid}
+          disabled={isWorking}
+          title="Connect a bank account via Plaid">
+          {connecting   ? '⟳ Connecting…'
+           : linkLoading ? '⟳ Loading…'
+           : syncDone    ? '✓ Account connected'
+           : '+ Connect a bank'}
+        </button>
+        {linkError && <span className={s.linkErr}>{linkError}</span>}
+      </div>
+
       {loading && !data && <div className={s.state}>Loading accounts…</div>}
       {error && <div className={s.state}>Couldn't load accounts. <b>{error}</b></div>}
 
-      {/* ── account cards ── */}
       <div className={s.grid}>
         {accounts.map((a, i) => (
           <div key={a.id} className={a.is_debt ? s.cardDebt : s.card} style={{ '--d': `${0.12 + i * 0.09}s` }}>

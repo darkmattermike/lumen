@@ -7,9 +7,7 @@ import {
   mockAccountForecast,
 } from './mock'
 
-/* With VITE_API_URL set we hit the real Lumen backend; otherwise we serve
-   (and mutate) an in-memory mock so every page runs standalone. */
-const BASE = import.meta.env.VITE_API_URL || ''
+const BASE    = import.meta.env.VITE_API_URL || ''
 const USE_MOCK = !BASE
 
 function getToken() {
@@ -50,25 +48,30 @@ export const api = {
   updateTransaction: (id, body) => USE_MOCK ? mock(() => mockUpdateTransaction(id, body)) : request(`/api/transactions/${id}`, { method: 'PATCH', body }),
 
   // ── accounts ──
-  accounts:      ()         => USE_MOCK ? mock(mockAccounts) : request('/api/accounts'),
+  accounts:      ()         => USE_MOCK ? mock(mockAccounts)               : request('/api/accounts'),
   updateAccount: (id, body) => USE_MOCK ? mock(() => mockUpdateAccount(id, body)) : request(`/api/accounts/${id}`, { method: 'PATCH', body }),
 
+  // ── plaid ──
+  plaidLinkToken: ()     => USE_MOCK ? mock(() => ({ link_token: null }))  : request('/api/plaid/link-token', { method: 'POST' }),
+  plaidExchange:  (body) => USE_MOCK ? mock(() => ({ success: true }))     : request('/api/plaid/exchange',    { method: 'POST', body }),
+  plaidSync:      ()     => USE_MOCK ? mock(() => ({ success: true }))     : request('/api/plaid/sync',        { method: 'POST' }),
+
   // ── budgets ──
-  budgets:            ()         => USE_MOCK ? mock(mockBudgets) : request('/api/budgets'),
-  createBudget:       (body)     => USE_MOCK ? mock(() => mockCreateBudget(body)) : request('/api/budgets', { method: 'POST', body }),
-  updateBudget:       (id, body) => USE_MOCK ? mock(() => mockUpdateBudget(id, body)) : request(`/api/budgets/${id}`, { method: 'PATCH', body }),
-  deleteBudget:       (id)       => USE_MOCK ? mock(() => mockDeleteBudget(id)) : request(`/api/budgets/${id}`, { method: 'DELETE' }),
-  autoOptimizeBudgets: ()        => USE_MOCK ? mock(() => ({ suggestions: [], summary: 'Mock mode — connect to backend to use Auto-Optimize.' })) : request('/api/budgets/auto-optimize', { method: 'POST' }),
+  budgets:             ()         => USE_MOCK ? mock(mockBudgets)                 : request('/api/budgets'),
+  createBudget:        (body)     => USE_MOCK ? mock(() => mockCreateBudget(body)): request('/api/budgets', { method: 'POST', body }),
+  updateBudget:        (id, body) => USE_MOCK ? mock(() => mockUpdateBudget(id, body)) : request(`/api/budgets/${id}`, { method: 'PATCH', body }),
+  deleteBudget:        (id)       => USE_MOCK ? mock(() => mockDeleteBudget(id))  : request(`/api/budgets/${id}`, { method: 'DELETE' }),
+  autoOptimizeBudgets: ()         => USE_MOCK ? mock(() => ({ suggestions: [], summary: 'Mock mode.' })) : request('/api/budgets/auto-optimize', { method: 'POST' }),
 
   // ── calendar / recurring ──
-  calendar:        ()         => USE_MOCK ? mock(mockCalendar) : request('/api/calendar'),
-  accountForecast: ()         => USE_MOCK ? mock(mockAccountForecast) : request('/api/calendar/forecast'),
+  calendar:        ()         => USE_MOCK ? mock(mockCalendar)                    : request('/api/calendar'),
+  accountForecast: ()         => USE_MOCK ? mock(mockAccountForecast)             : request('/api/calendar/forecast'),
   createRecurring: (body)     => USE_MOCK ? mock(() => mockCreateRecurring(body)) : request('/api/calendar', { method: 'POST', body }),
   updateRecurring: (id, body) => USE_MOCK ? mock(() => mockUpdateRecurring(id, body)) : request(`/api/calendar/${id}`, { method: 'PATCH', body }),
-  deleteRecurring: (id)       => USE_MOCK ? mock(() => mockDeleteRecurring(id)) : request(`/api/calendar/${id}`, { method: 'DELETE' }),
+  deleteRecurring: (id)       => USE_MOCK ? mock(() => mockDeleteRecurring(id))   : request(`/api/calendar/${id}`, { method: 'DELETE' }),
 
   // ── snapshot (Share with Claude) ──
   snapshot: () => USE_MOCK
-    ? mock(() => ({ error: 'Snapshot not available in mock mode. Connect to the backend.' }))
+    ? mock(() => ({ error: 'Snapshot not available in mock mode.' }))
     : request('/api/snapshot'),
 }
