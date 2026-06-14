@@ -19,6 +19,11 @@ export default function Accounts() {
   const [connecting,   setConnecting]   = useState(false) // exchanging token
   const [syncDone,     setSyncDone]     = useState(false)
 
+  // ── Sync state ──────────────────────────────────────────
+  const [syncing,      setSyncing]      = useState(false)
+  const [syncResult,   setSyncResult]   = useState(null)  // { synced: N } | null
+  const [syncError,    setSyncError]    = useState('')
+
   const accounts = data?.accounts || []
   const assets   = accounts.filter(a => !a.is_debt).reduce((t, a) => t + Number(a.balance), 0)
   const debt     = accounts.filter(a =>  a.is_debt).reduce((t, a) => t + Number(a.balance), 0)
@@ -32,6 +37,23 @@ export default function Accounts() {
     const n = Number(String(value).replace(/[^0-9.-]/g, ''))
     if (!Number.isFinite(n) || n === Number(a.balance)) return
     patch(a.id, { balance: n })
+  }
+
+  // ── Sync ────────────────────────────────────────────────────
+  async function handleSync() {
+    setSyncing(true)
+    setSyncResult(null)
+    setSyncError('')
+    try {
+      const result = await api.plaidSync()
+      setSyncResult(result)
+      refresh()
+      setTimeout(() => setSyncResult(null), 4000)
+    } catch (e) {
+      setSyncError(e?.message || 'Sync failed.')
+    } finally {
+      setSyncing(false)
+    }
   }
 
   // ── Step 1: fetch a link token from the backend ─────────────
@@ -116,16 +138,31 @@ export default function Accounts() {
       {/* ── Toolbar ── */}
       <div className={s.toolbar}>
         <button
-          className={`${s.connectBtn} ${syncDone ? s.connectBtnDone : ''}`}
+          className={`${s.toolChip} ${syncResult ? s.toolChipDone : ''}`}
+          onClick={handleSync}
+          disabled={syncing || isWorking}
+          title="Pull latest balances and transactions from all connected banks">
+          {syncing
+            ? '⟳ Syncing…'
+            : syncResult
+            ? `✓ Synced ${syncResult.synced ?? 0} transactions`
+            : '↻ Sync accounts'}
+        </button>
+
+        <button
+          className={`${s.toolChip} ${s.toolChipAlt} ${syncDone ? s.toolChipDone : ''}`}
           onClick={openPlaid}
-          disabled={isWorking}
-          title="Connect a bank account via Plaid">
-          {connecting   ? '⟳ Connecting…'
-           : linkLoading ? '⟳ Loading…'
-           : syncDone    ? '✓ Account connected'
+          disabled={isWorking || syncing}
+          title="Connect a new bank account via Plaid">
+          {connecting    ? '⟳ Connecting…'
+           : linkLoading  ? '⟳ Loading…'
+           : syncDone     ? '✓ Account connected'
            : '+ Connect a bank'}
         </button>
-        {linkError && <span className={s.linkErr}>{linkError}</span>}
+
+        {(linkError || syncError) && (
+          <span className={s.chipErr}>{linkError || syncError}</span>
+        )}
       </div>
 
       {loading && !data && <div className={s.state}>Loading accounts…</div>}
