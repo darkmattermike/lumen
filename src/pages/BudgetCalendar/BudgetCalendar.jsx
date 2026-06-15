@@ -261,7 +261,7 @@ const MONTHS = [
   {
     id: 'aug', name: 'August 2026',
     income: '~$8,700 (2 Apex + 2 Stearns + CS)',
-    note: 'RENTAL → CLOSING · Last rent Aug 1 · List Dani's house ~Aug 1 · Close ~Aug 14 · First mortgage Sep 1',
+    note: "RENTAL → CLOSING · Last rent Aug 1 · List Dani's house ~Aug 1 · Close ~Aug 14 · First mortgage Sep 1",
     phase: 'closing', phaseTxt: "Last rent Aug 1 — never again. List Dani's house ~Aug 1. Close on new home ~Aug 14. Cancel renter's insurance same day. Mortgage autopay set up. First mortgage payment Sep 1.",
     mbar: "Closed ~Aug 14. Keys in hand. Renter's insurance cancelled. Mortgage set up. First payment Sep 1.",
     surplus: 'August — closing month · Savings depleted to fund closing', surplusVal: 'Rebuild starts Sep 1 with ~$1,179/mo surplus',
