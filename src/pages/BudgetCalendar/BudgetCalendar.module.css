@@ -121,44 +121,55 @@
 .post    { background:rgba(98,224,181,.05);  color:var(--sw-mint);  border-left:3px solid rgba(98,224,181,.3); }
 
 /* weeks */
-.week { border-bottom:1px solid rgba(120,200,175,.05); }
+.week { border-bottom:2px solid rgba(8,18,20,.95); }
 .week:last-of-type { border-bottom:none; }
 
 .wlabel {
-  padding:5px 20px;
+  padding:6px 20px;
   font-family:var(--font-mono); font-size:9.5px; font-weight:700;
   letter-spacing:.1em; text-transform:uppercase; color:var(--sw-dim);
-  background:rgba(4,10,12,.4);
-  border-bottom:1px solid rgba(120,200,175,.04);
+  background:rgba(2,6,8,.8);
+  border-top:    1px solid rgba(10,24,26,.95);
+  border-bottom: 1px solid rgba(10,24,26,.95);
 }
 
 /* ── event rows ── */
 .ev {
   display:flex; align-items:flex-start; gap:10px;
-  padding:7px 20px;
-  border-bottom:1px solid rgba(120,200,175,.03);
+  padding:7px 20px 7px 20px;
+  /* uniform background — no row colour variants */
+  background: rgba(6,16,18,.45);
+  border-bottom: 1px solid rgba(10,24,26,.9);
+  border-left: 2px solid transparent;
   cursor:pointer;
   transition:background .14s;
   user-select:none;
 }
 .ev:last-child { border-bottom:none; }
-.ev:hover:not(.evDone) { background:rgba(120,200,175,.03); }
+.ev:hover:not(.evDone) { background:rgba(10,24,26,.7); }
 
-/* row variants */
-.evToday { background:rgba(232,184,98,.05)  !important; border-left:2px solid rgba(232,184,98,.45); padding-left:18px; }
-.evMile  { background:rgba(98,224,181,.04)  !important; border-left:2px solid rgba(98,224,181,.3);  padding-left:18px; }
-.evBonus { background:rgba(232,184,98,.05)  !important; border-left:2px solid rgba(232,184,98,.4);  padding-left:18px; }
-.evHouse { background:rgba(98,224,181,.05)  !important; border-left:2px solid rgba(98,224,181,.4);  padding-left:18px; }
-.evSave  { background:rgba(91,168,232,.04)  !important; border-left:2px solid rgba(91,168,232,.3);  padding-left:18px; }
+/* row variants — LEFT EDGE + NAME COLOUR ONLY, no background */
+.evToday { border-left-color: rgba(232,184,98,.7);  padding-left:18px; }
+.evMile  { border-left-color: rgba(98,224,181,.5);  padding-left:18px; }
+.evBonus { border-left-color: rgba(232,184,98,.65); padding-left:18px; }
+.evHouse { border-left-color: rgba(98,224,181,.6);  padding-left:18px; }
+.evSave  { border-left-color: rgba(91,168,232,.55); padding-left:18px; }
+
+/* name tint for special rows — subtle, not a full colour */
+.evToday .ename { color: rgba(240,210,160,.9); }
+.evMile  .ename { color: rgba(180,240,210,.9); }
+.evBonus .ename { color: rgba(240,210,140,.9); }
+.evHouse .ename { color: rgba(160,230,200,.9); }
+.evSave  .ename { color: rgba(160,200,240,.9); }
 
 /* done state */
-.evDone { background:rgba(4,10,12,.35) !important; border-left-color:rgba(120,200,175,.06) !important; }
+.evDone { border-left-color: rgba(120,200,175,.08) !important; opacity: .45; }
 .evDone .ename { text-decoration:line-through; color:var(--sw-dim) !important; }
 .evDone .esub  { color:rgba(93,122,112,.4); }
 .evDone .eamt  { color:var(--sw-dim) !important; }
 .evDone .edate { color:rgba(93,122,112,.4); }
-.evDone .edot  { opacity:.18; }
-.evDone .tag   { opacity:.25; }
+.evDone .edot  { opacity:.15; }
+.evDone .tag   { opacity:.2; }
 
 /* checkbox */
 .chk {
