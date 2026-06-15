@@ -560,8 +560,8 @@ export default function BudgetCalendar() {
       {/* ── account legend ── */}
       <div className={s.legend} style={{gridTemplateColumns:'repeat(5,1fr)'}}>
         {[
-          {color:C.ap,  label:'Autopay ·9785',       detail:'Apex lands here · Mortgage · Mike's car · Yost · Lead Bank · Roth', bal:'$8.12 — Apex Jun 15',                  balOk:false},
-          {color:C.atn, label:'Above the Norm ·4510', detail:'Stearns lands here · Dani's car · Utilities · Insurance · Subs',    bal:'$175.00',                              balOk:false},
+          {color:C.ap,  label:'Autopay ·9785',       detail:`Apex lands here · Mortgage · Mike's car · Yost · Lead Bank · Roth`, bal:'$8.12 — Apex Jun 15',                  balOk:false},
+          {color:C.atn, label:'Above the Norm ·4510', detail:`Stearns lands here · Dani's car · Utilities · Insurance · Subs`,    bal:'$175.00',                              balOk:false},
           {color:C.sp,  label:'Spending ·1712',       detail:'Funded $723×2/mo from ATN · Groceries · Fuel · Shopping',           bal:'$28.11 — critical until Jun 15',       balOk:false},
           {color:C.cs,  label:'Child Support ·9893',  detail:'CS income · $1,000 floor · Kids & family',                          bal:'$890 — below floor, recovers Jun 19',  balOk:false},
           {color:C.sv,  label:'Savings (total)',       detail:'Personal $929 · ·1244 $5,100 · ·3046 $440 · ·4182 $900 · Liberty $5,900', bal:'$13,269 liquid · 401k $42,000', balOk:true},
