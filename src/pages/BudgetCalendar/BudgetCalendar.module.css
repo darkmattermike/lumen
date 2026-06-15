@@ -137,16 +137,15 @@
 .ev {
   display:flex; align-items:flex-start; gap:10px;
   padding:7px 20px 7px 20px;
-  /* uniform background — no row colour variants */
   background: rgba(6,16,18,.45);
-  border-bottom: 1px solid rgba(10,24,26,.9);
+  border-bottom: 3px solid rgb(6,17,19);
   border-left: 2px solid transparent;
   cursor:pointer;
   transition:background .14s;
   user-select:none;
 }
 .ev:last-child { border-bottom:none; }
-.ev:hover:not(.evDone) { background:rgba(10,24,26,.7); }
+.ev:hover:not(.evDone) { background:rgba(255,255,255,.03); }
 
 /* row variants — LEFT EDGE + NAME COLOUR ONLY, no background */
 .evToday { border-left-color: rgba(232,184,98,.7);  padding-left:18px; }
