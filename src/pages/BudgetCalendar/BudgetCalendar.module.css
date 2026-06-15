@@ -242,3 +242,30 @@
 
 /* ── legend passthrough (inline style) ── */
 .legend {}
+
+/* ── Standalone HTML budget calendar host ───────────────────── */
+.hostedCalendarPage {
+  width: 100%;
+  min-height: calc(100vh - 96px);
+  overflow: hidden;
+  border-radius: 22px;
+  background: #0d0f14;
+}
+
+.hostedCalendarFrame {
+  display: block;
+  width: 100%;
+  min-height: calc(100vh - 96px);
+  height: calc(100vh - 96px);
+  border: 0;
+  background: #0d0f14;
+}
+
+@media (max-width: 760px) {
+  .hostedCalendarPage,
+  .hostedCalendarFrame {
+    min-height: calc(100vh - 78px);
+    height: calc(100vh - 78px);
+    border-radius: 14px;
+  }
+}
