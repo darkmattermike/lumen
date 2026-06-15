@@ -52,24 +52,41 @@
 
 /* ── account legend ── */
 .legend {
-  display: grid; grid-template-columns: repeat(4,1fr); gap:1px;
+  display: grid;
+  /* columns set inline per instance (4 or 5) */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
   margin: 0 22px 18px;
-  border-radius: 10px; overflow:hidden;
-  border: 1px solid var(--sw-line);
 }
 .legendItem {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
   background: rgba(5,14,16,.6);
-  border-bottom: 2px solid var(--ac);
+  border: 1px solid var(--sw-line);
+  border-top: 2px solid var(--ac);
+  border-radius: 8px;
+  min-width: 0;
 }
-.ldot   { width:9px; height:9px; border-radius:50%; background:var(--ac); flex-shrink:0; }
-.linfo  { flex:1; min-width:0; }
-.lname  { font-size:11.5px; font-weight:650; color:var(--ac); }
-.ldetail{ font-size:10.5px; color:var(--sw-dim); margin-top:1px; }
-.lbal   { font-size:11px; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums; }
-.lbalOk   { color:var(--sw-mint-2); }
-.lbalWarn { color:var(--sw-amber); }
+.ldot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ac);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.lheader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.linfo  { min-width: 0; }
+.lname  { font-size: 11px; font-weight: 700; color: var(--ac); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ldetail{ font-size: 10px; color: var(--sw-dim); line-height: 1.4; margin-top: 2px; }
+.lbal   { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 4px; border-top: 1px solid rgba(120,200,175,.08); padding-top: 4px; }
+.lbalOk   { color: var(--sw-mint-2); }
+.lbalWarn { color: var(--sw-amber); }
 
 /* ── months ── */
 .months { display:flex; flex-direction:column; gap:20px; padding:0 22px 32px; }
@@ -248,7 +265,7 @@
 
 /* ── responsive ── */
 @media (max-width:700px) {
-  .legend   { grid-template-columns:repeat(2,1fr); }
+  .legend   { grid-template-columns:repeat(2,1fr) !important; }
   .sstrip   { grid-template-columns:repeat(2,1fr); }
   .mfooter  { grid-template-columns:repeat(2,1fr); }
   .head     { padding:14px 16px 12px; }
@@ -256,8 +273,7 @@
   .legend   { margin:0 12px 14px; }
   .eamt     { min-width:64px; font-size:11.5px; }
   .edate    { width:52px; font-size:9.5px; }
-  .legendItem { flex-wrap:wrap; }
-  .lbal     { width:100%; margin-top:3px; }
+  /* vertical card layout needs no overrides on mobile */
 }
 
 /* ══════════════════════════════════════════════
