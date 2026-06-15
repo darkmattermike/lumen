@@ -38,6 +38,9 @@ async function request(path, options = {}) {
 
 const mock = (fn) => Promise.resolve(fn())
 
+// Expose raw request for direct endpoint calls
+export { request }
+
 export const api = {
   // ── dashboard / forecast ──
   dashboard: ()     => USE_MOCK ? mock(mockDashboard) : request('/api/dashboard'),
