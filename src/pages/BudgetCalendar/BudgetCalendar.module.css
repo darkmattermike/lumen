@@ -259,3 +259,56 @@
   .legendItem { flex-wrap:wrap; }
   .lbal     { width:100%; margin-top:3px; }
 }
+
+/* ══════════════════════════════════════════════
+   Balance Strip — new in v4.1
+   ══════════════════════════════════════════════ */
+.balStrip {
+  background: rgba(4,10,12,.85);
+  border-top: 2px solid rgba(120,200,175,.12);
+  padding: 10px 20px 12px;
+}
+.balLabel {
+  font-family: var(--font-mono);
+  font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--sw-dim); margin-bottom: 8px;
+}
+.balGrid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 5px;
+}
+.balItem {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(120,200,175,.06);
+  border-radius: 7px; padding: 6px 8px;
+}
+.balTotal {
+  grid-column: span 3;
+  background: rgba(98,224,181,.08);
+  border-color: rgba(98,224,181,.2);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.balName {
+  font-size: 10px; color: var(--sw-dim); margin-bottom: 2px;
+  font-family: var(--font-mono);
+}
+.balVal {
+  font-size: 12px; font-weight: 600;
+  color: #e8f5f0; font-variant-numeric: tabular-nums;
+}
+.balTotal .balName { color: var(--sw-mint); font-size: 11px; }
+.balTotal .balVal  { color: #fff; font-size: 14px; font-weight: 700; }
+.balNote {
+  font-size: 11px; color: var(--sw-dim);
+  margin-top: 6px; font-style: italic; line-height: 1.5;
+}
+
+/* Personal Savings tag */
+.tagPs { background:rgba(232,168,64,.12); color:#e8a840; }
+
+@media (max-width:600px) {
+  .balGrid { grid-template-columns: repeat(2,1fr); }
+  .balTotal { grid-column: span 2; flex-direction: column; align-items: flex-start; gap:2px; }
+}
