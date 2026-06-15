@@ -23,12 +23,16 @@ function BalStrip({ label, items, note }) {
     <div className={s.balStrip}>
       <div className={s.balLabel}>{label}</div>
       <div className={s.balGrid}>
-        {items.map((it, i) => (
-          <div key={i} className={`${s.balItem} ${it.total ? s.balTotal : ''} ${s[`bal_${it.cls}`] || ''}`}>
-            <div className={s.balName}>{it.name}</div>
-            <div className={s.balVal}>{it.val}</div>
-          </div>
-        ))}
+        {items.map((it, i) => {
+          // cls comes in as " ap", " atn" etc — trim the space
+          const clsKey = `bal_${it.cls.trim()}`
+          return (
+            <div key={i} className={[s.balItem, it.total ? s.balTotal : '', s[clsKey] || ''].filter(Boolean).join(' ')}>
+              <div className={s.balName}>{it.name}</div>
+              <div className={s.balVal}>{it.val}</div>
+            </div>
+          )
+        })}
       </div>
       {note && <div className={s.balNote}>{note}</div>}
     </div>
@@ -36,29 +40,22 @@ function BalStrip({ label, items, note }) {
 }
 
 // ── single event row ───────────────────────────────────────
-const TAG_CLS = {
-  't-ap':'t_ap','t-atn':'t_atn','t-sp':'t_sp','t-cs':'t_cs',
-  't-sav':'t_sav','t-citi':'t_citi','t-act':'t_act','t-key':'t_key','t-eff':'t_eff'
-}
-
 function Ev({ ev, done, note, onToggle, dateOverride, onDateSave, onNoteSave }) {
   const [editingDate, setEditingDate] = useState(false)
-  const [dateDraft,   setDateDraft]   = useState('')
-  const [showNote,    setShowNote]    = useState(!!note)
-  const dateRef = useRef(null)
-  const noteRef = useRef(null)
+  const [draft, setDraft]             = useState('')
+  const inputRef = useRef(null)
 
   const displayDate = dateOverride || ev.date
   const isEdited    = !!dateOverride
 
   function startEdit(e) {
     e.stopPropagation()
-    setDateDraft(displayDate)
+    setDraft(displayDate)
     setEditingDate(true)
-    setTimeout(() => dateRef.current?.select(), 0)
+    setTimeout(() => inputRef.current?.select(), 0)
   }
   function commitEdit() {
-    const val = dateDraft.trim()
+    const val = draft.trim()
     onDateSave(ev.id, val && val !== ev.date ? val : null)
     setEditingDate(false)
   }
@@ -66,18 +63,6 @@ function Ev({ ev, done, note, onToggle, dateOverride, onDateSave, onNoteSave }) 
     if (e.key === 'Enter')  { e.preventDefault(); commitEdit() }
     if (e.key === 'Escape') { setEditingDate(false) }
     e.stopPropagation()
-  }
-
-  function handleAddNote(e) {
-    e.stopPropagation()
-    setShowNote(true)
-    setTimeout(() => noteRef.current?.focus(), 0)
-  }
-
-  function handleNoteChange(e) {
-    const val = e.target.value
-    onNoteSave(ev.id, val)
-    if (!val.trim()) setShowNote(false)
   }
 
   const rowCls = [
@@ -89,17 +74,22 @@ function Ev({ ev, done, note, onToggle, dateOverride, onDateSave, onNoteSave }) 
     done               ? s.evDone  : '',
   ].filter(Boolean).join(' ')
 
+  // tag → css class map
+  const tagClsMap = {
+    't-ap':'t_ap','t-atn':'t_atn','t-sp':'t_sp','t-cs':'t_cs',
+    't-sav':'t_sav','t-citi':'t_citi','t-act':'t_act','t-key':'t_key','t-eff':'t_eff'
+  }
+
   return (
     <div className={rowCls}
       onClick={() => !editingDate && onToggle(ev.id)}
       role="button" tabIndex={0}
       onKeyDown={e => { if (!editingDate && (e.key === 'Enter' || e.key === ' ')) onToggle(ev.id) }}>
-
       <div className={`${s.chk} ${done ? s.chkDone : ''}`} aria-hidden="true"/>
 
       {editingDate ? (
-        <input ref={dateRef} className={s.edateInput}
-          value={dateDraft} onChange={e => setDateDraft(e.target.value)}
+        <input ref={inputRef} className={s.edateInput}
+          value={draft} onChange={e => setDraft(e.target.value)}
           onBlur={commitEdit} onKeyDown={handleDateKey}
           onClick={e => e.stopPropagation()} />
       ) : (
@@ -110,38 +100,24 @@ function Ev({ ev, done, note, onToggle, dateOverride, onDateSave, onNoteSave }) 
       <div className={s.edot} style={{ background: ev.color }}/>
 
       <div className={s.ebody}>
-        {/* single line: name · tags · sub all inline */}
-        <span className={s.ename}>{ev.name}</span>
-        {ev.tag && ev.tag.split(' · ').map((t, i) => (
-          <span key={i} className={`${s.tag} ${s[TAG_CLS[ev.tagCls]] || s.tagDef}`}>{t}</span>
-        ))}
-        {ev.sub && <span className={s.esub}> — {ev.sub}</span>}
-
-        {/* note row — only shown when active */}
-        {showNote ? (
-          <div className={s.enoteRow} onClick={e => e.stopPropagation()}>
-            <input
-              ref={noteRef}
-              className={s.enote}
-              type="text"
-              placeholder="Add note…"
-              defaultValue={note || ''}
-              onMouseDown={e => e.stopPropagation()}
-              onKeyDown={e => {
-                e.stopPropagation()
-                if (e.key === 'Escape') { setShowNote(false); if (!note) onNoteSave(ev.id, '') }
-              }}
-              onBlur={e => { if (!e.target.value.trim()) setShowNote(false) }}
-              onChange={handleNoteChange}
-            />
-          </div>
-        ) : (
-          <button className={s.addNoteBtn}
-            onClick={handleAddNote}
-            title="Add a note to this item">
-            + note
-          </button>
-        )}
+        <div className={s.ename}>
+          {ev.name}
+          {ev.tag && ev.tag.split(' · ').map((t, i) => (
+            <span key={i} className={`${s.tag} ${s[tagClsMap[ev.tagCls]] || s.tagDef}`}>{t}</span>
+          ))}
+        </div>
+        {ev.sub && <div className={s.esub}>{ev.sub}</div>}
+        <input
+          className={s.enote}
+          type="text"
+          placeholder="Add note…"
+          value={note || ''}
+          onClick={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+          onKeyDown={e => e.stopPropagation()}
+          onChange={e => onNoteSave(ev.id, e.target.value)}
+          aria-label="Transaction note"
+        />
       </div>
 
       <span className={`${s.eamt} ${s[ev.amtCls] || ''}`}>{ev.amt}</span>
@@ -174,9 +150,20 @@ const MONTHS = [
         balStrips: [
           {
             label: "After Jun 14–18 · Seed placed · Apex · Inspection",
-            note: "",
+            note:  "ATN holds ~$1,280 after the temporary seed. Autopay remains tight until later paychecks, and the Jun 18 Mike auto loan is removed this month. Jun 18 Mike auto loan removed: Autopay keeps an extra $725. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$1,236",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$1,412.70",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$647.50",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$890",total:false},
+              {cls:"sav",name:"Personal Savings ·4685",val:"~$929",total:false},
+              {cls:"sav",name:"Stearns ·1244",val:"~$4,100",total:false},
+              {cls:"sav",name:"Stearns ·3046",val:"~$440",total:false},
+              {cls:"sav",name:"Stearns ·4182",val:"~$900",total:false},
+              {cls:"sav",name:"Liberty Savings",val:"~$5,900",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,720",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,560",total:false},
+              {cls:"sav",name:"Pending external transfers",val:"~$590",total:false},
             ],
           },
         ],
@@ -203,9 +190,14 @@ const MONTHS = [
         balStrips: [
           {
             label: "After Jun 19–28 · Stearns · Bills · Citi payment",
-            note: "",
+            note:  "ATN smoothing active: Jun 19 Spending transfer reduced by $300. ATN now stays much safer while Spending carries the squeeze. Citi ·5079 is now $40/mo and Dani Citi adds $40/mo from ATN through Dec. Jun 18 Mike auto loan removed: Autopay keeps an extra $725. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$1,181",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,207.70",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$547.50",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$1,165",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,680",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,520",total:false},
             ],
           },
         ],
@@ -233,9 +225,20 @@ const MONTHS = [
         balStrips: [
           {
             label: "June 30 END · Apex only · No Stearns counted",
-            note: "",
+            note:  "No Jun 30 Stearns paycheck and no Jun 30 July pre-fund are counted. ATN is very lean, so do not add extra ATN spending before Jul 3. Jun 18 Mike auto loan removed: Autopay keeps an extra $725. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$3,481",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$1,009.70",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$439.50",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$1,365",total:false},
+              {cls:"sav",name:"Personal Savings ·4685",val:"~$929",total:false},
+              {cls:"sav",name:"Stearns ·1244",val:"~$1,931",total:false},
+              {cls:"sav",name:"Stearns ·3046",val:"~$440",total:false},
+              {cls:"sav",name:"Stearns ·4182",val:"~$900",total:false},
+              {cls:"sav",name:"Liberty Savings",val:"~$5,900",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,680",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,520",total:false},
+              {cls:"sav",name:"Pending external transfers",val:"~$2,169",total:false},
             ],
           },
         ],
@@ -272,9 +275,16 @@ const MONTHS = [
         balStrips: [
           {
             label: "After Jul 1–6 · Permanent ATN buffer funded · ·1244 restored · Stearns",
-            note: "",
+            note:  "Permanent ATN buffer is now explicitly funded; June seed is restored to ·1244, and July Spending is funded from the Jul 3 Stearns deposit. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest. The $2,000 Autopay→Stearns group batch leaves $1,000 in ATN and restores $1,000 to ·1244 after settlement.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$1,352",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,569.20",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$2,202.80",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$1,565",total:false},
+              {cls:"sav",name:"Stearns ·1244",val:"~$3,654",total:false},
+              {cls:"sav",name:"Liberty Savings",val:"~$5,900",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,680",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,520",total:false},
             ],
           },
         ],
@@ -296,9 +306,18 @@ const MONTHS = [
         balStrips: [
           {
             label: "After Jul 7–14 · Insurance · PayPal · Moving funds",
-            note: "",
+            note:  "This is the tightest July ATN checkpoint. Keep ATN spending frozen until the Jul 17 Stearns deposit. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$1,352",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,196.20",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,999.80",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$1,640",total:false},
+              {cls:"sav",name:"Stearns ·1244",val:"~$3,654",total:false},
+              {cls:"sav",name:"Cap One ·3046",val:"~$0",total:false},
+              {cls:"sav",name:"Cap One ·4182",val:"~$0",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,680",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,520",total:false},
+              {cls:"sav",name:"Pending external transfers",val:"~$1,340",total:false},
             ],
           },
         ],
@@ -325,9 +344,14 @@ const MONTHS = [
         balStrips: [
           {
             label: "After Jul 15–22 · Apex + Rent + Stearns + Loans",
-            note: "",
+            note:  "Rent, Citi, Fidelity, Mike auto, Dani auto, and Spectrum are all covered. ATN is still lean but positive. Citi ·5079 is now $40/mo and Dani Citi adds $40/mo from ATN through Dec. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$552",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,257.20",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,719.80",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$1,840",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,640",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,480",total:false},
             ],
           },
         ],
@@ -356,9 +380,19 @@ const MONTHS = [
         balStrips: [
           {
             label: "July 31 END · Bonus deployed · Closing fund ready",
-            note: "",
+            note:  "Closing fund is ready: Liberty $5,260 + Cap One ·3046 $1,140 + Cap One ·4182 $1,600 = $8,000. The remainder stays liquid. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$2,837",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,809.20",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,164.80",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$2,115",total:false},
+              {cls:"sav",name:"Personal Savings ·4685",val:"~$2,329",total:false},
+              {cls:"sav",name:"Stearns ·1244",val:"~$5,100",total:false},
+              {cls:"sav",name:"Cap One ·3046",val:"~$1,140",total:false},
+              {cls:"sav",name:"Cap One ·4182",val:"~$1,600",total:false},
+              {cls:"sav",name:"Liberty Savings",val:"~$5,900",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,640",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,480",total:false},
             ],
           },
         ],
@@ -400,9 +434,19 @@ const MONTHS = [
         balStrips: [
           {
             label: "Aug 1–13 · Last rent paid · Pre-closing",
-            note: "",
+            note:  "Last rent is paid. ATN is tight pre-closing; avoid extra ATN spending before the Aug 14 Stearns deposit. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$810",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,068.70",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$556.10",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$2,190",total:false},
+              {cls:"sav",name:"Liberty Savings",val:"~$5,900",total:false},
+              {cls:"sav",name:"Cap One ·3046",val:"~$1,140",total:false},
+              {cls:"sav",name:"Cap One ·4182",val:"~$1,600",total:false},
+              {cls:"sav",name:"Stearns ·1244",val:"~$3,654",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,640",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,480",total:false},
+              {cls:"sav",name:"Pending external transfers",val:"~$1,446",total:false},
             ],
           },
         ],
@@ -427,9 +471,17 @@ const MONTHS = [
         balStrips: [
           {
             label: "After Aug 14–20 · CLOSED · Keys in hand · Paychecks",
-            note: "",
+            note:  "Closing wire is complete and paychecks land. Cap One closing buckets are depleted as planned. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$1,960",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,234.70",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,722.10",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$2,390",total:false},
+              {cls:"sav",name:"Personal Savings ·4685",val:"~$2,329",total:false},
+              {cls:"sav",name:"Stearns ·1244",val:"~$4,377",total:false},
+              {cls:"sav",name:"Liberty remainder",val:"~$640",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,640",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,480",total:false},
             ],
           },
         ],
@@ -459,9 +511,18 @@ const MONTHS = [
         balStrips: [
           {
             label: "August 31 END · First home month done · Sep mortgage ready",
-            note: "",
+            note:  "September mortgage is covered even under the conservative Sep 1 assumption. If first payment is actually Oct 1, this becomes extra cushion. Citi ·5079 is now $40/mo and Dani Citi adds $40/mo from ATN through Dec. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest. Reconciled note: the CS→Autopay bridge is reflected by the transfer initiation date, so the source cash may show as pending before the mortgage month begins.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$4,205",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,681.70",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,167.10",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$2,165",total:false},
+              {cls:"sav",name:"Personal Savings ·4685",val:"~$2,329",total:false},
+              {cls:"sav",name:"Stearns ·1244",val:"~$5,100",total:false},
+              {cls:"sav",name:"Liberty remainder",val:"~$640",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,600",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,440",total:false},
+              {cls:"sav",name:"Pending external transfers",val:"~$500",total:false},
             ],
           },
         ],
@@ -553,9 +614,17 @@ const MONTHS = [
         balStrips: [
           {
             label: "Sep 30 END · First full mortgage month done",
-            note: "",
+            note:  "HYSA move and CS sweep are now reflected. CS is kept at a ~$2,500 operating floor. Citi ·5079 is now $40/mo and Dani Citi adds $40/mo from ATN through Dec. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest. Reconciled note: the CS→Autopay bridge is reflected by the transfer initiation date, so the source cash may show as pending before the mortgage month begins.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$5,268",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,554.20",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,169.40",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$2,500",total:false},
+              {cls:"sav",name:"HYSA (excl. Stearns float)",val:"~$5,609",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,560",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,400",total:false},
+              {cls:"sav",name:"Stearns transfer float ·1244",val:"~$1,500",total:false},
+              {cls:"sav",name:"Pending external transfers",val:"~$500",total:false},
             ],
           },
         ],
@@ -649,9 +718,17 @@ const MONTHS = [
         balStrips: [
           {
             label: "Oct 30 END · Bonus · Dani sale · Savings surging",
-            note: "",
+            note:  "Dani sale proceeds, Oct bonus, and CS sweep are reflected. Furnishing purchases are not deducted here unless actually spent. Citi ·5079 is now $40/mo and Dani Citi adds $40/mo from ATN through Dec. Transfer-efficient version: external transfers are batched and only counted when available; internal subtransfers happen inside the destination/source account group. Dani Citi balance is now shown in each balance strip, starting at ~$1,560 and reducing by $40/mo through December before interest. Reconciled note: the CS→Autopay bridge is reflected by the transfer initiation date, so the source cash may show as pending before the mortgage month begins.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$5,331",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,426.70",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,106.70",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$2,500",total:false},
+              {cls:"sav",name:"HYSA (excl. Stearns float)",val:"~$58,784",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,520",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,360",total:false},
+              {cls:"sav",name:"Stearns transfer float ·1244",val:"~$1,500",total:false},
+              {cls:"sav",name:"Pending external transfers",val:"~$500",total:false},
             ],
           },
         ],
@@ -743,9 +820,17 @@ const MONTHS = [
         balStrips: [
           {
             label: "Nov 30 END · Dec transfer batches pending",
-            note: "",
+            note:  "Nov 30 reflects the Dec Spending batch already initiated and the Dec mortgage bridge already in transit. That is why Stearns ·1244 shows only the remaining cash float while Pending external transfers shows the money currently moving between groups. Autopay, ATN, Spending, and CS all remain positive.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$5,394",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,299.20",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,109",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$2,500",total:false},
+              {cls:"sav",name:"HYSA (excl. Stearns float)",val:"~$59,159",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,480",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,320",total:false},
+              {cls:"sav",name:"Stearns transfer float ·1244",val:"~$54",total:false},
+              {cls:"sav",name:"Pending external transfers",val:"~$1,946",total:false},
             ],
           },
         ],
@@ -838,9 +923,16 @@ const MONTHS = [
         balStrips: [
           {
             label: "December 31 END · Year-end · New mortgage rate Jan 1",
-            note: "",
+            note:  "Dec 31 liquid total is still roughly $72.8k before card balances/interest. All bridge transfers have arrived, pending external transfers are back to $0, Spending is swept back to a $1,000 floor, CS is held at a $2,500 floor, and the Stearns transfer float is restored to ~$1,500.",
             items: [
               {cls:"ap",name:"Autopay ·9785",val:"~$5,457",total:false},
+              {cls:"atn",name:"ATN ·4510",val:"~$2,171.70",total:false},
+              {cls:"sp",name:"Spending ·1712",val:"~$1,000",total:false},
+              {cls:"cs",name:"CS ·9893",val:"~$2,500",total:false},
+              {cls:"sav",name:"HYSA (excl. Stearns float)",val:"~$60,145.30",total:false},
+              {cls:"citi",name:"Citi ·5079",val:"~−$1,440",total:false},
+              {cls:"citi",name:"Dani Citi card",val:"~−$1,280",total:false},
+              {cls:"sav",name:"Stearns transfer float ·1244",val:"~$1,500",total:false},
             ],
           },
         ],

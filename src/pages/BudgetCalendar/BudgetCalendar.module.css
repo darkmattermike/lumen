@@ -206,18 +206,22 @@
 .tagDef { background:rgba(139,146,168,.12); color:#8b92a8; }
 
 /* ── balance strips ── */
-.balStrip  { background:#141720; border-top:1px solid #262b3a; padding:12px 28px 14px; }
+.balStrip  { background:#141720; border-top:2px solid #262b3a; padding:12px 28px 14px; }
 .balLabel  { font-size:10px; font-weight:700; color:#555e78; letter-spacing:.08em; text-transform:uppercase; margin-bottom:10px; }
 .balGrid   { display:flex; flex-wrap:wrap; gap:8px; }
-.balItem   { background:#0d0f14; border:1px solid #262b3a; border-radius:4px; padding:8px 12px; min-width:140px; }
-.balTotal  { background:#0F6E56; border-color:#0F6E56; display:flex; justify-content:space-between; align-items:center; flex-basis:100%; }
-.balTotal .balName { color:#86EFAC; font-size:11px; font-weight:500; }
-.balTotal .balVal  { color:#fff; font-size:14px; font-weight:700; }
+.balItem   { background:#0d0f14; border:1px solid #262b3a; border-radius:4px; padding:8px 12px; min-width:140px; flex-shrink:0; }
+.balTotal  {
+  background:rgba(15,110,86,.25); border-color:rgba(61,214,140,.3);
+  display:flex; justify-content:space-between; align-items:center;
+  flex-basis:100%;
+}
+.balTotal .balName { color:#3dd68c; font-size:11px; font-weight:500; }
+.balTotal .balVal  { color:#fff; font-size:15px; font-weight:700; }
 .balName   { font-size:10px; color:#555e78; margin-bottom:3px; }
 .balVal    { font-size:14px; font-weight:700; color:#e8eaf0; }
-.balNote   { font-size:11px; color:#8b92a8; margin-top:10px; line-height:1.5; }
+.balNote   { font-size:11px; color:#8b92a8; margin-top:10px; line-height:1.55; }
 
-/* account-coloured bal values */
+/* account-coloured bal values — cls matches "ap", "atn", "sp", "cs", "sav", "citi" */
 .bal_ap   .balVal { color:#a78bfa; }
 .bal_atn  .balVal { color:#60a5fa; }
 .bal_sp   .balVal { color:#3dd68c; }
