@@ -984,7 +984,81 @@ const STARTING_BALANCES={
 let state=loadState();
 let baseTx={};
 function loadState(){try{return JSON.parse(localStorage.getItem(STATE_KEY)||'{"tx":{}}');}catch(e){return {tx:{}};}}
-function saveState(){localStorage.setItem(STATE_KEY, JSON.stringify(state));}
+function authHeaders(){
+  let token=null;
+  try{ token=localStorage.getItem('lumen_token') || localStorage.getItem('token') || localStorage.getItem('authToken'); }catch(e){}
+  return Object.assign({'Content-Type':'application/json'}, token ? {Authorization:`Bearer ${token}`} : {});
+}
+async function loadRemoteState(){
+  try{
+    const res=await fetch(API_PATH,{headers:authHeaders(), credentials:'include'});
+    if(!res.ok) throw new Error('GET '+res.status);
+    const payload=await res.json();
+    const remoteState=payload?.data && Object.keys(payload.data).length ? payload.data : null;
+    if(remoteState && typeof remoteState==='object'){
+      state=remoteState.tx ? remoteState : {tx: remoteState.tx || {}};
+      saveState(false);
+      return true;
+    }
+    // Backward compatibility for older checked-only API payloads.
+    if(payload?.checked && typeof payload.checked==='object'){
+      state.tx=state.tx||{};
+      for(const [id,done] of Object.entries(payload.checked)){
+        if(!state.tx[id]) state.tx[id]={};
+        state.tx[id].done=!!done;
+      }
+      saveState(false);
+    }
+    return true;
+  }catch(err){
+    console.warn('[BudgetCalendar] remote load failed; using localStorage fallback:', err);
+    return false;
+  }
+}
+function checkedPayload(){
+  const checked={};
+  for(const [id,t] of Object.entries(state.tx||{})){
+    if(typeof t.done==='boolean') checked[id]=!!t.done;
+  }
+  return checked;
+}
+function notesPayload(){
+  const notes={};
+  for(const [id,t] of Object.entries(state.tx||{})){
+    if(t.note) notes[id]=t.note;
+  }
+  return notes;
+}
+function datesPayload(){
+  const dates={};
+  for(const [id,t] of Object.entries(state.tx||{})){
+    if(t.date) dates[id]=t.date;
+  }
+  return dates;
+}
+async function saveRemoteStateNow(){
+  if(!syncReady) return;
+  try{
+    const res=await fetch(API_PATH,{
+      method:'POST',
+      headers:authHeaders(),
+      credentials:'include',
+      body:JSON.stringify({checked:checkedPayload(), notes:notesPayload(), dates:datesPayload(), data:state})
+    });
+    if(!res.ok) throw new Error('POST '+res.status);
+  }catch(err){
+    console.warn('[BudgetCalendar] remote save failed; kept localStorage copy:', err);
+  }
+}
+function scheduleRemoteSave(){
+  if(!syncReady) return;
+  clearTimeout(remoteSaveTimer);
+  remoteSaveTimer=setTimeout(saveRemoteStateNow, 450);
+}
+function saveState(sync=true){
+  localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  if(sync) scheduleRemoteSave();
+}
 function loadDoneLegacy(){try{return JSON.parse(localStorage.getItem(DONE_KEY)||'{}');}catch(e){return {};}}
 function saveDoneLegacy(done){localStorage.setItem(DONE_KEY, JSON.stringify(done));}
 function esc(s){return String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
