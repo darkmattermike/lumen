@@ -36,22 +36,29 @@ function BalStrip({ label, items, note }) {
 }
 
 // ── single event row ───────────────────────────────────────
+const TAG_CLS = {
+  't-ap':'t_ap','t-atn':'t_atn','t-sp':'t_sp','t-cs':'t_cs',
+  't-sav':'t_sav','t-citi':'t_citi','t-act':'t_act','t-key':'t_key','t-eff':'t_eff'
+}
+
 function Ev({ ev, done, note, onToggle, dateOverride, onDateSave, onNoteSave }) {
   const [editingDate, setEditingDate] = useState(false)
-  const [draft, setDraft]             = useState('')
-  const inputRef = useRef(null)
+  const [dateDraft,   setDateDraft]   = useState('')
+  const [showNote,    setShowNote]    = useState(!!note)
+  const dateRef = useRef(null)
+  const noteRef = useRef(null)
 
   const displayDate = dateOverride || ev.date
   const isEdited    = !!dateOverride
 
   function startEdit(e) {
     e.stopPropagation()
-    setDraft(displayDate)
+    setDateDraft(displayDate)
     setEditingDate(true)
-    setTimeout(() => inputRef.current?.select(), 0)
+    setTimeout(() => dateRef.current?.select(), 0)
   }
   function commitEdit() {
-    const val = draft.trim()
+    const val = dateDraft.trim()
     onDateSave(ev.id, val && val !== ev.date ? val : null)
     setEditingDate(false)
   }
@@ -59,6 +66,18 @@ function Ev({ ev, done, note, onToggle, dateOverride, onDateSave, onNoteSave }) 
     if (e.key === 'Enter')  { e.preventDefault(); commitEdit() }
     if (e.key === 'Escape') { setEditingDate(false) }
     e.stopPropagation()
+  }
+
+  function handleAddNote(e) {
+    e.stopPropagation()
+    setShowNote(true)
+    setTimeout(() => noteRef.current?.focus(), 0)
+  }
+
+  function handleNoteChange(e) {
+    const val = e.target.value
+    onNoteSave(ev.id, val)
+    if (!val.trim()) setShowNote(false)
   }
 
   const rowCls = [
@@ -70,22 +89,17 @@ function Ev({ ev, done, note, onToggle, dateOverride, onDateSave, onNoteSave }) 
     done               ? s.evDone  : '',
   ].filter(Boolean).join(' ')
 
-  // tag → css class map
-  const tagClsMap = {
-    't-ap':'t_ap','t-atn':'t_atn','t-sp':'t_sp','t-cs':'t_cs',
-    't-sav':'t_sav','t-citi':'t_citi','t-act':'t_act','t-key':'t_key','t-eff':'t_eff'
-  }
-
   return (
     <div className={rowCls}
       onClick={() => !editingDate && onToggle(ev.id)}
       role="button" tabIndex={0}
       onKeyDown={e => { if (!editingDate && (e.key === 'Enter' || e.key === ' ')) onToggle(ev.id) }}>
+
       <div className={`${s.chk} ${done ? s.chkDone : ''}`} aria-hidden="true"/>
 
       {editingDate ? (
-        <input ref={inputRef} className={s.edateInput}
-          value={draft} onChange={e => setDraft(e.target.value)}
+        <input ref={dateRef} className={s.edateInput}
+          value={dateDraft} onChange={e => setDateDraft(e.target.value)}
           onBlur={commitEdit} onKeyDown={handleDateKey}
           onClick={e => e.stopPropagation()} />
       ) : (
@@ -96,24 +110,38 @@ function Ev({ ev, done, note, onToggle, dateOverride, onDateSave, onNoteSave }) 
       <div className={s.edot} style={{ background: ev.color }}/>
 
       <div className={s.ebody}>
-        <div className={s.ename}>
-          {ev.name}
-          {ev.tag && ev.tag.split(' · ').map((t, i) => (
-            <span key={i} className={`${s.tag} ${s[tagClsMap[ev.tagCls]] || s.tagDef}`}>{t}</span>
-          ))}
-        </div>
-        {ev.sub && <div className={s.esub}>{ev.sub}</div>}
-        <input
-          className={s.enote}
-          type="text"
-          placeholder="Add note…"
-          value={note || ''}
-          onClick={e => e.stopPropagation()}
-          onMouseDown={e => e.stopPropagation()}
-          onKeyDown={e => e.stopPropagation()}
-          onChange={e => onNoteSave(ev.id, e.target.value)}
-          aria-label="Transaction note"
-        />
+        {/* single line: name · tags · sub all inline */}
+        <span className={s.ename}>{ev.name}</span>
+        {ev.tag && ev.tag.split(' · ').map((t, i) => (
+          <span key={i} className={`${s.tag} ${s[TAG_CLS[ev.tagCls]] || s.tagDef}`}>{t}</span>
+        ))}
+        {ev.sub && <span className={s.esub}> — {ev.sub}</span>}
+
+        {/* note row — only shown when active */}
+        {showNote ? (
+          <div className={s.enoteRow} onClick={e => e.stopPropagation()}>
+            <input
+              ref={noteRef}
+              className={s.enote}
+              type="text"
+              placeholder="Add note…"
+              defaultValue={note || ''}
+              onMouseDown={e => e.stopPropagation()}
+              onKeyDown={e => {
+                e.stopPropagation()
+                if (e.key === 'Escape') { setShowNote(false); if (!note) onNoteSave(ev.id, '') }
+              }}
+              onBlur={e => { if (!e.target.value.trim()) setShowNote(false) }}
+              onChange={handleNoteChange}
+            />
+          </div>
+        ) : (
+          <button className={s.addNoteBtn}
+            onClick={handleAddNote}
+            title="Add a note to this item">
+            + note
+          </button>
+        )}
       </div>
 
       <span className={`${s.eamt} ${s[ev.amtCls] || ''}`}>{ev.amt}</span>
