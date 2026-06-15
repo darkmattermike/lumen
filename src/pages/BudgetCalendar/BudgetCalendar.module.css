@@ -328,3 +328,39 @@
   .balGrid { grid-template-columns: repeat(2,1fr); }
   .balTotal { grid-column: span 2; flex-direction: column; align-items: flex-start; gap:2px; }
 }
+
+/* ── inline date editing ── */
+.edate {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background .15s, color .15s;
+  padding: 1px 3px;
+  margin: -1px -3px;
+}
+.edate:hover {
+  background: rgba(120, 200, 175, .1);
+  color: var(--sw-mut);
+}
+
+/* dim indicator when a date has been overridden */
+.edateEdited {
+  color: var(--sw-mint);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+/* the input that appears when editing */
+.edateInput {
+  width: 62px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--sw-txt);
+  background: rgba(98, 224, 181, .08);
+  border: 1px solid rgba(98, 224, 181, .4);
+  border-radius: 4px;
+  padding: 1px 4px;
+  outline: none;
+  caret-color: var(--sw-mint);
+  flex-shrink: 0;
+}

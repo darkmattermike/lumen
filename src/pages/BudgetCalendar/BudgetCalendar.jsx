@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import SwShell from '../../components/SwShell/SwShell'
 import s from './BudgetCalendar.module.css'
 
-const STORAGE_KEY = 'budget_v4_1'
+const STORAGE_KEY  = 'budget_v4_1'
+const DATES_KEY    = 'budget_v4_1_dates'
 
 // ── account colours ────────────────────────────────────────
 const C = {
@@ -35,7 +36,38 @@ function BalStrip({ label, items, note }) {
 }
 
 // ── event component ────────────────────────────────────────
-function Ev({ ev, done, onToggle }) {
+function Ev({ ev, done, onToggle, dateOverride, onDateSave }) {
+  const [editing, setEditing] = useState(false)
+  const [draft,   setDraft]   = useState('')
+  const inputRef = useRef(null)
+
+  const displayDate = dateOverride || ev.date
+  const isEdited    = !!dateOverride
+
+  function startEdit(e) {
+    e.stopPropagation()
+    setDraft(displayDate)
+    setEditing(true)
+    // focus after paint
+    setTimeout(() => inputRef.current?.select(), 0)
+  }
+
+  function commitEdit() {
+    const val = draft.trim()
+    if (val && val !== ev.date) {
+      onDateSave(ev.id, val)
+    } else if (!val || val === ev.date) {
+      onDateSave(ev.id, null) // clear override if reset to original
+    }
+    setEditing(false)
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter')  { e.preventDefault(); commitEdit() }
+    if (e.key === 'Escape') { setEditing(false) }
+    e.stopPropagation()
+  }
+
   const rowCls = [
     s.ev,
     ev.type === 'sev'  ? s.evSave  : '',
@@ -47,10 +79,30 @@ function Ev({ ev, done, onToggle }) {
   ].filter(Boolean).join(' ')
 
   return (
-    <div className={rowCls} onClick={() => onToggle(ev.id)} role="button" tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onToggle(ev.id) }}>
+    <div className={rowCls} onClick={() => !editing && onToggle(ev.id)} role="button" tabIndex={0}
+      onKeyDown={e => { if (!editing && (e.key === 'Enter' || e.key === ' ')) onToggle(ev.id) }}>
       <div className={`${s.chk} ${done ? s.chkDone : ''}`} aria-hidden="true"/>
-      <span className={s.edate}>{ev.date}</span>
+
+      {/* ── editable date ── */}
+      {editing ? (
+        <input
+          ref={inputRef}
+          className={s.edateInput}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={handleKey}
+          onClick={e => e.stopPropagation()}
+          aria-label="Edit date"
+        />
+      ) : (
+        <span
+          className={`${s.edate} ${isEdited ? s.edateEdited : ''}`}
+          onClick={startEdit}
+          title="Click to edit date"
+        >{displayDate}</span>
+      )}
+
       <div className={s.edot} style={{ background: ev.color || C.ap }}/>
       <div className={s.ebody}>
         <div className={s.ename}>
@@ -511,6 +563,26 @@ export default function BudgetCalendar() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }
   })
 
+  // ── date overrides ─────────────────────────────────────
+  const [dates, setDates] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(DATES_KEY) || '{}') } catch { return {} }
+  })
+
+  const saveDate = useCallback((id, val) => {
+    setDates(prev => {
+      const next = { ...prev }
+      if (val === null || val === undefined) {
+        delete next[id]
+      } else {
+        next[id] = val
+      }
+      try { localStorage.setItem(DATES_KEY, JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [])
+
+  const editedCount = Object.keys(dates).length
+
   // Count all checkable events
   const allIds = MONTHS.flatMap(m =>
     m.weeks.flatMap(w => w.events ? w.events.map(e => e.id) : [])
@@ -534,6 +606,12 @@ export default function BudgetCalendar() {
     try { localStorage.removeItem(STORAGE_KEY) } catch {}
   }
 
+  const resetDates = () => {
+    if (!window.confirm(`Reset all ${editedCount} date edits?`)) return
+    setDates({})
+    try { localStorage.removeItem(DATES_KEY) } catch {}
+  }
+
   return (
     <SwShell>
       {/* ── head ── */}
@@ -554,7 +632,12 @@ export default function BudgetCalendar() {
       <div className={s.prog}>
         <div className={s.progTrack}><div className={s.progFill} style={{width:`${pct}%`}}/></div>
         <span className={s.progCount}>{done} / {total}</span>
-        <button className={s.resetBtn} onClick={reset}>Reset</button>
+        <button className={s.resetBtn} onClick={reset}>Reset checks</button>
+        {editedCount > 0 && (
+          <button className={s.resetBtn} onClick={resetDates}>
+            Reset dates ({editedCount})
+          </button>
+        )}
       </div>
 
       {/* ── account legend ── */}
@@ -599,7 +682,7 @@ export default function BudgetCalendar() {
                   <div className={s.week}>
                     <div className={s.wlabel}>{week.label}</div>
                     {week.events.map(ev => (
-                      <Ev key={ev.id} ev={ev} done={!!checked[ev.id]} onToggle={toggle} />
+                      <Ev key={ev.id} ev={ev} done={!!checked[ev.id]} onToggle={toggle} dateOverride={dates[ev.id]} onDateSave={saveDate} />
                     ))}
                   </div>
                 )}
