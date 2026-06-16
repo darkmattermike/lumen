@@ -238,28 +238,60 @@ export default function BudgetCalendar() {
   const timer = useRef(null)
 
   useEffect(() => {
+    // ── 1. Try to recover from old iframe localStorage keys ──
+    // The old standalone HTML saved to these two keys. Since the iframe
+    // ran on the same domain, these may still be in localStorage.
+    const OLD_STATE_KEY = 'budget_cal_v5_july15_house_sale_topups_v1'
+    const OLD_DONE_KEY  = 'budget_cal_v5'
+    const MIGRATED_KEY  = 'bcal_iframe_migrated'
+
+    if (!localStorage.getItem(MIGRATED_KEY)) {
+      const oldStatRaw = localStorage.getItem(OLD_STATE_KEY)
+      const oldDoneRaw = localStorage.getItem(OLD_DONE_KEY)
+      const recovered  = {}
+
+      if (oldStatRaw) {
+        try {
+          const parsed = JSON.parse(oldStatRaw)
+          const txMap  = parsed.tx || {}
+          for (const [id, tx] of Object.entries(txMap)) {
+            if (tx && !tx.deleted) {
+              recovered[id] = {
+                ...(tx.done    !== undefined ? { done:   tx.done    } : {}),
+                ...(tx.note                  ? { note:   tx.note    } : {}),
+                ...(tx.date                  ? { date:   tx.date    } : {}),
+                ...(tx.title                 ? { title:  tx.title   } : {}),
+                ...(tx.detail                ? { detail: tx.detail  } : {}),
+                ...(tx.changes               ? { changes:tx.changes } : {}),
+              }
+            }
+          }
+        } catch {}
+      }
+
+      if (oldDoneRaw) {
+        try {
+          const doneMap = JSON.parse(oldDoneRaw)
+          for (const [id, isDone] of Object.entries(doneMap)) {
+            if (isDone) recovered[id] = { ...(recovered[id]||{}), done: true }
+          }
+        } catch {}
+      }
+
+      if (Object.keys(recovered).length > 0) {
+        setTxOv(recovered)
+        localStorage.setItem(SK, JSON.stringify(recovered))
+        syncSave(recovered).catch(()=>{})
+        localStorage.setItem(MIGRATED_KEY, '1')
+        return // skip backend fetch — we just restored from local
+      }
+      localStorage.setItem(MIGRATED_KEY, '1')
+    }
+
+    // ── 2. Fetch from backend ─────────────────────────────────
     request('/api/budget-calendar').then(data => {
       if (data?.tx && Object.keys(data.tx).length > 0) {
-        // New format — tx overrides
         setTxOv(data.tx); localStorage.setItem(SK, JSON.stringify(data.tx))
-      } else if (data?.checked && Object.keys(data.checked).length > 0) {
-        // Migrate old checked/notes/dates format → new tx format
-        const mig = {}
-        for (const [id, isDone] of Object.entries(data.checked)) {
-          if (isDone) mig[id] = { ...(mig[id]||{}), done: true }
-        }
-        for (const [id, note] of Object.entries(data.notes||{})) {
-          if (note) mig[id] = { ...(mig[id]||{}), note }
-        }
-        for (const [id, date] of Object.entries(data.dates||{})) {
-          if (date) mig[id] = { ...(mig[id]||{}), date }
-        }
-        if (Object.keys(mig).length) {
-          setTxOv(mig)
-          localStorage.setItem(SK, JSON.stringify(mig))
-          // Immediately save migrated state to backend in new format
-          syncSave(mig).catch(()=>{})
-        }
       }
     }).catch(()=>{})
   }, [])

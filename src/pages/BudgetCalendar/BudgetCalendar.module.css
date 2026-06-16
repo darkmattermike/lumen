@@ -143,16 +143,32 @@
 .tagDef { background:rgba(120,200,175,.08); color:var(--sw-mut); }
 
 /* ── balance strips ── */
-.balStrip  { background:rgba(5,12,14,.6); border-top:2px solid var(--sw-line); padding:12px 28px 14px; }
-.balLabel  { font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--sw-dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:10px; }
-.balGrid   { display:flex; flex-wrap:wrap; gap:8px; }
-.balItem   { background:rgba(9,24,26,.8); border:1px solid var(--sw-line); border-radius:6px; padding:8px 12px; min-width:130px; flex-shrink:0; }
-.balTotal  { background:rgba(98,224,181,.08); border-color:rgba(98,224,181,.25); display:flex; justify-content:space-between; align-items:center; flex-basis:100%; }
+.balStrip {
+  background: linear-gradient(180deg, #071a1c 0%, #071318 100%);
+  border-top:    3px solid var(--sw-mint);
+  border-bottom: 3px solid var(--sw-mint);
+  margin: 0;
+  padding: 14px 28px 16px;
+}
+.balLabel {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  color: var(--sw-mint); letter-spacing: .12em; text-transform: uppercase;
+  margin-bottom: 12px; opacity: .8;
+}
+.balGrid  { display:flex; flex-wrap:wrap; gap:8px; }
+.balItem  {
+  background: rgba(9,24,26,.9); border: 1px solid rgba(98,224,181,.15);
+  border-radius: 6px; padding: 8px 12px; min-width: 130px; flex-shrink: 0;
+}
+.balTotal {
+  background: rgba(98,224,181,.1); border-color: rgba(98,224,181,.35);
+  display:flex; justify-content:space-between; align-items:center; flex-basis:100%;
+}
 .balTotal .balName { color:var(--sw-mint); font-size:11px; font-weight:500; }
 .balTotal .balVal  { color:#fff; font-size:15px; font-weight:700; }
-.balName   { font-size:10px; color:var(--sw-dim); margin-bottom:3px; }
-.balVal    { font-size:14px; font-weight:700; color:#e8f5f0; }
-.balNote   { font-size:11px; color:var(--sw-mut); margin-top:10px; line-height:1.55; }
+.balName  { font-size:10px; color:var(--sw-dim); margin-bottom:3px; }
+.balVal   { font-size:14px; font-weight:700; color:#e8f5f0; }
+.balNote  { font-size:11px; color:var(--sw-mut); margin-top:10px; line-height:1.55; border-top: 1px solid var(--sw-line); padding-top: 8px; }
 .bal_ap   .balVal { color:var(--sw-purple); }
 .bal_atn  .balVal { color:var(--sw-blue); }
 .bal_sp   .balVal { color:var(--sw-mint); }
