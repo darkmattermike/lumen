@@ -378,83 +378,73 @@ export default function BudgetCalendar() {
     const bal = { ...STARTING_BALANCES }
     const snapshots = {}
 
-    // Build a lookup: which week does each user-added tx belong to?
-    // Key: `${monthId}-${wi}` → [id, ...]
-    const addedInWeek = {}
-    for (const [id, tx] of Object.entries(txOv)) {
-      if (PLAN_EVENTS[id] || tx?.deleted || !tx?.title) continue
-      const date = tx.date || '9999'
-      // Find the right week by plan date range
-      for (const month of PLAN_MONTHS) {
-        let placed = false
-        for (let wi = 0; wi < month.weeks.length; wi++) {
-          const week = month.weeks[wi]
-          const isLast = wi === month.weeks.length - 1
-          const planDates = week.items
-            .filter(it => it.type === 'ev' && PLAN_EVENTS[it.id])
-            .map(it => PLAN_EVENTS[it.id].date).filter(Boolean).sort()
-          const wMin = planDates[0] || ''
-          const wMax = planDates[planDates.length - 1] || ''
-          if (wMin && (date <= wMax || isLast)) {
-            const key = `${month.id}-${wi}`
-            if (!addedInWeek[key]) addedInWeek[key] = []
-            addedInWeek[key].push(id)
-            placed = true
-            break
-          }
-        }
-        if (placed) break
-      }
-    }
-
+    // Build the full ordered list of items exactly as they render:
+    // For each month/week, collect evs (with effective date from override or plan)
+    // and strips, sort evs by effective date+order between strips,
+    // then walk applying changes and snapshotting at strips.
     for (const month of PLAN_MONTHS) {
       for (let wi = 0; wi < month.weeks.length; wi++) {
         const week = month.weeks[wi]
+        const wKey = `${month.id}-${wi}`
+
+        // Plan events for this week — use effective date (override takes precedence)
+        const planEvItems = week.items.filter(it => it.type === 'ev').map(it => ({
+          id:    it.id,
+          date:  txOv[it.id]?.date ?? PLAN_EVENTS[it.id]?.date ?? '',
+          order: PLAN_EVENTS[it.id]?.order ?? 99999,
+          isAdded: false,
+        }))
+
+        // User-added transactions placed in this week
+        const addedEvItems = Object.entries(txOv)
+          .filter(([id, tx]) => !PLAN_EVENTS[id] && !tx?.deleted && tx?.title)
+          .filter(([id, tx]) => {
+            // place in same week as the render logic does
+            const date = tx.date || '9999'
+            const planDates = week.items
+              .filter(it => it.type === 'ev' && PLAN_EVENTS[it.id])
+              .map(it => PLAN_EVENTS[it.id].date).filter(Boolean).sort()
+            const wMin = planDates[0] || ''
+            const wMax = planDates[planDates.length - 1] || ''
+            const isLast = wi === month.weeks.length - 1
+            return wMin && (date <= wMax || isLast) && date >= wMin
+          })
+          .map(([id, tx]) => ({
+            id, date: tx.date || '9999', order: 99999, isAdded: true,
+          }))
+
+        // Interleave: between strips, sort evs by effective date+order
         let si = 0
+        let evBuf = [...planEvItems, ...addedEvItems]
 
-        // Collect all ev ids for this week in date+order order (plan + user-added)
-        const planEvs = week.items
-          .filter(it => it.type === 'ev')
-          .map(it => ({ id: it.id, date: txOv[it.id]?.date ?? PLAN_EVENTS[it.id]?.date ?? '', order: PLAN_EVENTS[it.id]?.order ?? 99999 }))
-        const extraEvs = (addedInWeek[`${month.id}-${wi}`] || [])
-          .map(id => ({ id, date: txOv[id]?.date ?? '9999', order: 99999 }))
-        const allEvs = [...planEvs, ...extraEvs].sort((a, b) =>
-          a.date !== b.date ? a.date.localeCompare(b.date) : a.order - b.order
-        )
+        // Walk week items — when we hit a strip, flush+apply evBuf then snapshot
+        const strips = week.items.filter(it => it.type === 'strip')
+        const hasStrips = strips.length > 0
 
-        // Walk items in order, but replace the flat ev list with sorted allEvs between strips
-        let evIdx = 0
-        for (const it of week.items) {
-          if (it.type === 'ev') {
-            // Apply in sorted order — we'll process all evs when we hit the first one,
-            // then skip remaining ev items
-            if (evIdx === 0) {
-              for (const ev of allEvs) {
-                const ov = txOv[ev.id] || {}
-                if (ov.deleted) continue
-                const changes = ov.changes ?? PLAN_EVENTS[ev.id]?.changes ?? []
-                for (const ch of changes) {
-                  if (!ch.account) continue
-                  if (bal[ch.account] === undefined) bal[ch.account] = 0
-                  bal[ch.account] += Number(ch.amount || 0)
-                }
-              }
-            }
-            evIdx++
-          } else {
-            // strip — snapshot
-            snapshots[`${month.id}-${wi}-${si}`] = { ...bal }
-            si++
-            evIdx = 0 // reset for next ev group after this strip
-          }
-        }
-        // Handle any remaining evs after the last strip (no strip at end)
-        if (evIdx === 0 && week.items.filter(it=>it.type==='ev').length === 0) {
-          // week has no plan evs — apply added evs directly
-          for (const ev of extraEvs) {
+        if (hasStrips) {
+          // Apply all evs in this segment before the strip
+          evBuf.sort((a, b) => a.date !== b.date ? a.date.localeCompare(b.date) : a.order - b.order)
+          for (const ev of evBuf) {
             const ov = txOv[ev.id] || {}
             if (ov.deleted) continue
-            const changes = ov.changes ?? []
+            const changes = ov.changes ?? (ev.isAdded ? [] : PLAN_EVENTS[ev.id]?.changes ?? [])
+            for (const ch of changes) {
+              if (!ch.account) continue
+              if (bal[ch.account] === undefined) bal[ch.account] = 0
+              bal[ch.account] += Number(ch.amount || 0)
+            }
+          }
+          for (const _strip of strips) {
+            snapshots[`${month.id}-${wi}-${si}`] = { ...bal }
+            si++
+          }
+        } else {
+          // No strip — just apply evs
+          evBuf.sort((a, b) => a.date !== b.date ? a.date.localeCompare(b.date) : a.order - b.order)
+          for (const ev of evBuf) {
+            const ov = txOv[ev.id] || {}
+            if (ov.deleted) continue
+            const changes = ov.changes ?? (ev.isAdded ? [] : PLAN_EVENTS[ev.id]?.changes ?? [])
             for (const ch of changes) {
               if (!ch.account) continue
               if (bal[ch.account] === undefined) bal[ch.account] = 0
