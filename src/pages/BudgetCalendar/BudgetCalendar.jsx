@@ -537,21 +537,72 @@ export default function BudgetCalendar() {
                           sorted.push(...evBuf)
                           evBuf = []
                         }
-                        // Walk plan items; inject extras into the ev buffer (not after strips)
+                        // Compute this week's date range from plan event dates (ignoring overrides)
+                        const planDates = week.items
+                          .filter(it => it.type==='ev' && PLAN_EVENTS[it.id])
+                          .map(it => PLAN_EVENTS[it.id].date)
+                          .filter(Boolean).sort()
+                        const wMin = planDates[0] || ''
+                        const wMax = planDates[planDates.length-1] || ''
+                        const isLastWeek = wi === month.weeks.length - 1
+
+                        // Walk plan items; inject extras before strips
                         const extraEvs = extraIds.map(id => ({ type:'ev', id }))
                         let extrasInjected = false
                         for (const it of week.items) {
                           if (it.type === 'strip') {
-                            // Inject extras before the first strip so they sort with the preceding evs
                             if (!extrasInjected) { evBuf.push(...extraEvs); extrasInjected = true }
                             flush()
                             sorted.push(it)
                           } else {
+                            // If this plan event has a date override that moves it OUT of this week,
+                            // skip it here — it will appear in the week matching its override date
+                            const effDate = txOv[it.id]?.date
+                            if (effDate && wMin && wMax && !isLastWeek) {
+                              if (effDate < wMin || effDate > wMax) continue
+                            }
                             evBuf.push(it)
                           }
                         }
                         if (!extrasInjected) evBuf.push(...extraEvs)
                         flush()
+
+                        // Also collect overflow events from OTHER weeks whose date override puts them here
+                        // These are plan events (not user-added) with overrides landing in this week's range
+                        if (wMin && wMax) {
+                          const overflowEvs = []
+                          for (const [id, ov] of Object.entries(txOv)) {
+                            if (!PLAN_EVENTS[id] || ov.deleted || !ov.date) continue
+                            const base = PLAN_EVENTS[id]
+                            // Only process if this ev doesn't belong to this week originally
+                            const belongsHere = month.weeks[wi].items.some(it => it.id === id)
+                            if (belongsHere) continue
+                            // Check if override date falls in this week
+                            if (ov.date >= wMin && (ov.date <= wMax || isLastWeek)) {
+                              // Make sure it's in this month (check plan month)
+                              const evMonth = PLAN_MONTHS.find(m2 => m2.weeks.some(w2 => w2.items.some(it => it.id === id)))
+                              if (evMonth?.id === month.id) {
+                                overflowEvs.push({ type:'ev', id })
+                              }
+                            }
+                          }
+                          if (overflowEvs.length) {
+                            // Insert into sorted maintaining date+order sort
+                            const combined = [...sorted.filter(it=>it.type==='ev'), ...overflowEvs]
+                            combined.sort((a,b)=>{
+                              const da = txOv[a.id]?.date ?? PLAN_EVENTS[a.id]?.date ?? ''
+                              const db = txOv[b.id]?.date ?? PLAN_EVENTS[b.id]?.date ?? ''
+                              if (da!==db) return da.localeCompare(db)
+                              return (PLAN_EVENTS[a.id]?.order??99999)-(PLAN_EVENTS[b.id]?.order??99999)
+                            })
+                            // Rebuild sorted preserving strip positions
+                            const strips = sorted.filter(it=>it.type==='strip')
+                            sorted.length = 0
+                            sorted.push(...combined)
+                            // Re-insert strips at end (they were at the end of the week)
+                            sorted.push(...strips)
+                          }
+                        }
                         let _si = 0
                         return sorted.map((it,ii)=>{
                           if (it.type==='ev') {
