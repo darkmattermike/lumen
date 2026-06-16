@@ -89,7 +89,7 @@
   gap: 8px;
   padding: 7px 28px;
   background: #040d0f;
-  border-bottom: 6px solid rgba(98,224,181,.12);
+  border-bottom: 1px solid rgba(98,224,181,.12);
   border-left: 3px solid transparent;
   cursor: pointer;
   transition: background .12s;
