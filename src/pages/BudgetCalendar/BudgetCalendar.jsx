@@ -528,7 +528,11 @@ export default function BudgetCalendar() {
                           evBuf.sort((a,b)=>{
                             const da = txOv[a.id]?.date ?? PLAN_EVENTS[a.id]?.date ?? ''
                             const db = txOv[b.id]?.date ?? PLAN_EVENTS[b.id]?.date ?? ''
-                            return da.localeCompare(db)
+                            if (da !== db) return da.localeCompare(db)
+                            // same date — preserve original plan order
+                            const oa = PLAN_EVENTS[a.id]?.order ?? 99999
+                            const ob = PLAN_EVENTS[b.id]?.order ?? 99999
+                            return oa - ob
                           })
                           sorted.push(...evBuf)
                           evBuf = []
