@@ -965,6 +965,28 @@ const API_PATH=API_BASE + '/api/budget-calendar';
 let remoteSaveTimer=null;
 console.info('[BudgetCalendar] API endpoint:', API_PATH);
 let syncReady=false;
+let lastSyncStatus='local';
+function hasParentBridge(){ return window.parent && window.parent !== window; }
+function buildRemotePayload(){ return { checked:checkedPayload(), notes:notesPayload(), dates:datesPayload(), data:state }; }
+function setSyncStatus(text, kind='info'){
+  lastSyncStatus=text;
+  try{
+    let el=document.getElementById('syncStatusBadge');
+    if(!el){
+      el=document.createElement('div'); el.id='syncStatusBadge';
+      el.style.cssText='position:fixed;right:14px;bottom:14px;z-index:9999;padding:6px 10px;border-radius:999px;background:#141720;border:1px solid #262b3a;color:#8b92a8;font-size:11px;box-shadow:0 8px 28px rgba(0,0,0,.25);';
+      document.body.appendChild(el);
+    }
+    el.textContent=text;
+    el.style.color=kind==='ok'?'#3dd68c':kind==='err'?'#e05555':kind==='warn'?'#f0a500':'#8b92a8';
+  }catch(e){}
+}
+window.addEventListener('message',(event)=>{
+  if(event.origin !== window.location.origin) return;
+  const msg=event.data||{};
+  if(msg.type==='BUDGET_CALENDAR_SAVE_OK') setSyncStatus('Saved to Lumen', 'ok');
+  if(msg.type==='BUDGET_CALENDAR_SAVE_ERROR') setSyncStatus('Save failed: '+(msg.error||''), 'err');
+});
 const ACCOUNTS=["Autopay", "ATN", "Spending", "CS", "Personal Savings", "Stearns 1244", "Stearns 3046", "Stearns 4182", "Cap One 3046", "Cap One 4182", "Liberty", "HYSA", "Pending External", "Citi 5079", "Dani Citi"];
 const STARTING_BALANCES={
   'Autopay':8,
@@ -991,29 +1013,72 @@ function authHeaders(){
   try{ token=localStorage.getItem('lumen_token') || localStorage.getItem('token') || localStorage.getItem('authToken'); }catch(e){}
   return Object.assign({'Content-Type':'application/json'}, token ? {Authorization:`Bearer ${token}`} : {});
 }
+function applyRemotePayload(payload){
+  const remoteState=payload?.data && typeof payload.data==='object' && Object.keys(payload.data).length ? payload.data : null;
+  if(remoteState){
+    state=remoteState.tx ? remoteState : {tx: remoteState.tx || {}};
+    saveState(false);
+    return true;
+  }
+  if(payload?.checked && typeof payload.checked==='object'){
+    state.tx=state.tx||{};
+    for(const [id,done] of Object.entries(payload.checked)){
+      if(!state.tx[id]) state.tx[id]={};
+      state.tx[id].done=!!done;
+    }
+    if(payload.notes && typeof payload.notes==='object'){
+      for(const [id,note] of Object.entries(payload.notes)){
+        if(!state.tx[id]) state.tx[id]={};
+        state.tx[id].note=note;
+      }
+    }
+    if(payload.dates && typeof payload.dates==='object'){
+      for(const [id,date] of Object.entries(payload.dates)){
+        if(!state.tx[id]) state.tx[id]={};
+        state.tx[id].date=date;
+      }
+    }
+    saveState(false);
+    return true;
+  }
+  return false;
+}
+function loadRemoteStateFromParent(timeoutMs=3000){
+  if(!hasParentBridge()) return Promise.resolve(null);
+  return new Promise(resolve=>{
+    let done=false;
+    const timer=setTimeout(()=>{
+      if(done) return; done=true; window.removeEventListener('message', onMsg); resolve(null);
+    }, timeoutMs);
+    function onMsg(event){
+      if(event.origin !== window.location.origin) return;
+      const msg=event.data||{};
+      if(msg.type==='BUDGET_CALENDAR_REMOTE_STATE'){
+        if(done) return; done=true; clearTimeout(timer); window.removeEventListener('message', onMsg); resolve(msg.payload||{});
+      }
+      if(msg.type==='BUDGET_CALENDAR_REMOTE_STATE_ERROR'){
+        if(done) return; done=true; clearTimeout(timer); window.removeEventListener('message', onMsg); console.warn('[BudgetCalendar] parent load failed:', msg.error); resolve(null);
+      }
+    }
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({type:'BUDGET_CALENDAR_REQUEST_REMOTE_STATE'}, window.location.origin);
+  });
+}
 async function loadRemoteState(){
+  try{
+    const parentPayload=await loadRemoteStateFromParent();
+    if(parentPayload && applyRemotePayload(parentPayload)){ setSyncStatus('Loaded from Lumen', 'ok'); return true; }
+  }catch(err){ console.warn('[BudgetCalendar] parent bridge load failed:', err); }
   try{
     const res=await fetch(API_PATH,{headers:authHeaders(), credentials:'include'});
     if(!res.ok) throw new Error('GET '+res.status);
     const payload=await res.json();
-    const remoteState=payload?.data && Object.keys(payload.data).length ? payload.data : null;
-    if(remoteState && typeof remoteState==='object'){
-      state=remoteState.tx ? remoteState : {tx: remoteState.tx || {}};
-      saveState(false);
-      return true;
-    }
-    // Backward compatibility for older checked-only API payloads.
-    if(payload?.checked && typeof payload.checked==='object'){
-      state.tx=state.tx||{};
-      for(const [id,done] of Object.entries(payload.checked)){
-        if(!state.tx[id]) state.tx[id]={};
-        state.tx[id].done=!!done;
-      }
-      saveState(false);
-    }
+    const applied=applyRemotePayload(payload);
+    setSyncStatus(applied?'Loaded from API':'No remote state yet', applied?'ok':'warn');
     return true;
   }catch(err){
     console.warn('[BudgetCalendar] remote load failed; using localStorage fallback:', err);
+    setSyncStatus('Local only - load failed', 'warn');
     return false;
   }
 }
@@ -1040,16 +1105,28 @@ function datesPayload(){
 }
 async function saveRemoteStateNow(){
   if(!syncReady) return;
+  const payload=buildRemotePayload();
+  // Primary path when embedded in React: let the parent use the same API helper as the rest of Lumen.
+  if(hasParentBridge()){
+    try{
+      window.parent.postMessage({type:'BUDGET_CALENDAR_SAVE_STATE', payload}, window.location.origin);
+      setSyncStatus('Saving to Lumen…', 'info');
+      return;
+    }catch(err){ console.warn('[BudgetCalendar] parent bridge save failed, trying direct API:', err); }
+  }
+  // Fallback path when this file is opened directly.
   try{
     const res=await fetch(API_PATH,{
       method:'POST',
       headers:authHeaders(),
       credentials:'include',
-      body:JSON.stringify({checked:checkedPayload(), notes:notesPayload(), dates:datesPayload(), data:state})
+      body:JSON.stringify(payload)
     });
     if(!res.ok) throw new Error('POST '+res.status);
+    setSyncStatus('Saved to API', 'ok');
   }catch(err){
     console.warn('[BudgetCalendar] remote save failed; kept localStorage copy:', err);
+    setSyncStatus('Local only - save failed', 'err');
   }
 }
 function scheduleRemoteSave(){
