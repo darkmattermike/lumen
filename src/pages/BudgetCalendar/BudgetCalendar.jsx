@@ -29,7 +29,7 @@ function money(n) {
 
 function recalcBalances(txOverrides) {
   const bal = { ...STARTING_BALANCES }
-  const allIds = PLAN_MONTHS.flatMap(m => m.weeks.flatMap(w => w.evIds))
+  const allIds = PLAN_MONTHS.flatMap(m => m.weeks.flatMap(w => w.items.filter(it=>it.type==='ev').map(it=>it.id)))
   for (const id of allIds) {
     const ov = txOverrides[id]
     if (ov?.deleted) continue
@@ -240,10 +240,26 @@ export default function BudgetCalendar() {
   useEffect(() => {
     request('/api/budget-calendar').then(data => {
       if (data?.tx && Object.keys(data.tx).length > 0) {
+        // New format — tx overrides
         setTxOv(data.tx); localStorage.setItem(SK, JSON.stringify(data.tx))
-      } else if (data?.checked) {
-        const mig = Object.fromEntries(Object.entries(data.checked).filter(([,v])=>v).map(([k])=>[k,{done:true}]))
-        if (Object.keys(mig).length) setTxOv(prev => ({...mig,...prev}))
+      } else if (data?.checked && Object.keys(data.checked).length > 0) {
+        // Migrate old checked/notes/dates format → new tx format
+        const mig = {}
+        for (const [id, isDone] of Object.entries(data.checked)) {
+          if (isDone) mig[id] = { ...(mig[id]||{}), done: true }
+        }
+        for (const [id, note] of Object.entries(data.notes||{})) {
+          if (note) mig[id] = { ...(mig[id]||{}), note }
+        }
+        for (const [id, date] of Object.entries(data.dates||{})) {
+          if (date) mig[id] = { ...(mig[id]||{}), date }
+        }
+        if (Object.keys(mig).length) {
+          setTxOv(mig)
+          localStorage.setItem(SK, JSON.stringify(mig))
+          // Immediately save migrated state to backend in new format
+          syncSave(mig).catch(()=>{})
+        }
       }
     }).catch(()=>{})
   }, [])
@@ -298,7 +314,7 @@ export default function BudgetCalendar() {
   }
 
   const liveBal = useMemo(() => recalcBalances(txOv), [txOv])
-  const allIds  = PLAN_MONTHS.flatMap(m => m.weeks.flatMap(w => w.evIds))
+  const allIds  = PLAN_MONTHS.flatMap(m => m.weeks.flatMap(w => w.items.filter(it=>it.type==='ev').map(it=>it.id)))
   const total   = allIds.length
   const doneCt  = allIds.filter(id => !txOv[id]?.deleted && txOv[id]?.done).length
   const pct     = total ? Math.round((doneCt/total)*100) : 0
@@ -376,11 +392,10 @@ export default function BudgetCalendar() {
                   {month.weeks.map((week,wi)=>(
                     <div key={wi} className={s.week}>
                       <div className={s.wlabel}>{week.label}</div>
-                      {week.evIds.map(id=>(
-                        <EvRow key={id} evId={id} txOverrides={txOv} onToggle={toggle} onEdit={setEditingId} acctFilter={filter}/>
-                      ))}
-                      {week.balStrips?.map((strip,si)=>(
-                        <BalStrip key={si} strip={strip} bal={liveBal}/>
+                      {week.items.map((it,ii)=>(
+                        it.type==='ev'
+                          ? <EvRow key={it.id} evId={it.id} txOverrides={txOv} onToggle={toggle} onEdit={setEditingId} acctFilter={filter}/>
+                          : <BalStrip key={ii} strip={it.data} bal={liveBal}/>
                       ))}
                     </div>
                   ))}
