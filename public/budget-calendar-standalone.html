@@ -1168,16 +1168,16 @@ function toggle(id){
   const legacy=loadDoneLegacy(); legacy[id]=state.tx[id].done; saveDoneLegacy(legacy);
   saveState(); applyStateToRows(); updateProg();
 }
+function styleBalValEl(el){
+  // Strip tilde if present
+  if(el.textContent.startsWith('~')) el.textContent=el.textContent.slice(1).trim();
+  // Parse and colour
+  const num=parseFloat(el.textContent.replace(/[^0-9.\-−–]/g,'').replace('−','-').replace('–','-'));
+  if(isNaN(num)) return;
+  el.style.color=num<0?'var(--red)':num===0?'var(--text3)':'var(--green)';
+}
 function styleBalVals(container){
-  (container||document).querySelectorAll('.bal-val').forEach(el=>{
-    if(!el.dataset.styled){
-      el.textContent=el.textContent.replace(/^~/,'').trim();
-      el.dataset.styled='1';
-    }
-    const num=parseFloat(el.textContent.replace(/[^0-9.\-−]/g,'').replace('−','-').replace('–','-'));
-    if(isNaN(num)) return;
-    el.style.color=num<0?'var(--red)':num===0?'var(--text3)':'var(--green)';
-  });
+  (container||document).querySelectorAll('.bal-val').forEach(styleBalValEl);
 }
 function toggleMonth(id){let b=document.getElementById('body-'+id),c=document.getElementById('chev-'+id);let open=b.classList.toggle('open');if(c)c.textContent=open?'▾':'▸';if(open)styleBalVals(b);}
 function jumpTo(id){let b=document.getElementById('body-'+id),c=document.getElementById('chev-'+id);b.classList.add('open');if(c)c.textContent='▾';styleBalVals(b);document.getElementById('m-'+id).scrollIntoView({behavior:'smooth'});}
@@ -1315,7 +1315,7 @@ function updateBalanceStrip(strip, bal){
     const name=item.querySelector('.bal-name')?.textContent || '';
     const val=balanceForLabel(name,bal);
     const out=item.querySelector('.bal-val');
-    if(out && val!==null && val!==undefined){ out.textContent='~'+money(val); }
+    if(out && val!==null && val!==undefined){ out.textContent=money(val); styleBalValEl(out); }
   });
 }
 function openEditModal(id){
