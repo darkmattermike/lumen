@@ -45,32 +45,41 @@ function recalcBalances(txOverrides) {
 }
 
 function balForLabel(label, bal) {
-  if (label.includes('Autopay'))       return bal['Autopay']
-  if (label.match(/^ATN/))             return bal['ATN']
-  if (label.includes('Spending'))      return bal['Spending']
-  if (label.match(/^CS/) || label.includes('Child Support')) return bal['CS']
-  if (label.includes('Personal Savings')) return bal['Personal Savings']
+  if (label.includes('Autopay'))                            return bal['Autopay']
+  if (/^ATN/.test(label))                                   return bal['ATN']
+  if (label.includes('Spending'))                           return bal['Spending']
+  if (/^CS/.test(label) || label.includes('Child Support')) return bal['CS']
+  if (label.includes('Personal Savings'))                   return bal['Personal Savings']
   if (label.includes('Stearns') && label.includes('1244')) return bal['Stearns 1244']
   if (label.includes('Stearns') && label.includes('3046')) return bal['Stearns 3046']
   if (label.includes('Stearns') && label.includes('4182')) return bal['Stearns 4182']
-  if (label.includes('Liberty'))       return bal['Liberty']
-  if (label.includes('HYSA'))          return bal['HYSA']
-  if (label.includes('Pending'))       return bal['Pending External']
-  if (label.includes('Dani Citi'))     return bal['Dani Citi']
-  if (label.includes('Citi'))          return bal['Citi 5079']
+  if (label.includes('Cap One') && label.includes('3046')) return bal['Cap One 3046']
+  if (label.includes('Cap One') && label.includes('4182')) return bal['Cap One 4182']
+  if (label.includes('Liberty'))                            return bal['Liberty']
+  if (label.includes('HYSA'))                               return bal['HYSA']
+  if (label.includes('Pending'))                            return bal['Pending External']
+  if (label.includes('Dani Citi'))                          return bal['Dani Citi']
+  if (label.includes('Citi'))                               return bal['Citi 5079']
+  if (label.includes('transfer float'))                     return bal['Stearns 1244']
   return null
 }
 
+function moneyFmt(n) {
+  const v = Math.abs(Number(n) || 0)
+  const str = v.toLocaleString(undefined, { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 })
+  return (Number(n) < 0 ? '−' : '') + '$' + str
+}
+
 // ── Balance strip ──────────────────────────────────────────
-function BalStrip({ strip, bal }) {
+function BalStrip({ strip, balSnap }) {
   return (
     <div className={s.balStrip}>
       <div className={s.balLabel}>{strip.label}</div>
       <div className={s.balGrid}>
         {strip.items.map((it, i) => {
-          const live = bal ? balForLabel(it.name, bal) : null
-          const num  = live !== null && live !== undefined ? live : parseFloat(String(it.val).replace(/[^0-9.\-−]/g,'').replace('−','-'))
-          const display = live !== null && live !== undefined ? money(live) : it.val.replace(/^~/,'')
+          const live = balSnap != null ? balForLabel(it.name, balSnap) : null
+          const num = live != null ? live : parseFloat(String(it.val).replace(/[^0-9.\-−]/g,'').replace('−','-'))
+          const display = live != null ? moneyFmt(live) : it.val.replace(/^~/, '').trim()
           const col = isNaN(num) ? undefined : num < 0 ? 'var(--sw-rose)' : num === 0 ? 'var(--sw-dim)' : 'var(--sw-mint-2)'
           return (
             <div key={i} className={[s.balItem, it.total ? s.balTotal : '', s[`bal_${it.cls.trim()}`]||''].filter(Boolean).join(' ')}>
@@ -362,12 +371,80 @@ export default function BudgetCalendar() {
     const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const tx=d.tx||d.state?.tx||d;setTxOv(tx);persist(tx);alert('Imported.')}catch{alert('Could not read file.')}};r.readAsText(f)
   }
 
-  const liveBal = useMemo(() => recalcBalances(txOv), [txOv])
+  // Live balance recalculation — mirrors HTML recalcBalances() exactly.
+  // Walk PLAN_MONTHS items in DOM order. Apply each ev's changes to running
+  // balances; when a strip is encountered, snapshot the current balances for
+  // that strip. Result: Map<stripKey, balSnapshot>.
+  const liveBalByStrip = useMemo(() => {
+    const bal = { ...STARTING_BALANCES }
+    const snapshots = {}   // key = `${monthId}-${weekIdx}-${stripIdx}` → bal snapshot
+
+    for (const month of PLAN_MONTHS) {
+      for (let wi = 0; wi < month.weeks.length; wi++) {
+        const week = month.weeks[wi]
+        let si = 0
+        for (const it of week.items) {
+          if (it.type === 'ev') {
+            const ov = txOv[it.id] || {}
+            if (ov.deleted) continue
+            const changes = ov.changes ?? PLAN_EVENTS[it.id]?.changes ?? []
+            for (const ch of changes) {
+              if (!ch.account) continue
+              if (bal[ch.account] === undefined) bal[ch.account] = 0
+              bal[ch.account] += Number(ch.amount || 0)
+            }
+          } else {
+            // strip — snapshot current balances
+            snapshots[`${month.id}-${wi}-${si}`] = { ...bal }
+            si++
+          }
+        }
+      }
+    }
+    return snapshots
+  }, [txOv])
   const allIds  = PLAN_MONTHS.flatMap(m => m.weeks.flatMap(w => w.items.filter(it=>it.type==='ev').map(it=>it.id)))
   const total   = allIds.length
   const doneCt  = allIds.filter(id => !txOv[id]?.deleted && txOv[id]?.done).length
   const pct     = total ? Math.round((doneCt/total)*100) : 0
-  const addedIds = Object.keys(txOv).filter(id => !PLAN_EVENTS[id] && !txOv[id]?.deleted)
+  // Added transactions keyed by [monthId][weekIndex] based on their date
+  const addedByWeek = useMemo(() => {
+    const result = {}
+    for (const [id, tx] of Object.entries(txOv)) {
+      if (PLAN_EVENTS[id] || tx?.deleted || !tx?.title) continue
+      const date = tx.date || ''
+      // Find which month+week this date belongs to
+      let placed = false
+      for (const month of PLAN_MONTHS) {
+        for (let wi = 0; wi < month.weeks.length; wi++) {
+          const week = month.weeks[wi]
+          const evDates = week.items
+            .filter(it => it.type === 'ev')
+            .map(it => txOv[it.id]?.date ?? PLAN_EVENTS[it.id]?.date ?? '')
+            .filter(Boolean)
+          const wMin = evDates.length ? evDates.reduce((a,b) => a<b?a:b) : ''
+          const wMax = evDates.length ? evDates.reduce((a,b) => a>b?a:b) : ''
+          const isLast = wi === month.weeks.length - 1
+          if (!placed && ((wMin && wMax && date >= wMin && date <= wMax) || (isLast && date >= (wMin||'')))) {
+            const key = `${month.id}-${wi}`
+            if (!result[key]) result[key] = []
+            result[key].push(id)
+            placed = true
+            break
+          }
+        }
+        if (placed) break
+      }
+      // If no week matched, put in last week of last month
+      if (!placed) {
+        const lastM = PLAN_MONTHS[PLAN_MONTHS.length - 1]
+        const key   = `${lastM.id}-${lastM.weeks.length - 1}`
+        if (!result[key]) result[key] = []
+        result[key].push(id)
+      }
+    }
+    return result
+  }, [txOv])
 
   return (
     <SwShell>
@@ -442,8 +519,14 @@ export default function BudgetCalendar() {
                     <div key={wi} className={s.week}>
                       <div className={s.wlabel}>{week.label}</div>
                       {(()=>{
-                        // Sort items: strips stay in place, evs sort by effective date
-                        // We interleave: collect ev runs, sort them, then emit strips at original positions
+                        const weekKey = `${month.id}-${wi}`
+                        const extraIds = addedByWeek[weekKey] || []
+                        // Merge added transactions into items list as ev entries
+                        const allItems = [
+                          ...week.items,
+                          ...extraIds.map(id => ({ type:'ev', id }))
+                        ]
+                        // Sort ev runs between strips by effective date
                         const sorted = []
                         let evBuf = []
                         const flush = () => {
@@ -455,27 +538,25 @@ export default function BudgetCalendar() {
                           sorted.push(...evBuf)
                           evBuf = []
                         }
-                        for (const it of week.items) {
+                        for (const it of allItems) {
                           if (it.type === 'strip') { flush(); sorted.push(it) }
                           else evBuf.push(it)
                         }
                         flush()
-                        return sorted.map((it,ii)=>(
-                          it.type==='ev'
-                            ? <EvRow key={it.id} evId={it.id} txOverrides={txOv} onToggle={toggle} onEdit={setEditingId} acctFilter={filter}/>
-                            : <BalStrip key={ii} strip={it.data} bal={liveBal}/>
-                        ))
+                        let _si = 0
+                        return sorted.map((it,ii)=>{
+                          if (it.type==='ev') {
+                            return <EvRow key={it.id} evId={it.id} txOverrides={txOv} onToggle={toggle} onEdit={setEditingId} acctFilter={filter}/>
+                          } else {
+                            const balSnap = liveBalByStrip[`${month.id}-${wi}-${_si}`]
+                            _si++
+                            return <BalStrip key={ii} strip={it.data} balSnap={balSnap}/>
+                          }
+                        })
                       })()}
                     </div>
                   ))}
-                  {month.id===PLAN_MONTHS[PLAN_MONTHS.length-1].id && addedIds.length>0 && (
-                    <div className={s.week}>
-                      <div className={s.wlabel}>Added transactions</div>
-                      {addedIds.map(id=>(
-                        <EvRow key={id} evId={id} txOverrides={txOv} onToggle={toggle} onEdit={setEditingId} acctFilter={filter}/>
-                      ))}
-                    </div>
-                  )}
+{/* Added transactions are injected into the correct month/week via addedIds logic above */}
                 </div>
               )}
             </div>
