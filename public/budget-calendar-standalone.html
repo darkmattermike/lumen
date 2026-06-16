@@ -393,6 +393,133 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Segoe U
   .ev > .edit-btn { grid-column: 6; }
 }
 
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE-FIRST OVERRIDES  ≤ 600px
+   These go last to beat all prior !important declarations
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+
+  /* ── page chrome ── */
+  body { padding: 0 0 24px; }
+  .page { border-radius: 0; border-left: 0; border-right: 0; box-shadow: none; }
+
+  /* ── header: stack, tighten ── */
+  .hdr { padding: 12px 14px 10px; }
+  .hdr h1 { font-size: 16px; }
+  .hdr .sub { font-size: 11px; margin-top: 2px; }
+  .legend { display: none; }  /* dot colours convey account — legend wastes space */
+
+  /* ── progress bar ── */
+  .prog-bar { padding: 8px 14px; gap: 8px; flex-wrap: wrap; }
+  .prog-label { display: none; }
+  .toolbar-btn { font-size: 10px; height: 26px; padding: 0 10px; }
+  .toolbar-btn.subtle { display: none; }
+
+  /* ── month nav: tighter pills ── */
+  .month-nav { padding: 0 14px; }
+  .mnav-btn { padding: 7px 10px; font-size: 11px; }
+
+  /* ── month header ── */
+  .month-hdr { padding: 10px 14px 8px; }
+  .month-title { font-size: 14px; }
+  .month-meta { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .month-badge { font-size: 10px; padding: 2px 7px; }
+
+  /* ── week label ── */
+  .wlabel { padding: 5px 14px 4px; font-size: 9.5px; }
+
+  /* ── event rows: 5-col compact grid ──
+     date(56px) | chk | dot | name+amount-stacked | edit(36px)
+     No tag column. Amount and sub hidden from main grid,
+     amount moved INSIDE ename as a right-float line.
+  ── */
+  .ev {
+    grid-template-columns: 56px 20px 10px minmax(0,1fr) 36px !important;
+    column-gap: 5px !important;
+    padding: 8px 14px 8px 12px !important;
+    min-height: 0 !important;
+    border-bottom: 5px solid #0d0f14 !important;
+    align-items: center !important;
+  }
+
+  /* reassign columns */
+  .ev > .edate    { grid-column: 1 !important; }
+  .ev > .echk     { grid-column: 2 !important; }
+  .ev > .edot     { grid-column: 3 !important; }
+  .ev > .ename    { grid-column: 4 !important; }
+  .ev > .etagcol  { display: none !important; }
+  .ev > .eamt     { display: none !important; }
+  .ev > .edit-btn { grid-column: 5 !important; width: 36px !important; padding: 0 4px !important; font-size: 10px !important; }
+
+  /* date: shorter format already in HTML, just shrink font */
+  .edate { font-size: 10px !important; line-height: 1.3 !important; white-space: nowrap !important; }
+
+  /* checkbox: bigger tap target */
+  .echk { width: 18px !important; height: 18px !important; }
+
+  /* content: name on line 1, sub below, amount appended inline after name */
+  .ename { font-size: 13px !important; line-height: 1.4 !important; }
+  .esub  { display: none !important; }
+
+  /* Show amount inline after name using ::after on a data attr set by JS,
+     OR just re-show .eamt inside the name column as a block */
+  .ev > .eamt {
+    display: block !important;
+    grid-column: 4 !important;
+    text-align: left !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: inherit !important;
+    white-space: nowrap !important;
+    padding-top: 0 !important;
+    line-height: 1.3 !important;
+  }
+  /* Now we need the ename and eamt to stack — make col 4 a subgrid */
+  .ev > .ename,
+  .ev > .eamt {
+    grid-column: 4 !important;
+  }
+  /* Stack them with a small inner grid */
+  .ev {
+    grid-template-rows: auto auto !important;
+  }
+  .ev > .edate, .ev > .echk, .ev > .edot, .ev > .edit-btn {
+    grid-row: 1 !important;
+    align-self: center !important;
+  }
+  .ev > .ename  { grid-row: 1 !important; align-self: center !important; }
+  .ev > .eamt   { grid-row: 2 !important; padding-left: 0 !important; }
+
+  /* tags: smaller, wrap inside name cell */
+  .tag { font-size: 9px !important; padding: 0px 4px !important; margin-left: 3px !important; }
+  .note-pill { font-size: 8.5px !important; }
+
+  /* ── balance strips ── */
+  .bal-strip { padding: 10px 14px 12px; }
+  .bal-grid { gap: 6px; }
+  .bal-item {
+    min-width: 0 !important;
+    flex: 1 1 calc(50% - 3px) !important;
+    padding: 7px 9px !important;
+  }
+  .bal-item.total { flex-basis: 100% !important; }
+  .bal-val { font-size: 13px !important; }
+  .bal-note { font-size: 10.5px !important; margin-top: 8px !important; }
+
+  /* ── summary panel ── */
+  .summary { margin: 10px 14px; padding: 12px; }
+  .sum-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .sum-val { font-size: 13px; }
+
+  /* ── modal ── */
+  .modal { border-radius: 10px; }
+  .modal-hdr { padding: 12px 14px; }
+  .modal-body { padding: 12px 14px; }
+  .modal-actions { padding: 10px 14px; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .split-head, .split-row { grid-template-columns: minmax(0,1fr) 100px 34px !important; }
+}
 </style>
 </head>
 <body>

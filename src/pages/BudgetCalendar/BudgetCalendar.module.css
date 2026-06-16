@@ -269,3 +269,16 @@
     border-radius: 14px;
   }
 }
+
+@media (max-width: 600px) {
+  .hostedCalendarPage {
+    border-radius: 0;
+    margin: 0 -16px; /* bleed to screen edges past SwShell padding */
+    width: calc(100% + 32px);
+  }
+  .hostedCalendarFrame {
+    border-radius: 0;
+    height: 100svh;
+    min-height: 100svh;
+  }
+}
