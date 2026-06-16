@@ -222,8 +222,7 @@ function EditModal({ evId, txOverrides, onSave, onDelete, onDuplicate, onClose }
         </div>
         <div className={s.modalFoot}>
           <div className={s.modalFootL}>
-            {base && <><button className={s.mDanger} onClick={()=>onDelete(evId)}>Delete</button>
-            <button className={s.mSubtle} onClick={()=>onDuplicate(evId)}>Duplicate</button></>}
+            <button className={s.mDanger} onClick={()=>onDelete(evId)}>Delete</button>
           </div>
           <div className={s.modalFootR}>
             <button className={s.mCancel} onClick={onClose}>Cancel</button>
@@ -521,12 +520,8 @@ export default function BudgetCalendar() {
                       {(()=>{
                         const weekKey = `${month.id}-${wi}`
                         const extraIds = addedByWeek[weekKey] || []
-                        // Merge added transactions into items list as ev entries
-                        const allItems = [
-                          ...week.items,
-                          ...extraIds.map(id => ({ type:'ev', id }))
-                        ]
-                        // Sort ev runs between strips by effective date
+                        // Sort ev runs between strips by effective date.
+                        // Extra (user-added) evs are mixed in with plan evs before sorting.
                         const sorted = []
                         let evBuf = []
                         const flush = () => {
@@ -538,10 +533,20 @@ export default function BudgetCalendar() {
                           sorted.push(...evBuf)
                           evBuf = []
                         }
-                        for (const it of allItems) {
-                          if (it.type === 'strip') { flush(); sorted.push(it) }
-                          else evBuf.push(it)
+                        // Walk plan items; inject extras into the ev buffer (not after strips)
+                        const extraEvs = extraIds.map(id => ({ type:'ev', id }))
+                        let extrasInjected = false
+                        for (const it of week.items) {
+                          if (it.type === 'strip') {
+                            // Inject extras before the first strip so they sort with the preceding evs
+                            if (!extrasInjected) { evBuf.push(...extraEvs); extrasInjected = true }
+                            flush()
+                            sorted.push(it)
+                          } else {
+                            evBuf.push(it)
+                          }
                         }
+                        if (!extrasInjected) evBuf.push(...extraEvs)
                         flush()
                         let _si = 0
                         return sorted.map((it,ii)=>{
