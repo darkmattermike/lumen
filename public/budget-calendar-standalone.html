@@ -960,8 +960,10 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Segoe U
 <script>
 const DONE_KEY='budget_cal_v5';
 const STATE_KEY='budget_cal_v5_modal_preserve_v1';
-const API_PATH='/api/budget-calendar';
+const API_BASE=(new URLSearchParams(window.location.search).get('apiBase') || '').replace(/\/$/, '');
+const API_PATH=API_BASE + '/api/budget-calendar';
 let remoteSaveTimer=null;
+console.info('[BudgetCalendar] API endpoint:', API_PATH);
 let syncReady=false;
 const ACCOUNTS=["Autopay", "ATN", "Spending", "CS", "Personal Savings", "Stearns 1244", "Stearns 3046", "Stearns 4182", "Cap One 3046", "Cap One 4182", "Liberty", "HYSA", "Pending External", "Citi 5079", "Dani Citi"];
 const STARTING_BALANCES={
