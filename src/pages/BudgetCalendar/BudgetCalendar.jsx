@@ -387,13 +387,49 @@ export default function BudgetCalendar() {
         const week = month.weeks[wi]
         const wKey = `${month.id}-${wi}`
 
-        // Plan events for this week — use effective date (override takes precedence)
-        const planEvItems = week.items.filter(it => it.type === 'ev').map(it => ({
+        // Compute this week's plan date range (used to slot cross-week overrides)
+        const wPlanDates = week.items
+          .filter(it => it.type === 'ev' && PLAN_EVENTS[it.id])
+          .map(it => PLAN_EVENTS[it.id].date).filter(Boolean).sort()
+        const wRecalcMin = wPlanDates[0] || ''
+        const wRecalcMax = wPlanDates[wPlanDates.length - 1] || ''
+        const isLastWeekR = wi === month.weeks.length - 1
+
+        // Plan events for this week — use effective date.
+        // Skip events whose override date moves them OUT of this week's range
+        // (they'll be picked up when we process the week their override date falls in).
+        const planEvItems = week.items.filter(it => {
+          if (it.type !== 'ev') return false
+          const effDate = txOv[it.id]?.date
+          if (!effDate || !wRecalcMin || !wRecalcMax || isLastWeekR) return true
+          return effDate >= wRecalcMin && effDate <= wRecalcMax
+        }).map(it => ({
           id:    it.id,
           date:  txOv[it.id]?.date ?? PLAN_EVENTS[it.id]?.date ?? '',
           order: PLAN_EVENTS[it.id]?.order ?? 99999,
           isAdded: false,
         }))
+
+        // Also collect plan events from OTHER weeks whose override date lands HERE
+        const overflowEvItems = []
+        for (const [oid, ov] of Object.entries(txOv)) {
+          if (!PLAN_EVENTS[oid] || ov.deleted || !ov.date) continue
+          // Check if this ev originally belongs to a different week in this month
+          const belongsHere = week.items.some(it => it.id === oid)
+          if (belongsHere) continue
+          // Check if override date falls in this week
+          if (wRecalcMin && ov.date >= wRecalcMin && (ov.date <= wRecalcMax || isLastWeekR)) {
+            // Confirm it's in this month
+            const inThisMonth = month.weeks.some(w2 => w2.items.some(it => it.id === oid))
+            if (inThisMonth) {
+              overflowEvItems.push({
+                id: oid, date: ov.date,
+                order: PLAN_EVENTS[oid]?.order ?? 99999,
+                isAdded: false,
+              })
+            }
+          }
+        }
 
         // User-added transactions placed in this week
         const addedEvItems = Object.entries(txOv)
@@ -415,7 +451,7 @@ export default function BudgetCalendar() {
 
         // Interleave: between strips, sort evs by effective date+order
         let si = 0
-        let evBuf = [...planEvItems, ...addedEvItems]
+        let evBuf = [...planEvItems, ...overflowEvItems, ...addedEvItems]
 
         // Walk week items — when we hit a strip, flush+apply evBuf then snapshot
         const strips = week.items.filter(it => it.type === 'strip')
