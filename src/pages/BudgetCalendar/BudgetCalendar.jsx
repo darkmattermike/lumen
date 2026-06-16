@@ -424,11 +424,31 @@ export default function BudgetCalendar() {
                   {month.weeks.map((week,wi)=>(
                     <div key={wi} className={s.week}>
                       <div className={s.wlabel}>{week.label}</div>
-                      {week.items.map((it,ii)=>(
-                        it.type==='ev'
-                          ? <EvRow key={it.id} evId={it.id} txOverrides={txOv} onToggle={toggle} onEdit={setEditingId} acctFilter={filter}/>
-                          : <BalStrip key={ii} strip={it.data} bal={liveBal}/>
-                      ))}
+                      {(()=>{
+                        // Sort items: strips stay in place, evs sort by effective date
+                        // We interleave: collect ev runs, sort them, then emit strips at original positions
+                        const sorted = []
+                        let evBuf = []
+                        const flush = () => {
+                          evBuf.sort((a,b)=>{
+                            const da = txOv[a.id]?.date ?? PLAN_EVENTS[a.id]?.date ?? ''
+                            const db = txOv[b.id]?.date ?? PLAN_EVENTS[b.id]?.date ?? ''
+                            return da.localeCompare(db)
+                          })
+                          sorted.push(...evBuf)
+                          evBuf = []
+                        }
+                        for (const it of week.items) {
+                          if (it.type === 'strip') { flush(); sorted.push(it) }
+                          else evBuf.push(it)
+                        }
+                        flush()
+                        return sorted.map((it,ii)=>(
+                          it.type==='ev'
+                            ? <EvRow key={it.id} evId={it.id} txOverrides={txOv} onToggle={toggle} onEdit={setEditingId} acctFilter={filter}/>
+                            : <BalStrip key={ii} strip={it.data} bal={liveBal}/>
+                        ))
+                      })()}
                     </div>
                   ))}
                   {month.id===PLAN_MONTHS[PLAN_MONTHS.length-1].id && addedIds.length>0 && (

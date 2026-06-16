@@ -177,8 +177,8 @@
 .bal_citi .balVal { color:var(--sw-rose); }
 
 /* ── edit modal ── */
-.backdrop { position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
-.modal { background:linear-gradient(180deg,#0d1e22 0%,#0a181c 100%); border:1px solid var(--sw-line); border-radius:14px; width:100%; max-width:520px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 30px 80px rgba(0,0,0,.7); }
+.backdrop { position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding:40px 20px 20px; overflow-y:auto; }
+.modal { background:linear-gradient(180deg,#0d1e22 0%,#0a181c 100%); border:1px solid var(--sw-line); border-radius:14px; width:100%; max-width:520px; max-height:none; overflow:visible; display:flex; flex-direction:column; box-shadow:0 30px 80px rgba(0,0,0,.7); flex-shrink:0; }
 .modalHdr { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--sw-line); flex-shrink:0; }
 .modalTitle { font-family:var(--font-disp); font-size:17px; font-weight:500; color:#e8f5f0; }
 .modalX { background:none; border:none; color:var(--sw-dim); font-size:22px; cursor:pointer; line-height:1; padding:0 4px; }
