@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import SwShell from '../../components/SwShell/SwShell'
 import { request } from '../../data/api'
 import { PLAN_EVENTS, PLAN_MONTHS, STARTING_BALANCES, ACCOUNTS, PLAN_VERSION } from './budgetPlanData'
@@ -105,8 +106,21 @@ function EvRow({ evId, txOverrides, onToggle, onEdit, acctFilter }) {
   const tags    = base?.tags ?? []
   const type    = base?.type ?? ''
   const color   = base?.color ?? '#888'
-  const amt     = base?.amt  ?? ''
-  const amtCls  = base?.amtCls ?? ''
+
+  // If changes were edited, recompute the display amount from the splits
+  let amt    = base?.amt    ?? ''
+  let amtCls = base?.amtCls ?? ''
+  if (ov.changes) {
+    const total = ov.changes.reduce((s, c) => s + Number(c.amount || 0), 0)
+    if (total !== 0) {
+      const pos = ov.changes.filter(c => c.amount > 0).reduce((s,c)=>s+c.amount,0)
+      const neg = ov.changes.filter(c => c.amount < 0).reduce((s,c)=>s+c.amount,0)
+      const fmt = n => { const v=Math.abs(n); const str=v.toLocaleString(undefined,{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2}); return (n<0?'−':'+')+'$'+str }
+      if (pos && neg) amt = fmt(neg) + ' / ' + fmt(pos)
+      else amt = fmt(total)
+      amtCls = total >= 0 ? 'inc' : 'exp'
+    }
+  }
 
   if (acctFilter !== 'all') {
     const targets = ACCT_MATCH[acctFilter] || []
@@ -466,8 +480,9 @@ export default function BudgetCalendar() {
         })}
       </div>
 
-      {editingId && (
-        <EditModal evId={editingId} txOverrides={txOv} onSave={saveEdit} onDelete={deleteTx} onDuplicate={dupTx} onClose={()=>setEditingId(null)}/>
+      {editingId && createPortal(
+        <EditModal evId={editingId} txOverrides={txOv} onSave={saveEdit} onDelete={deleteTx} onDuplicate={dupTx} onClose={()=>setEditingId(null)}/>,
+        document.body
       )}
     </SwShell>
   )
