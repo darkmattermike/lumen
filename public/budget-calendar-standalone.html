@@ -520,6 +520,45 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Segoe U
   .form-grid { grid-template-columns: 1fr !important; }
   .split-head, .split-row { grid-template-columns: minmax(0,1fr) 100px 34px !important; }
 }
+
+/* ── account filter bar ── */
+.acct-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 20px 4px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+.acct-filter-bar .fchip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  background: var(--surface2);
+  color: var(--text2);
+  transition: all .15s;
+  user-select: none;
+  white-space: nowrap;
+}
+.acct-filter-bar .fchip:hover { opacity: .85; }
+.acct-filter-bar .fchip.active { border-color: currentColor; }
+.acct-filter-bar .fchip .fchip-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* hidden by filter */
+.ev.acct-hidden { display: none !important; }
+@media (max-width: 600px) {
+  .acct-filter-bar { padding: 6px 14px 2px; gap: 5px; }
+  .acct-filter-bar .fchip { font-size: 10px; padding: 3px 9px; }
+}
 </style>
 </head>
 <body>
@@ -574,6 +613,29 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Segoe U
 <button class="mnav-btn" onclick="jumpTo('oct')">October</button>
 <button class="mnav-btn" onclick="jumpTo('nov')">November</button>
 <button class="mnav-btn" onclick="jumpTo('dec')">December</button>
+</div>
+<div class="acct-filter-bar" id="acctFilterBar">
+  <div class="fchip active" data-acct="all" onclick="setAcctFilter('all')" style="color:var(--cyan)">
+    <div class="fchip-dot" style="background:var(--cyan)"></div>All
+  </div>
+  <div class="fchip" data-acct="Autopay" onclick="setAcctFilter('Autopay')" style="color:var(--c-ap)">
+    <div class="fchip-dot" style="background:var(--c-ap)"></div>Autopay ·9785
+  </div>
+  <div class="fchip" data-acct="ATN" onclick="setAcctFilter('ATN')" style="color:var(--c-atn)">
+    <div class="fchip-dot" style="background:var(--c-atn)"></div>ATN ·4510
+  </div>
+  <div class="fchip" data-acct="Spending" onclick="setAcctFilter('Spending')" style="color:var(--c-sp)">
+    <div class="fchip-dot" style="background:var(--c-sp)"></div>Spending ·1712
+  </div>
+  <div class="fchip" data-acct="CS" onclick="setAcctFilter('CS')" style="color:var(--c-cs)">
+    <div class="fchip-dot" style="background:var(--c-cs)"></div>CS ·9893
+  </div>
+  <div class="fchip" data-acct="Savings" onclick="setAcctFilter('Savings')" style="color:var(--c-sav)">
+    <div class="fchip-dot" style="background:var(--c-sav)"></div>Savings / HYSA
+  </div>
+  <div class="fchip" data-acct="Citi" onclick="setAcctFilter('Citi')" style="color:var(--c-citi)">
+    <div class="fchip-dot" style="background:var(--c-citi)"></div>Citi cards
+  </div>
 </div>
 <div class="month-section" id="m-jun">
 <div class="month-hdr" onclick="toggleMonth('jun')">
@@ -1423,4 +1485,57 @@ collectBase();
 openCurrentMonth();
 applyStateToRows();
 </script>
+
+<script>
+// ── Account filter ─────────────────────────────────────────────
+var _activeAcctFilter = 'all';
+
+// Account name → what to match in data-changes JSON
+var ACCT_MATCH = {
+  'Autopay':  ['Autopay'],
+  'ATN':      ['ATN'],
+  'Spending': ['Spending'],
+  'CS':       ['CS'],
+  'Savings':  ['Stearns 1244','Stearns 3046','Stearns 4182','Personal Savings','Liberty Savings','Pending External'],
+  'Citi':     ['Citi 5079','Dani Citi'],
+};
+
+function setAcctFilter(acct) {
+  _activeAcctFilter = acct;
+
+  // Update chip active states
+  document.querySelectorAll('.fchip').forEach(function(chip) {
+    chip.classList.toggle('active', chip.dataset.acct === acct);
+  });
+
+  // Show/hide events
+  document.querySelectorAll('.ev').forEach(function(ev) {
+    if (acct === 'all') {
+      ev.classList.remove('acct-hidden');
+      return;
+    }
+    var changesRaw = ev.getAttribute('data-changes') || '[]';
+    var changes;
+    try { changes = JSON.parse(changesRaw); } catch(e) { changes = []; }
+    var accounts = changes.map(function(c){ return c.account || ''; });
+    var targets = ACCT_MATCH[acct] || [acct];
+    var match = accounts.some(function(a) {
+      return targets.some(function(t){ return a.indexOf(t) !== -1; });
+    });
+    ev.classList.toggle('acct-hidden', !match);
+  });
+
+  // Auto-expand all months when filtering, collapse back to normal on "All"
+  if (acct !== 'all') {
+    document.querySelectorAll('.month-body').forEach(function(b) {
+      var id = b.id.replace('body-','');
+      var c  = document.getElementById('chev-'+id);
+      b.classList.add('open');
+      if (c) c.textContent = '▾';
+      styleBalVals(b);
+    });
+  }
+}
+</script>
+
 </body></html>
