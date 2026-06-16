@@ -376,26 +376,90 @@ export default function BudgetCalendar() {
   // that strip. Result: Map<stripKey, balSnapshot>.
   const liveBalByStrip = useMemo(() => {
     const bal = { ...STARTING_BALANCES }
-    const snapshots = {}   // key = `${monthId}-${weekIdx}-${stripIdx}` → bal snapshot
+    const snapshots = {}
+
+    // Build a lookup: which week does each user-added tx belong to?
+    // Key: `${monthId}-${wi}` → [id, ...]
+    const addedInWeek = {}
+    for (const [id, tx] of Object.entries(txOv)) {
+      if (PLAN_EVENTS[id] || tx?.deleted || !tx?.title) continue
+      const date = tx.date || '9999'
+      // Find the right week by plan date range
+      for (const month of PLAN_MONTHS) {
+        let placed = false
+        for (let wi = 0; wi < month.weeks.length; wi++) {
+          const week = month.weeks[wi]
+          const isLast = wi === month.weeks.length - 1
+          const planDates = week.items
+            .filter(it => it.type === 'ev' && PLAN_EVENTS[it.id])
+            .map(it => PLAN_EVENTS[it.id].date).filter(Boolean).sort()
+          const wMin = planDates[0] || ''
+          const wMax = planDates[planDates.length - 1] || ''
+          if (wMin && (date <= wMax || isLast)) {
+            const key = `${month.id}-${wi}`
+            if (!addedInWeek[key]) addedInWeek[key] = []
+            addedInWeek[key].push(id)
+            placed = true
+            break
+          }
+        }
+        if (placed) break
+      }
+    }
 
     for (const month of PLAN_MONTHS) {
       for (let wi = 0; wi < month.weeks.length; wi++) {
         const week = month.weeks[wi]
         let si = 0
+
+        // Collect all ev ids for this week in date+order order (plan + user-added)
+        const planEvs = week.items
+          .filter(it => it.type === 'ev')
+          .map(it => ({ id: it.id, date: txOv[it.id]?.date ?? PLAN_EVENTS[it.id]?.date ?? '', order: PLAN_EVENTS[it.id]?.order ?? 99999 }))
+        const extraEvs = (addedInWeek[`${month.id}-${wi}`] || [])
+          .map(id => ({ id, date: txOv[id]?.date ?? '9999', order: 99999 }))
+        const allEvs = [...planEvs, ...extraEvs].sort((a, b) =>
+          a.date !== b.date ? a.date.localeCompare(b.date) : a.order - b.order
+        )
+
+        // Walk items in order, but replace the flat ev list with sorted allEvs between strips
+        let evIdx = 0
         for (const it of week.items) {
           if (it.type === 'ev') {
-            const ov = txOv[it.id] || {}
+            // Apply in sorted order — we'll process all evs when we hit the first one,
+            // then skip remaining ev items
+            if (evIdx === 0) {
+              for (const ev of allEvs) {
+                const ov = txOv[ev.id] || {}
+                if (ov.deleted) continue
+                const changes = ov.changes ?? PLAN_EVENTS[ev.id]?.changes ?? []
+                for (const ch of changes) {
+                  if (!ch.account) continue
+                  if (bal[ch.account] === undefined) bal[ch.account] = 0
+                  bal[ch.account] += Number(ch.amount || 0)
+                }
+              }
+            }
+            evIdx++
+          } else {
+            // strip — snapshot
+            snapshots[`${month.id}-${wi}-${si}`] = { ...bal }
+            si++
+            evIdx = 0 // reset for next ev group after this strip
+          }
+        }
+        // Handle any remaining evs after the last strip (no strip at end)
+        if (evIdx === 0 && week.items.filter(it=>it.type==='ev').length === 0) {
+          // week has no plan evs — apply added evs directly
+          for (const ev of extraEvs) {
+            const ov = txOv[ev.id] || {}
             if (ov.deleted) continue
-            const changes = ov.changes ?? PLAN_EVENTS[it.id]?.changes ?? []
+            const changes = ov.changes ?? []
             for (const ch of changes) {
               if (!ch.account) continue
               if (bal[ch.account] === undefined) bal[ch.account] = 0
               bal[ch.account] += Number(ch.amount || 0)
             }
-          } else {
-            // strip — snapshot current balances
-            snapshots[`${month.id}-${wi}-${si}`] = { ...bal }
-            si++
           }
         }
       }
