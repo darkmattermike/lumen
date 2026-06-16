@@ -1554,4 +1554,35 @@ async function initBudgetCalendar(){
 }
 initBudgetCalendar();
 </script>
+
+<script>
+// ── Balance strip: strip tildes + colour-code values ─────────
+(function() {
+  function styleBalVals() {
+    document.querySelectorAll('.bal-val').forEach(el => {
+      // 1. Strip leading tilde
+      let text = el.textContent.replace(/^~/, '').trim()
+      el.textContent = text
+
+      // 2. Parse numeric value — handle − (minus sign variants)
+      const cleaned = text.replace(/[^0-9.\-−]/g, '').replace('−', '-')
+      const num = parseFloat(cleaned)
+
+      // 3. Colour
+      if (isNaN(num)) return
+      if (num < 0)         { el.style.color = 'var(--red)' }
+      else if (num === 0)  { el.style.color = 'var(--text3)' }
+      else                 { el.style.color = 'var(--green)' }
+    })
+  }
+
+  // Run after DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', styleBalVals)
+  } else {
+    styleBalVals()
+  }
+})()
+</script>
+
 </body></html>
