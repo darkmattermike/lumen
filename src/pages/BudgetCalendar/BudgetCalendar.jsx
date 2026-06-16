@@ -143,10 +143,13 @@ function EvRow({ evId, txOverrides, onToggle, onEdit, acctFilter }) {
       <div className={s.edot} style={{background:color}}/>
       <div className={s.ebody}>
         <span className={s.ename}>{title}</span>
-        {tags.map((t,i) => <span key={i} className={`${s.tag} ${s[t.cls.replace(/-/g,'_')]||s.tagDef}`}>{t.label}</span>)}
-        {changes.length > 0 && changes.map((ch,i) => (
-          <span key={i} className={`${s.tag} ${accountCls(ch.account)}`}>{displayAcct(ch.account)}</span>
-        ))}
+        {/* Use base tags from HTML if available; fall back to change accounts if no base tags */}
+        {tags.length > 0
+          ? tags.map((t,i) => <span key={i} className={`${s.tag} ${s[t.cls.replace(/-/g,'_')]||s.tagDef}`}>{t.label}</span>)
+          : changes.map((ch,i) => (
+              <span key={i} className={`${s.tag} ${accountCls(ch.account)}`}>{displayAcct(ch.account)}</span>
+            ))
+        }
         {detail && <span className={s.esub}> — {detail}</span>}
         {note && <div className={s.enote}>{note}</div>}
       </div>
